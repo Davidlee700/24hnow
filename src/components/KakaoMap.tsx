@@ -101,6 +101,7 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
         opacity:${verified ? 1 : 0.5};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:13px;line-height:1;user-select:none;
+        filter:invert(1) hue-rotate(180deg) brightness(1.14);
       `;
       el.textContent = emoji;
       el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
