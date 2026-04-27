@@ -22,7 +22,7 @@ function run(script: string) {
   console.log(`\n${'='.repeat(50)}`);
   console.log(`▶ Running: ${script}`);
   console.log('='.repeat(50));
-  execSync(`npx tsx ${path.join(root, 'src/scripts', script)}`, {
+  execSync(`npx tsx "${path.join(root, 'src/scripts', script)}"`, {
     stdio: 'inherit',
     cwd: root,
   });
