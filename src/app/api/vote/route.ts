@@ -21,21 +21,7 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // Check for same IP vote on this store+tag today
-  const today = new Date().toISOString().slice(0, 10);
-  const { data: existing } = await supabase
-    .from('store_votes')
-    .select('id')
-    .eq('store_id', store_id)
-    .eq('tag', tag)
-    .eq('ip_hash', ip_hash)
-    .gte('created_at', `${today}T00:00:00.000Z`)
-    .maybeSingle();
-
-  if (existing) {
-    return NextResponse.json({ error: 'Already voted today' }, { status: 409 });
-  }
-
+  // Insert vote directly (relying on client-side state for basic duplicate prevention)
   const { error } = await supabase
     .from('store_votes')
     .insert({ store_id, tag, ip_hash });
