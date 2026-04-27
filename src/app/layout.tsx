@@ -18,18 +18,26 @@ export const metadata: Metadata = {
     url: "https://24now.kr",
     siteName: "24시 나우 - 밤샘지도",
     locale: "ko_KR",
+    title: '24시나우 | 지금 내 주변 밤샘 장소 찾기',
+    description: '어둡고 낯선 길 위에서도 24시나우와 함께라면 든든합니다.',
+    url: 'https://24hnow.vercel.app',
+    siteName: '24시나우',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 1200,
+      },
+    ],
+    locale: 'ko_KR',
+    type: 'website',
   },
-  alternates: {
-    canonical: "https://24now.kr",
+  twitter: {
+    card: 'summary_large_image',
+    title: '24시나우',
+    description: '지금 당장 이용 가능한 밤샘 장소 찾기',
+    images: ['/og-image.png'],
   },
-};
-
-export const viewport: Viewport = {
-  themeColor: "#000000",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
@@ -42,6 +50,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <Script 
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js"
+          integrity="sha384-lSQ7vULjY7ByPu7JstS+6SOm97n69OaGf9InpS9D05FvI5Oq0uXN5+vTzZ45b6u1"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {/* Load Kakao Maps SDK with libraries (services, clusterer, drawing) if needed later */}
         <Script
           strategy="beforeInteractive"

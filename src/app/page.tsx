@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import KakaoMap from '@/components/KakaoMap';
 import StoreBottomSheet from '@/components/StoreBottomSheet';
 import { useStores } from '@/hooks/useStores';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
+import { supabase } from '@/lib/supabase';
 
 const FILTERS = ['카페', '편의점', '셀프세차장', 'PC방', '약국'];
 
@@ -17,12 +19,30 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
   el.addEventListener('animationend', () => el.classList.remove('tap-bounce'), { once: true });
 }
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState<string>('카페');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [requestGps, setRequestGps] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Handle deep linking from URL (?store=uuid)
+  useEffect(() => {
+    const storeId = searchParams.get('store');
+    if (storeId) {
+      supabase
+        .from('stores')
+        .select('*')
+        .eq('id', storeId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setSelectedStore(data as Store);
+          }
+        });
+    }
+  }, [searchParams]);
 
   // "이 지역에서 검색" logic
   const pendingBoundsRef = useRef<MapBounds | null>(null);
@@ -153,5 +173,13 @@ export default function Home() {
         onClose={() => setSelectedStore(null)}
       />
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="loading-overlay">지도를 불러오고 있어요...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
