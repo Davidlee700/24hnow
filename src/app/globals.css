@@ -82,7 +82,7 @@ body, html {
   height: 100%;
   z-index: 1;
   /* Night map: invert tiles + restore hue, slight brightness reduction */
-  filter: invert(1) hue-rotate(180deg) brightness(0.88) contrast(0.92);
+  filter: invert(1) hue-rotate(180deg) brightness(0.78) contrast(1.08) saturate(0.55);
 }
 
 /* Floating Top Area (Logo + Filters) */
@@ -107,13 +107,13 @@ body, html {
 .floating-search-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  align-self: flex-start;
   background: var(--material-thick);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 0.5px solid var(--border-light);
   border-radius: var(--radius-full);
-  padding: 12px 20px;
+  padding: 10px 18px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -318,12 +318,19 @@ body, html {
   animation: fade-out-up 0.18s ease-in forwards;
 }
 
-/* ─── 2차 필터 (무인카페 등) ──────────────────────────── */
+/* ─── 2차 필터 ───────────────────────────────────────── */
 .sub-filter-container {
   display: flex;
-  gap: 6px;
+  gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
+  background: var(--material-thick);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--border-light);
+  border-radius: var(--radius-full);
+  padding: 4px 6px;
+  box-shadow: var(--shadow-sm);
 }
 .sub-filter-container::-webkit-scrollbar { display: none; }
 
@@ -331,19 +338,19 @@ body, html {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 5px 12px;
   background: transparent;
-  border: 0.5px solid var(--border-light);
+  border: none;
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.15s, color 0.15s;
 }
 .sub-filter-chip.active {
-  background: rgba(173, 255, 47, 0.12);
-  border-color: var(--accent-neon);
+  background: rgba(173, 255, 47, 0.15);
   color: var(--accent-neon);
 }
 

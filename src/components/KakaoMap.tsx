@@ -101,9 +101,18 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
         opacity:${verified ? 1 : 0.55};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:18px;line-height:1;user-select:none;
-        filter:invert(1) hue-rotate(180deg) brightness(1.14) contrast(1.09);
+        filter:invert(1) hue-rotate(180deg) brightness(1.28) contrast(0.93) saturate(1.82);
+        transition:transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
       `;
       el.textContent = emoji;
+      el.addEventListener('mouseenter', () => {
+        el.style.transform = 'scale(1.35)';
+        el.style.zIndex = '999';
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'scale(1)';
+        el.style.zIndex = '';
+      });
       el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
 
       const overlay = new kakao.maps.CustomOverlay({ position, content: el, yAnchor: 0.5, xAnchor: 0.5, clickable: true });
