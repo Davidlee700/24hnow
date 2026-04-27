@@ -17,7 +17,7 @@ const TARGET_REGIONS = [
 ];
 
 async function fetchPharmacies(q0: string, q1: string = '') {
-  const url = `http://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getPharmacyListInfoInqire?serviceKey=${SERVICE_KEY}&Q0=${encodeURIComponent(q0)}&Q1=${encodeURIComponent(q1)}&numOfRows=1000&_type=json`;
+  const url = `http://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyListInfoInqire?serviceKey=${SERVICE_KEY}&Q0=${encodeURIComponent(q0)}&Q1=${encodeURIComponent(q1)}&numOfRows=1000&_type=json`;
   
   try {
     const res = await fetch(url);
@@ -31,9 +31,10 @@ async function fetchPharmacies(q0: string, q1: string = '') {
 }
 
 function checkIsLateNight(p: any): boolean {
-  // Check if any day ends at or after 24:00 (midnight)
+  // Check if any day ends at or after 23:00 (since 24h ones are rare, let's include late-night ones)
+  // But user specifically wants 24h Now, so let's stick to 2400 or later.
   for (let i = 1; i <= 7; i++) {
-    const endTime = p[`dutyTime${i}e`];
+    const endTime = p[`dutyTime${i}c`] || p[`dutyTime${i}e`];
     if (endTime && parseInt(endTime) >= 2400) return true;
   }
   return false;
@@ -44,7 +45,7 @@ function formatHours(p: any): string {
   let hours = '';
   for (let i = 1; i <= 7; i++) {
     const s = p[`dutyTime${i}s`];
-    const e = p[`dutyTime${i}e`];
+    const e = p[`dutyTime${i}c`] || p[`dutyTime${i}e`];
     if (s && e) hours += `${days[i-1]}: ${s}-${e} `;
   }
   return hours.trim();
@@ -55,55 +56,58 @@ async function run() {
 
   for (const region of TARGET_REGIONS) {
     console.log(`\n🔍 ${region.q0} 약국 데이터 요청 중...`);
-    const items = await fetchPharmacies(region.q0, region.q1);
-    console.log(`   → 총 ${items.length}개 약국 발견`);
-
-    let savedCount = 0;
-    for (const p of items) {
-      const isLateNight = checkIsLateNight(p);
+    
+    let totalSaved = 0;
+    for (let page = 1; page <= 6; page++) {
+      const url = `http://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyListInfoInqire?serviceKey=${SERVICE_KEY}&Q0=${encodeURIComponent(region.q0)}&Q1=${encodeURIComponent(region.q1)}&numOfRows=1000&pageNo=${page}&_type=json`;
       
-      // 심야 운영 약국만 저장 (자정 이후까지 영업)
-      if (!isLateNight) continue;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const items = data.response?.body?.items?.item;
+        const list = Array.isArray(items) ? items : items ? [items] : [];
+        if (list.length === 0) break;
 
-      const { data: existing } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('name', p.dutyName)
-        .eq('road_address', p.dutyAddr)
-        .maybeSingle();
+        for (const p of list) {
+          const isLateNight = checkIsLateNight(p);
+          if (!isLateNight) continue;
 
-      const hours = formatHours(p);
-      const { class_type } = { class_type: 'A' }; // Official API data is Class A
+          const { data: existing } = await supabase
+            .from('stores')
+            .select('id')
+            .eq('name', p.dutyName)
+            .eq('road_address', p.dutyAddr)
+            .maybeSingle();
 
-      const payload = {
-        name: p.dutyName,
-        category: '약국',
-        road_address: p.dutyAddr,
-        latitude: parseFloat(p.wgs84Lat),
-        longitude: parseFloat(p.wgs84Lon),
-        is_24h: hours.includes('2400') || hours.includes('0000'), // Strictly 24h
-        class_type: isLateNight ? 'A' : 'B',
-        raw_hours: hours,
-        inference_note: '공공데이터포털(E-Gen) 공식 데이터',
-        metadata: {
-          phone: p.dutyTel1 || null,
-          hpid: p.hpid,
-          source: 'e_gen_api'
-        },
-        last_verified_at: new Date().toISOString(),
-        trust_score: 95
-      };
+          const hours = formatHours(p);
+          const payload = {
+            name: p.dutyName,
+            category: '약국',
+            road_address: p.dutyAddr,
+            latitude: parseFloat(p.wgs84Lat),
+            longitude: parseFloat(p.wgs84Lon),
+            is_24h: hours.includes('2400') || hours.includes('0000'),
+            class_type: 'A',
+            raw_hours: hours,
+            inference_note: '공공데이터포털(E-Gen) 공식 데이터',
+            metadata: { phone: p.dutyTel1 || null, hpid: p.hpid, source: 'e_gen_api' },
+            last_verified_at: new Date().toISOString(),
+            trust_score: 95
+          };
 
-      if (existing) {
-        await supabase.from('stores').update(payload).eq('id', existing.id);
-      } else {
-        await supabase.from('stores').insert(payload);
+          if (existing) {
+            await supabase.from('stores').update(payload).eq('id', existing.id);
+          } else {
+            await supabase.from('stores').insert(payload);
+          }
+          totalSaved++;
+        }
+      } catch (e) {
+        console.error(`Page ${page} Error:`, e);
       }
-      savedCount++;
     }
-    console.log(`   ✅ ${savedCount}개의 심야 약국 저장 완료`);
+    console.log(`   ✅ ${totalSaved}개의 심야 약국 저장 완료`);
   }
-
   console.log('\n✨ 약국 수집 완료!');
 }
 
