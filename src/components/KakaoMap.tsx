@@ -40,6 +40,7 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
       if (!mapRef.current) {
         const center = new kakao.maps.LatLng(37.5665, 126.9780);
         mapRef.current = new kakao.maps.Map(mapElement.current, { center, level: 5 });
+        mapRef.current.setMaxLevel(10);
         setMapLoaded(true);
 
         kakao.maps.event.addListener(mapRef.current, 'idle', () => {
