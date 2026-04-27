@@ -11,9 +11,23 @@ const supabase = createClient(
 const SERVICE_KEY = process.env.DATA_GO_KR_SERVICE_KEY;
 
 const TARGET_REGIONS = [
-  { q0: '서울특별시', q1: '' }, // Seoul districts will be fetched individually or as a whole
+  { q0: '서울특별시', q1: '' },
+  { q0: '부산광역시', q1: '' },
+  { q0: '대구광역시', q1: '' },
+  { q0: '인천광역시', q1: '' },
+  { q0: '광주광역시', q1: '' },
+  { q0: '대전광역시', q1: '' },
+  { q0: '울산광역시', q1: '' },
+  { q0: '세종특별자치시', q1: '' },
   { q0: '경기도', q1: '' },
-  { q0: '인천광역시', q1: '' }
+  { q0: '강원특별자치도', q1: '' },
+  { q0: '충청북도', q1: '' },
+  { q0: '충청남도', q1: '' },
+  { q0: '전북특별자치도', q1: '' },
+  { q0: '전라남도', q1: '' },
+  { q0: '경상북도', q1: '' },
+  { q0: '경상남도', q1: '' },
+  { q0: '제주특별자치도', q1: '' },
 ];
 
 async function fetchPharmacies(q0: string, q1: string = '') {

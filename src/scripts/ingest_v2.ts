@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { ALL_REGIONS } from './regions';
 
 dotenv.config({ path: '.env.local' });
 
@@ -14,18 +15,7 @@ const NAVER_SECRET = process.env.NAVER_SEARCH_CLIENT_SECRET;
 const NCP_ID = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
 const NCP_SECRET = process.env.NAVER_CLIENT_SECRET;
 
-const TARGET_REGIONS = [
-  '서울 강남구', '서울 강북구', '서울 강동구', '서울 강서구', '서울 관악구',
-  '서울 광진구', '서울 구로구', '서울 금천구', '서울 노원구', '서울 도봉구',
-  '서울 동대문구', '서울 동작구', '서울 마포구', '서울 서대문구', '서울 서초구',
-  '서울 성동구', '서울 성북구', '서울 송파구', '서울 양천구', '서울 영등포구',
-  '서울 용산구', '서울 은평구', '서울 종로구', '서울 중구', '서울 중랑구',
-  '수원', '성남', '고양', '부천', '용인', '안산', '안양', '남양주', '화성', '평택',
-  '의정부', '시흥', '파주', '광명', '김포', '광주', '군포', '하남', '오산', '이천',
-  '양주', '구리', '안성', '포천', '의왕', '여주', '동두천', '과천', '가평', '양평', '연천',
-  '인천 중구', '인천 동구', '인천 미추홀구', '인천 연수구', '인천 남동구',
-  '인천 부평구', '인천 계양구', '인천 서구', '인천 강화군', '인천 옹진군'
-];
+const TARGET_REGIONS = ALL_REGIONS;
 
 const TARGET_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방'];
 
