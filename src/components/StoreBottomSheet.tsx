@@ -28,7 +28,7 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
 export default function StoreBottomSheet({ store, userLocation, onClose }: Props) {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { votes, vote, hasVoted, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
+  const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
   // Clear toast when store changes
   useEffect(() => {
@@ -77,7 +77,9 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
               <p className="caption">{store.category} · {store.road_address}</p>
             </div>
             <span className={`badge ${store.trust_score > 60 ? 'badge-verified' : 'badge-warning'}`}>
-              {store.trust_score > 60 ? '● 운영 중' : '확인 필요'}
+              {store.trust_score > 60
+                ? <><span className="status-dot" />운영 중</>
+                : '확인 필요'}
             </span>
           </div>
 
@@ -134,7 +136,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                 {tags.map(tag => (
                   <button
                     key={tag}
-                    className="tag-vote-btn"
+                    className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
                     disabled={hasVoted}
                     onClick={(e) => handleVote(e, tag)}
                   >

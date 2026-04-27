@@ -13,13 +13,16 @@ export const CATEGORY_TAGS: Record<string, string[]> = {
 export function useTagVotes(storeId: string | null, category: string) {
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [hasVoted, setHasVoted] = useState(false);
+  const [votedTag, setVotedTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!storeId) return;
 
     setVotes({});
-    setHasVoted(!!localStorage.getItem(`voted_${storeId}`));
+    const stored = localStorage.getItem(`voted_${storeId}`);
+    setHasVoted(!!stored);
+    setVotedTag(stored ?? null);
     setLoading(true);
 
     supabase
@@ -42,7 +45,8 @@ export function useTagVotes(storeId: string | null, category: string) {
     // Optimistic update
     setVotes(prev => ({ ...prev, [tag]: (prev[tag] || 0) + 1 }));
     setHasVoted(true);
-    localStorage.setItem(`voted_${storeId}`, '1');
+    setVotedTag(tag);
+    localStorage.setItem(`voted_${storeId}`, tag);
 
     const res = await fetch('/api/vote', {
       method: 'POST',
@@ -54,6 +58,7 @@ export function useTagVotes(storeId: string | null, category: string) {
       // Revert optimistic update on failure
       setVotes(prev => ({ ...prev, [tag]: Math.max(0, (prev[tag] || 1) - 1) }));
       setHasVoted(false);
+      setVotedTag(null);
       localStorage.removeItem(`voted_${storeId}`);
       return null;
     }
@@ -66,6 +71,7 @@ export function useTagVotes(storeId: string | null, category: string) {
     votes,
     vote,
     hasVoted,
+    votedTag,
     loading,
     tags: CATEGORY_TAGS[category] ?? [],
   };

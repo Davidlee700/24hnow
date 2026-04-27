@@ -133,6 +133,14 @@ export default function Home() {
         )}
       </div>
 
+      {/* Empty State */}
+      {searchedBounds && stores.length === 0 && !showSearchHere && (
+        <div className="empty-state">
+          <p>이 근처엔 24시간 운영 매장이 없어요</p>
+          <span>지도를 이동해 다른 지역을 확인해보세요</span>
+        </div>
+      )}
+
       {/* GPS button */}
       <div
         className={`gps-button ${requestGps ? 'active' : ''}`}

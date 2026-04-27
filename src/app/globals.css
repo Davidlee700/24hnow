@@ -47,6 +47,8 @@ body, html {
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.022em;
+  line-height: 1.5;
   width: 100%;
   height: 100%;
   overflow: hidden; /* Prevent body scroll, act like native app */
@@ -231,14 +233,27 @@ body, html {
   padding: 4px 8px;
   border-radius: 6px;
 }
-.badge-verified { background: rgba(173, 255, 47, 0.15); color: var(--accent-neon); }
+.badge-verified { background: rgba(173, 255, 47, 0.15); color: var(--accent-neon); display: flex; align-items: center; gap: 4px; }
 .badge-warning { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
+
+@keyframes live-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.5; }
+}
+.status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  animation: live-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
 
 .ios-button {
   background: var(--accent-blue);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 14px 20px;
   font-size: 16px;
   font-weight: 600;
@@ -343,10 +358,9 @@ body, html {
 .tag-vote-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 14px;
-  background: var(--tertiary-bg);
-  border: 0.5px solid var(--border-extra-light);
+  background: transparent;
+  border: 0.5px solid var(--border-light);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 13px;
@@ -354,18 +368,31 @@ body, html {
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
 }
-.tag-vote-btn:disabled {
-  opacity: 0.45;
+.tag-vote-btn.voted {
+  background: rgba(173, 255, 47, 0.12);
+  border-color: var(--accent-neon);
+  color: var(--accent-neon);
+}
+.tag-vote-btn:disabled:not(.voted) {
+  opacity: 0.3;
+  cursor: default;
+}
+.tag-vote-btn:disabled.voted {
   cursor: default;
 }
 .tag-vote-btn .tag-count {
-  font-size: 11px;
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  font-size: 10px;
   color: var(--text-secondary);
   font-weight: 600;
-  margin-left: 6px;
-  flex-shrink: 0;
+}
+.tag-vote-btn.voted .tag-count {
+  color: var(--accent-neon);
 }
 
 /* ─── Vote Toast ─────────────────────────────────────── */
@@ -375,6 +402,36 @@ body, html {
   80%  { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-6px); }
 }
+/* ─── Empty State ────────────────────────────────────── */
+.empty-state {
+  position: absolute;
+  bottom: calc(100px + var(--safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--material-thick);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  text-align: center;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+}
+.empty-state p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+.empty-state span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .vote-toast {
   position: absolute;
   bottom: calc(100% + 12px);
