@@ -320,12 +320,12 @@ body, html {
 
 /* ─── "이 지역에서 검색" Button ────────────────────────── */
 @keyframes slide-down-bounce {
-  0%   { transform: translateY(-14px) scale(0.88); opacity: 0; }
-  65%  { transform: translateY(3px) scale(1.04); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
+  0%   { transform: translateX(-50%) translateY(-14px) scale(0.88); opacity: 0; }
+  65%  { transform: translateX(-50%) translateY(3px) scale(1.04); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
 }
 @keyframes fade-out-up {
-  to { transform: translateY(-10px) scale(0.9); opacity: 0; }
+  to { transform: translateX(-50%) translateY(-10px) scale(0.9); opacity: 0; }
 }
 
 .search-here-wrapper {
