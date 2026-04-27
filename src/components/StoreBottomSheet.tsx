@@ -111,6 +111,43 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     }
   };
 
+  const shareToKakao = (e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    if (!store || !(window as any).Kakao) return;
+    
+    (window as any).Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `[24시나우] ${store.name}`,
+        description: `${store.category} · 지금 당장 이용 가능해요!`,
+        imageUrl: 'https://24hnow.vercel.app/og-image.png',
+        link: {
+          mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`,
+          webUrl: `https://24hnow.vercel.app/?store=${store.id}`,
+        },
+      },
+      buttons: [
+        {
+          title: '지도에서 보기',
+          link: {
+            mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`,
+            webUrl: `https://24hnow.vercel.app/?store=${store.id}`,
+          },
+        },
+      ],
+    });
+  };
+
+  const copyLink = (e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    const url = `https://24hnow.vercel.app/?store=${store?.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToastMsg('공유 링크가 복사되었습니다! 🔗');
+      toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+    });
+  };
+
   return (
     <div className={`bottom-sheet ${store ? 'open' : ''}`} style={{ position: 'absolute' }}>
       {toastMsg && <div className="vote-toast">{toastMsg}</div>}
@@ -126,14 +163,31 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   <h2 className="title-1" style={{ marginBottom: '4px', letterSpacing: '-0.5px' }}>{store.name}</h2>
                   <p className="caption" style={{ color: 'var(--text-secondary)' }}>
                     {store.category} · {store.road_address}
-                    <span style={{ marginLeft: '8px', color: 'var(--accent-blue)', cursor: 'pointer' }} onClick={() => window.open(`https://search.naver.com/search.naver?query=${encodeURIComponent(store.name)}`, '_blank')}>
-                      리뷰 →
-                    </span>
                   </p>
                 </div>
-                <div className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`} style={{ padding: '6px 12px', borderRadius: '20px' }}>
-                  {store.class_type === 'A' ? <><span className="status-dot" />운영 중</> : '정보 확인 중'}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`} style={{ padding: '6px 12px', borderRadius: '20px' }}>
+                    {store.class_type === 'A' ? <><span className="status-dot" />운영 중</> : '정보 확인 중'}
+                  </div>
                 </div>
+              </div>
+
+              {/* Share & Copy Buttons */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                <button 
+                  className="ios-button" 
+                  style={{ flex: 1, background: '#FEE500', color: '#191919', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  onClick={shareToKakao}
+                >
+                  <span style={{ fontSize: '16px' }}>💬</span> 카톡 공유
+                </button>
+                <button 
+                  className="ios-button" 
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.1)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  onClick={copyLink}
+                >
+                  <span style={{ fontSize: '16px' }}>🔗</span> 링크 복사
+                </button>
               </div>
 
               <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>

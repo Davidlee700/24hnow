@@ -55,6 +55,11 @@ export default function RootLayout({
           integrity="sha384-lSQ7vULjY7ByPu7JstS+6SOm97n69OaGf9InpS9D05FvI5Oq0uXN5+vTzZ45b6u1"
           crossOrigin="anonymous"
           strategy="afterInteractive"
+          onLoad={() => {
+            if (window.Kakao && !window.Kakao.isInitialized()) {
+              window.Kakao.init('267ae86d30c2a074fc1f69eb82b93c8f');
+            }
+          }}
         />
         {/* Load Kakao Maps SDK with libraries (services, clusterer, drawing) if needed later */}
         <Script
