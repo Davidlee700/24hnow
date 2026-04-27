@@ -158,36 +158,25 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           {!isReporting ? (
             /* Normal Mode */
             <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 className="title-1" style={{ marginBottom: '4px', letterSpacing: '-0.5px' }}>{store.name}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <h2 className="title-1" style={{ letterSpacing: '-0.5px', margin: 0 }}>{store.name}</h2>
+                    <button 
+                      onClick={copyLink}
+                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      title="링크 복사"
+                    >
+                      🔗
+                    </button>
+                  </div>
                   <p className="caption" style={{ color: 'var(--text-secondary)' }}>
                     {store.category} · {store.road_address}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <div className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`} style={{ padding: '6px 12px', borderRadius: '20px' }}>
-                    {store.class_type === 'A' ? <><span className="status-dot" />운영 중</> : '정보 확인 중'}
-                  </div>
+                <div className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`} style={{ padding: '6px 12px', borderRadius: '20px' }}>
+                  {store.class_type === 'A' ? <><span className="status-dot" />운영 중</> : '정보 확인 중'}
                 </div>
-              </div>
-
-              {/* Share & Copy Buttons */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                <button 
-                  className="ios-button" 
-                  style={{ flex: 1, background: '#FEE500', color: '#191919', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  onClick={shareToKakao}
-                >
-                  <span style={{ fontSize: '16px' }}>💬</span> 카톡 공유
-                </button>
-                <button 
-                  className="ios-button" 
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.1)', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  onClick={copyLink}
-                >
-                  <span style={{ fontSize: '16px' }}>🔗</span> 링크 복사
-                </button>
               </div>
 
               <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
@@ -249,8 +238,14 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button className="ios-button" style={{ flex: 1, background: 'var(--tertiary-bg)' }} onClick={onClose}>닫기</button>
-                <button className="ios-button primary" style={{ flex: 2 }} onClick={openDirections}>길찾기</button>
+                <button 
+                  className="ios-button" 
+                  style={{ flex: 1, background: '#FEE500', color: '#191919', fontWeight: 600 }} 
+                  onClick={shareToKakao}
+                >
+                  💬 카톡 공유
+                </button>
+                <button className="ios-button primary" style={{ flex: 1.5 }} onClick={openDirections}>길찾기</button>
               </div>
               <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px', opacity: 0.6, cursor: 'pointer' }} onClick={() => setIsReporting(true)}>정보가 다른가요? 수정 제보하기</p>
             </>

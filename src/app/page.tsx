@@ -95,6 +95,7 @@ function HomeContent() {
         stores={stores}
         onBoundsChange={handleBoundsChange}
         onMarkerClick={setSelectedStore}
+        onMapClick={() => setSelectedStore(null)}
         requestGps={requestGps}
         onGpsComplete={() => setRequestGps(false)}
         onLocationUpdate={(lat, lng) => setUserLocation({ lat, lng })}

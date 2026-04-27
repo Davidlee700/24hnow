@@ -7,6 +7,7 @@ interface KakaoMapProps {
   stores?: Store[];
   onBoundsChange?: (bounds: MapBounds) => void;
   onMarkerClick?: (store: Store) => void;
+  onMapClick?: () => void;
   requestGps?: boolean;
   onGpsComplete?: () => void;
   onLocationUpdate?: (lat: number, lng: number) => void;
@@ -25,7 +26,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
-export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, requestGps, onGpsComplete, onLocationUpdate }: KakaoMapProps) {
+export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onLocationUpdate }: KakaoMapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -50,6 +51,10 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
             sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
             ne: { lat: b.getNorthEast().getLat(), lng: b.getNorthEast().getLng() },
           });
+        });
+
+        kakao.maps.event.addListener(mapRef.current, 'click', () => {
+          onMapClick?.();
         });
       }
     });
