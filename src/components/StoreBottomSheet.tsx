@@ -113,12 +113,21 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
   const shareToKakao = (e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
+    if (!store) return;
     const kakao = (window as any).Kakao;
     
-    if (!store) return;
-    if (!kakao || !kakao.isInitialized()) {
-      setToastMsg('카카오톡 공유를 준비 중이에요. 잠시 후 다시 시도해 주세요.');
+    if (!kakao) {
+      setToastMsg('카카오 SDK를 불러오는 중이에요. 1~2초 후 다시 시도해 주세요.');
       return;
+    }
+    
+    if (!kakao.isInitialized()) {
+      try {
+        kakao.init('267ae86d30c2a074fc1f69eb82b93c8f');
+      } catch (e) {
+        setToastMsg('카카오 초기화에 실패했습니다. 도메인 설정을 확인해 주세요.');
+        return;
+      }
     }
     
     if (!kakao.Share) {

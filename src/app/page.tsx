@@ -74,7 +74,13 @@ function HomeContent() {
     }, 180);
   };
 
-  const { stores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined);
+  const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined);
+
+  // Ensure the selectedStore is ALWAYS in the markers list, even if filtered out or outside bounds
+  const stores = [...fetchedStores];
+  if (selectedStore && !stores.some(s => s.id === selectedStore.id)) {
+    stores.push(selectedStore);
+  }
 
   const selectFilter = (filter: string, e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
