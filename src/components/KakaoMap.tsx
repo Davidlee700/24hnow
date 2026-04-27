@@ -1,150 +1,115 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
-interface Store {
-  id: string;
-  name: string;
-  category: string;
-  latitude: number;
-  longitude: number;
-  trust_score: number;
-  road_address: string;
-  metadata: any;
-}
+import type { Store, MapBounds } from '@/types/store';
 
 interface KakaoMapProps {
   stores?: Store[];
-  onBoundsChange?: (bounds: { sw: { lat: number; lng: number }; ne: { lat: number; lng: number } }) => void;
+  onBoundsChange?: (bounds: MapBounds) => void;
   onMarkerClick?: (store: Store) => void;
-  requestGps?: boolean; // Trigger GPS
+  requestGps?: boolean;
   onGpsComplete?: () => void;
+  onLocationUpdate?: (lat: number, lng: number) => void;
 }
 
 declare global {
-  interface Window {
-    kakao: any;
-  }
+  interface Window { kakao: any; }
 }
 
-export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, requestGps, onGpsComplete }: KakaoMapProps) {
+const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
+  '카페':       { bg: '#B07B40', emoji: '☕' },
+  '편의점':     { bg: '#0A84FF', emoji: '🏪' },
+  '셀프세차장': { bg: '#30D158', emoji: '🚗' },
+};
+const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
+
+export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, requestGps, onGpsComplete, onLocationUpdate }: KakaoMapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // 1. Initialize Map
+  // 1. Initialize map
   useEffect(() => {
     const kakao = window.kakao;
     if (!mapElement.current || !kakao) return;
 
     kakao.maps.load(() => {
       if (!mapRef.current) {
-        // Default to Seoul City Hall
         const center = new kakao.maps.LatLng(37.5665, 126.9780);
-        const options = {
-          center: center,
-          level: 5, // Zoomed in closer for app feel
-        };
-        mapRef.current = new kakao.maps.Map(mapElement.current, options);
+        mapRef.current = new kakao.maps.Map(mapElement.current, { center, level: 5 });
         setMapLoaded(true);
 
-        // Bind idle event for Bounding Box search
         kakao.maps.event.addListener(mapRef.current, 'idle', () => {
-          if (onBoundsChange) {
-            const bounds = mapRef.current.getBounds();
-            const sw = bounds.getSouthWest();
-            const ne = bounds.getNorthEast();
-            onBoundsChange({
-              sw: { lat: sw.getLat(), lng: sw.getLng() },
-              ne: { lat: ne.getLat(), lng: ne.getLng() }
-            });
-          }
+          if (!onBoundsChange) return;
+          const b = mapRef.current.getBounds();
+          onBoundsChange({
+            sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
+            ne: { lat: b.getNorthEast().getLat(), lng: b.getNorthEast().getLng() },
+          });
         });
       }
     });
   }, []);
 
-  // 2. Handle GPS Request
+  // 2. GPS
   useEffect(() => {
     if (!requestGps || !mapLoaded || !mapRef.current) return;
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const locPosition = new window.kakao.maps.LatLng(lat, lon);
-          
-          mapRef.current.setCenter(locPosition);
-          
-          // Trigger bounds change manually after GPS move
-          setTimeout(() => {
-            if (onBoundsChange) {
-              const bounds = mapRef.current.getBounds();
-              onBoundsChange({
-                sw: { lat: bounds.getSouthWest().getLat(), lng: bounds.getSouthWest().getLng() },
-                ne: { lat: bounds.getNorthEast().getLat(), lng: bounds.getNorthEast().getLng() }
-              });
-            }
-          }, 300);
+    if (!navigator.geolocation) { onGpsComplete?.(); return; }
 
-          if (onGpsComplete) onGpsComplete();
-        },
-        (error) => {
-          console.warn("GPS Error:", error);
-          if (onGpsComplete) onGpsComplete();
-        },
-        { enableHighAccuracy: true, timeout: 5000 }
-      );
-    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const locPosition = new window.kakao.maps.LatLng(lat, lng);
+        mapRef.current.setCenter(locPosition);
+        onLocationUpdate?.(lat, lng);
+        setTimeout(() => {
+          const b = mapRef.current.getBounds();
+          onBoundsChange?.({
+            sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
+            ne: { lat: b.getNorthEast().getLat(), lng: b.getNorthEast().getLng() },
+          });
+        }, 300);
+        onGpsComplete?.();
+      },
+      (err) => { console.warn('GPS Error:', err); onGpsComplete?.(); },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
   }, [requestGps, mapLoaded]);
 
-  // 3. Render Markers
+  // 3. Render markers
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
     const kakao = window.kakao;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
 
     stores.forEach(store => {
       if (!store.latitude || !store.longitude) return;
 
       const position = new kakao.maps.LatLng(store.latitude, store.longitude);
-      
-      const content = document.createElement('div');
-      content.style.width = '14px';
-      content.style.height = '14px';
-      content.style.background = store.trust_score > 60 ? '#ADFF2F' : '#8e8e93';
-      content.style.borderRadius = '50%';
-      content.style.border = '2px solid #000';
-      content.style.boxShadow = store.trust_score > 60 ? '0 0 10px #ADFF2F' : 'none';
-      content.style.cursor = 'pointer';
-      
-      content.onclick = () => {
-        if (onMarkerClick) onMarkerClick(store);
-        mapRef.current.panTo(position); // Center on click
-      };
+      const { bg, emoji } = CATEGORY_STYLE[store.category] ?? DEFAULT_STYLE;
+      const verified = store.trust_score > 60;
 
-      const customOverlay = new kakao.maps.CustomOverlay({
-        position: position,
-        content: content,
-        yAnchor: 0.5,
-        xAnchor: 0.5,
-        clickable: true
-      });
+      const el = document.createElement('div');
+      el.style.cssText = `
+        width:26px;height:26px;background:${bg};border-radius:50%;
+        border:1.5px solid rgba(255,255,255,0.35);
+        box-shadow:${verified ? `0 0 8px ${bg}88` : 'none'};
+        opacity:${verified ? 1 : 0.5};cursor:pointer;
+        display:flex;align-items:center;justify-content:center;
+        font-size:13px;line-height:1;user-select:none;
+      `;
+      el.textContent = emoji;
+      el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
 
-      customOverlay.setMap(mapRef.current);
-      markersRef.current.push(customOverlay);
+      const overlay = new kakao.maps.CustomOverlay({ position, content: el, yAnchor: 0.5, xAnchor: 0.5, clickable: true });
+      overlay.setMap(mapRef.current);
+      markersRef.current.push(overlay);
     });
   }, [stores, mapLoaded]);
 
-  return (
-    <div 
-      ref={mapElement} 
-      className="map-container"
-    />
-  );
+  return <div ref={mapElement} className="map-container" />;
 }

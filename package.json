@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ingest": "tsx src/scripts/run_all.ts",
+    "ingest:kakao": "tsx src/scripts/fetch_kakao.ts",
+    "ingest:naver": "tsx src/scripts/fetch_naver.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

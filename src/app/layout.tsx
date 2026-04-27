@@ -3,9 +3,25 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "24시나우 (24h Now) - 야간 작업자를 위한 전국 24시 점포 정보",
-  description: "밤샘 카공족, 야간 작업자들을 위한 전국 24시간 영업 카페, 식당, 편의점의 진짜 운영 정보를 확인하세요.",
-  keywords: ["24시", "24시간 카페", "야간 작업", "카공", "밤샘", "24시나우"],
+  title: "24시 카페·편의점·세차장 찾기 | 24시 나우 - 밤샘지도",
+  description: "내 근처 24시 카페, 야간 편의점, 24시간 셀프세차장을 지도에서 바로 확인. 밤새도록 열려 있는 곳만 모았습니다.",
+  keywords: [
+    "24시 카페", "24시간 카페", "야간 카페", "새벽 카페",
+    "근처 24시", "24시 편의점", "야간 편의점",
+    "야간 세차장", "24시 셀프세차", "24시간 세차",
+    "밤샘지도", "24시 나우", "24now"
+  ],
+  openGraph: {
+    title: "24시 카페·편의점·세차장 찾기 | 24시 나우 - 밤샘지도",
+    description: "내 근처 24시 카페, 야간 편의점, 24시간 셀프세차장을 지도에서 바로 확인. 밤새도록 열려 있는 곳만 모았습니다.",
+    type: "website",
+    url: "https://24now.kr",
+    siteName: "24시 나우 - 밤샘지도",
+    locale: "ko_KR",
+  },
+  alternates: {
+    canonical: "https://24now.kr",
+  },
 };
 
 export const viewport: Viewport = {
