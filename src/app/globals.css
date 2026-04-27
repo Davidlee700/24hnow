@@ -297,8 +297,20 @@ body, html {
   to { transform: translateY(-10px) scale(0.9); opacity: 0; }
 }
 
+.search-here-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  pointer-events: auto;
+  animation: slide-down-bounce 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.search-here-wrapper.hiding {
+  animation: fade-out-up 0.18s ease-in forwards;
+}
+
 .search-here-btn {
-  align-self: center;
   background: var(--material-thick);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -311,11 +323,15 @@ body, html {
   font-family: inherit;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  animation: slide-down-bounce 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  pointer-events: auto;
 }
-.search-here-btn.hiding {
-  animation: fade-out-up 0.18s ease-in forwards;
+
+.search-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  text-align: center;
+  pointer-events: none;
+  line-height: 1.4;
 }
 
 /* ─── 2차 필터 ───────────────────────────────────────── */

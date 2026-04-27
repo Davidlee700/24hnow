@@ -116,12 +116,15 @@ export default function Home() {
 
         {/* 이 지역에서 검색 버튼 */}
         {showSearchHere && (
-          <button
-            className={`search-here-btn ${searchHideAnim ? 'hiding' : ''}`}
-            onClick={handleSearchHere}
-          >
-            여기서 찾기 🔍
-          </button>
+          <div className={`search-here-wrapper ${searchHideAnim ? 'hiding' : ''}`}>
+            <button
+              className="search-here-btn"
+              onClick={handleSearchHere}
+            >
+              여기서 찾기 🔍
+            </button>
+            <p className="search-hint">원하는 위치로 지도를 이동한 뒤 탭해보세요</p>
+          </div>
         )}
       </div>
 
