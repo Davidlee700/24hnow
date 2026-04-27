@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import KakaoMap from '@/components/KakaoMap';
 import StoreBottomSheet from '@/components/StoreBottomSheet';
 import { useStores } from '@/hooks/useStores';
+import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
 
 const FILTERS = ['카페', '편의점', '셀프세차장'];
@@ -17,8 +18,8 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
 }
 
 export default function Home() {
-  const [activeFilters, setActiveFilters] = useState<string[]>(['카페']);
-  const [cafeSubFilter, setCafeSubFilter] = useState<'all' | 'unmanned_only'>('all');
+  const [activeFilter, setActiveFilter] = useState<string>('카페');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [requestGps, setRequestGps] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -51,28 +52,22 @@ export default function Home() {
     }, 180);
   };
 
-  const { stores: rawStores } = useStores(searchedBounds, activeFilters);
+  const { stores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined);
 
-  // Client-side 무인카페 sub-filter
-  const stores = cafeSubFilter === 'unmanned_only'
-    ? rawStores.filter(s => {
-        if (s.category !== '카페') return true;
-        return s.name.includes('무인') || s.metadata?.kakao_category_full?.includes('무인');
-      })
-    : rawStores;
-
-  const toggleFilter = (filter: string, e: React.MouseEvent<HTMLElement>) => {
+  const selectFilter = (filter: string, e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
-    setActiveFilters(prev => {
-      if (prev.includes(filter)) {
-        return prev.length > 1 ? prev.filter(f => f !== filter) : prev;
-      }
-      return [...prev, filter];
-    });
+    setActiveFilter(filter);
+    setActiveTag(null);
     setSelectedStore(null);
   };
 
-  const showCafeSubFilter = activeFilters.includes('카페');
+  const toggleTag = (tag: string, e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    setActiveTag(prev => prev === tag ? null : tag);
+    setSelectedStore(null);
+  };
+
+  const categoryTags = CATEGORY_TAGS[activeFilter] ?? [];
 
   return (
     <>
@@ -96,29 +91,26 @@ export default function Home() {
           {FILTERS.map(filter => (
             <div
               key={filter}
-              className={`filter-chip ${activeFilters.includes(filter) ? 'active' : ''}`}
-              onClick={(e) => toggleFilter(filter, e)}
+              className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
+              onClick={(e) => selectFilter(filter, e)}
             >
               {filter}
             </div>
           ))}
         </div>
 
-        {/* 2차 필터: 카페 선택 시 무인카페 */}
-        {showCafeSubFilter && (
+        {/* 2차 필터: 카테고리 태그 */}
+        {categoryTags.length > 0 && (
           <div className="sub-filter-container">
-            <button
-              className={`sub-filter-chip ${cafeSubFilter === 'all' ? 'active' : ''}`}
-              onClick={(e) => { tapEffect(e); setCafeSubFilter('all'); }}
-            >
-              전체
-            </button>
-            <button
-              className={`sub-filter-chip ${cafeSubFilter === 'unmanned_only' ? 'active' : ''}`}
-              onClick={(e) => { tapEffect(e); setCafeSubFilter('unmanned_only'); }}
-            >
-              무인카페만
-            </button>
+            {categoryTags.map(tag => (
+              <button
+                key={tag}
+                className={`sub-filter-chip ${activeTag === tag ? 'active' : ''}`}
+                onClick={(e) => toggleTag(tag, e)}
+              >
+                {tag}
+              </button>
+            ))}
           </div>
         )}
 

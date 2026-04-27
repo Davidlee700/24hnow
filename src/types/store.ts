@@ -7,6 +7,7 @@ export interface Store {
   trust_score: number;
   road_address: string;
   last_verified_at: string;
+  tags?: string[];
   metadata: {
     phone?: string;
     place_url?: string;
