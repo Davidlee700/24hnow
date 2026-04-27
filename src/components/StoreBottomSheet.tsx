@@ -10,12 +10,31 @@ interface Props {
   onClose: () => void;
 }
 
+function formatApiTime(timeStr: string): string {
+  if (!timeStr) return '';
+  const time = parseInt(timeStr);
+  if (time === 2400 || time === 0) return '자정(00:00)';
+  if (time > 2400) {
+    const hour = Math.floor((time - 2400) / 100);
+    const min = time % 100;
+    return `익일 ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  }
+  return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
+}
+
 function getTodayHours(rawHours?: string): string {
   if (!rawHours) return '24시간 운영 (추정)';
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   const today = days[new Date().getDay()];
-  const match = rawHours.match(new RegExp(`${today}: (\\d{4}-\\d{4})`));
-  if (match) return `오늘(${today})은 ${match[1].slice(0,2)}:${match[1].slice(2,4)} - ${match[1].slice(5,7)}:${match[1].slice(7,9)}`;
+  
+  // Parse format: "월: 0900-2500"
+  const match = rawHours.match(new RegExp(`${today}: (\\d{4})-(\\d{4})`));
+  if (match) {
+    const start = formatApiTime(match[1]);
+    const end = formatApiTime(match[2]);
+    return `오늘(${today})은 ${start} - ${end}`;
+  }
+  
   if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return `오늘(${today})은 24시간 운영`;
   return '영업시간 확인 필요';
 }
@@ -103,7 +122,13 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
             
             {showFullHours && store.raw_hours && (
               <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                {store.raw_hours.split(' ').map((h, i) => <p key={i}>{h}</p>)}
+                {store.raw_hours.split(' ').map((h, i) => {
+                  const parts = h.match(/(.*): (\d{4})-(\d{4})/);
+                  if (parts) {
+                    return <p key={i}>{parts[1]}: {formatApiTime(parts[2])} - {formatApiTime(parts[3])}</p>;
+                  }
+                  return <p key={i}>{h}</p>;
+                })}
               </div>
             )}
 
