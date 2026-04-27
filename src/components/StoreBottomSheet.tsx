@@ -85,6 +85,9 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
           {/* Info chips */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '12px', background: 'rgba(48,209,88,0.1)', padding: '6px 12px', borderRadius: '8px', color: 'var(--accent-green)', fontWeight: 600 }}>
+              🕐 24시간 운영
+            </span>
             <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
               신뢰도 {store.trust_score}점
             </span>

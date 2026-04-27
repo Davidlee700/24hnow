@@ -95,13 +95,13 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
 
       const el = document.createElement('div');
       el.style.cssText = `
-        width:26px;height:26px;background:${bg};border-radius:50%;
-        border:1.5px solid rgba(255,255,255,0.35);
-        box-shadow:${verified ? `0 0 8px ${bg}88` : 'none'};
-        opacity:${verified ? 1 : 0.5};cursor:pointer;
+        width:36px;height:36px;background:${bg};border-radius:50%;
+        border:2px solid rgba(255,255,255,0.9);
+        box-shadow:0 2px 10px rgba(0,0,0,0.7)${verified ? `,0 0 12px ${bg}cc` : ''};
+        opacity:${verified ? 1 : 0.55};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
-        font-size:13px;line-height:1;user-select:none;
-        filter:invert(1) hue-rotate(180deg) brightness(1.14);
+        font-size:18px;line-height:1;user-select:none;
+        filter:invert(1) hue-rotate(180deg) brightness(1.14) contrast(1.09);
       `;
       el.textContent = emoji;
       el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
