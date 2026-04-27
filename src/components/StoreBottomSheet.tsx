@@ -10,11 +10,14 @@ interface Props {
   onClose: () => void;
 }
 
-function relativeTime(isoString: string): string {
-  const days = Math.floor((Date.now() - new Date(isoString).getTime()) / 86400000);
-  if (days === 0) return '오늘 확인됨';
-  if (days === 1) return '1일 전 확인됨';
-  return `${days}일 전 확인됨`;
+function getTodayHours(rawHours?: string): string {
+  if (!rawHours) return '24시간 운영 (추정)';
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  const today = days[new Date().getDay()];
+  const match = rawHours.match(new RegExp(`${today}: (\\d{4}-\\d{4})`));
+  if (match) return `오늘(${today})은 ${match[1].slice(0,2)}:${match[1].slice(2,4)} - ${match[1].slice(5,7)}:${match[1].slice(7,9)}`;
+  if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return `오늘(${today})은 24시간 운영`;
+  return '영업시간 확인 필요';
 }
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
@@ -26,13 +29,14 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
 }
 
 export default function StoreBottomSheet({ store, userLocation, onClose }: Props) {
+  const [showFullHours, setShowFullHours] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
-  // Clear toast when store changes
   useEffect(() => {
     setToastMsg(null);
+    setShowFullHours(false);
   }, [store?.id]);
 
   const openDirections = () => {
@@ -46,11 +50,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
   const handleVote = async (e: React.MouseEvent<HTMLElement>, tag: string) => {
     tapEffect(e);
-    e.currentTarget.classList.add('vote-glow-anim');
-    e.currentTarget.addEventListener('animationend', (ev) => {
-      (ev.target as HTMLElement).classList.remove('vote-glow-anim');
-    }, { once: true });
-
     const msg = await vote(tag);
     if (msg) {
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -61,103 +60,104 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
   return (
     <div className={`bottom-sheet ${store ? 'open' : ''}`} style={{ position: 'absolute' }}>
-      {/* Toast notification */}
-      {toastMsg && (
-        <div className="vote-toast">{toastMsg}</div>
-      )}
-
+      {toastMsg && <div className="vote-toast">{toastMsg}</div>}
       <div className="drag-handle" onClick={onClose} />
 
       {store && (
         <div className="sheet-content">
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1, minWidth: 0, marginRight: '12px' }}>
-              <h2 className="title-1" style={{ marginBottom: '4px' }}>{store.name}</h2>
-              <p className="caption">{store.category} · {store.road_address}</p>
-            </div>
-            <span className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`}>
-              {store.class_type === 'A'
-                ? <><span className="status-dot" />운영 중</>
-                : store.class_type === 'C' ? '영업시간 확인 필요' : '정보 확인 중'}
-            </span>
-          </div>
-
-          {/* Info chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontSize: '12px', background: store.class_type === 'A' ? 'rgba(48,209,88,0.1)' : 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: store.class_type === 'A' ? 'var(--accent-green)' : 'var(--text-secondary)', fontWeight: 600 }}>
-              🕐 {store.class_type === 'A' ? '24시간 운영' : store.class_type === 'B' ? '24시간 운영 (추정)' : '시간 확인 필요'}
-            </span>
-            {store.inference_note && (
-              <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', opacity: 0.8 }}>
-                💡 {store.inference_note}
-              </span>
-            )}
-            <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
-              신뢰도 {store.trust_score}점
-            </span>
-          </div>
-
-          {/* Phone */}
-          {store.metadata?.phone && (
-            <a
-              href={`tel:${store.metadata.phone}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', color: 'var(--accent-blue)', fontSize: '15px', textDecoration: 'none' }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.09a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-              {store.metadata.phone}
-            </a>
-          )}
-
-          {/* Map links */}
-          {(store.metadata?.place_url || store.metadata?.naver_place_url) && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {store.metadata.place_url && (
-                <a href={store.metadata.place_url} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                  카카오맵 →
-                </a>
-              )}
-              {store.metadata.naver_place_url && (
-                <a href={store.metadata.naver_place_url} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                  네이버지도 →
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Tag voting */}
-          {tags.length > 0 && (
-            <div>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                {hasVoted ? '방문 정보가 반영됐어요 ✓' : '이 장소는 어떤가요?'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 className="title-1" style={{ marginBottom: '4px', letterSpacing: '-0.5px' }}>{store.name}</h2>
+              <p className="caption" style={{ color: 'var(--text-secondary)' }}>
+                {store.category} · {store.road_address}
+                <span style={{ marginLeft: '8px', color: 'var(--accent-blue)', cursor: 'pointer' }} onClick={() => window.open(`https://search.naver.com/search.naver?query=${encodeURIComponent(store.name)}`, '_blank')}>
+                  리뷰 999+ →
+                </span>
               </p>
-              <div className="tag-vote-grid">
-                {tags.map(tag => (
-                  <button
-                    key={tag}
-                    className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
-                    disabled={hasVoted}
-                    onClick={(e) => handleVote(e, tag)}
-                  >
-                    <span>{tag}</span>
-                    {(votes[tag] ?? 0) > 0 && (
-                      <span className="tag-count">{votes[tag]}</span>
-                    )}
-                  </button>
-                ))}
-              </div>
             </div>
-          )}
-
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="ios-button primary" onClick={(e) => { tapEffect(e); onClose(); }}>닫기</button>
-            <button className="ios-button" onClick={(e) => { tapEffect(e); openDirections(); }}>길찾기</button>
+            <div className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`} style={{ padding: '6px 12px', borderRadius: '20px' }}>
+              {store.class_type === 'A' ? <><span className="status-dot" />운영 중</> : '정보 확인 중'}
+            </div>
           </div>
+
+          {/* Today's Hour & Verification Card */}
+          <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+            <div 
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              onClick={() => setShowFullHours(!showFullHours)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>🕐</span>
+                <div>
+                  <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {getTodayHours(store.raw_hours)}
+                  </p>
+                  {store.class_type !== 'A' && (
+                    <p style={{ fontSize: '12px', color: 'var(--accent-orange)', marginTop: '2px' }}>💡 {store.inference_note}</p>
+                  )}
+                </div>
+              </div>
+              <span style={{ transform: showFullHours ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>▼</span>
+            </div>
+            
+            {showFullHours && store.raw_hours && (
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                {store.raw_hours.split(' ').map((h, i) => <p key={i}>{h}</p>)}
+              </div>
+            )}
+
+            {store.class_type !== 'A' && (
+              <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                <button 
+                  className="ios-button" 
+                  style={{ flex: 1, padding: '8px', fontSize: '13px', background: 'rgba(48,209,88,0.15)', color: '#30D158' }}
+                  onClick={(e) => { tapEffect(e); setToastMsg('제보해주셔서 감사합니다!'); }}
+                >
+                  지금 24시 맞아요 👍
+                </button>
+                <button 
+                  className="ios-button" 
+                  style={{ flex: 1, padding: '8px', fontSize: '13px', background: 'rgba(255,69,58,0.15)', color: '#FF453A' }}
+                  onClick={(e) => { tapEffect(e); setToastMsg('소중한 정보 감사합니다.'); }}
+                >
+                  24시 아니에요 👎
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Tags */}
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 500 }}>
+              {hasVoted ? '방문 정보가 반영되었습니다 ✓' : '이곳의 밤샘 분위기는 어떤가요?'}
+            </p>
+            <div className="tag-vote-grid">
+              {tags.map(tag => (
+                <button
+                  key={tag}
+                  className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
+                  disabled={hasVoted}
+                  onClick={(e) => handleVote(e, tag)}
+                >
+                  <span>{tag}</span>
+                  {(votes[tag] ?? 0) > 0 && <span className="tag-count">{votes[tag]}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="ios-button" style={{ flex: 1, background: 'var(--tertiary-bg)' }} onClick={onClose}>닫기</button>
+            <button className="ios-button primary" style={{ flex: 2 }} onClick={openDirections}>길찾기</button>
+          </div>
+          <p 
+            style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px', opacity: 0.6, cursor: 'pointer' }}
+            onClick={() => setToastMsg('수정 제보가 접수되었습니다.')}
+          >
+            정보가 다른가요? 수정 제보하기
+          </p>
         </div>
       )}
     </div>

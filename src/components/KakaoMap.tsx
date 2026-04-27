@@ -94,37 +94,37 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
       const position = new kakao.maps.LatLng(store.latitude, store.longitude);
       const { bg, emoji } = CATEGORY_STYLE[store.category] ?? DEFAULT_STYLE;
       const isConfirmed = store.class_type === 'A';
-      const isEstimated = store.class_type === 'B';
 
       const el = document.createElement('div');
       el.style.cssText = `
-        width:40px;height:40px;
-        background:${isConfirmed ? bg : `rgba(25, 25, 25, 0.65)`};
-        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        width:42px;height:42px;
+        background:${isConfirmed ? bg : 'rgba(255, 255, 255, 0.95)'};
         border-radius:50%;
-        border:2px solid ${isConfirmed ? 'white' : 'rgba(255,255,255,0.4)'};
-        box-shadow:0 4px 12px rgba(0,0,0,0.6)${isConfirmed ? `, 0 0 15px ${bg}cc` : ''};
+        border:2.5px solid white;
+        box-shadow:0 0 15px ${isConfirmed ? bg : 'rgba(255,255,255,0.4)'}, 0 6px 15px rgba(0,0,0,0.8);
         opacity:1;cursor:pointer;
         display:flex;align-items:center;justify-content:center;
-        font-size:20px;line-height:1;user-select:none;
-        filter:invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
-        transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        font-size:22px;line-height:1;user-select:none;
+        /* 인버전된 다크 맵에서 튀어나와 보이도록 밝기/채도 대폭 강화 */
+        filter:invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2);
+        transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
         z-index: ${isConfirmed ? '100' : '10'};
       `;
       
-      // Class A 전용 펄스 애니메이션 (추가 CSS 필요)
       if (isConfirmed) {
         el.classList.add('marker-pulse');
       }
 
       el.textContent = emoji;
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.3) translateY(-4px)';
+        el.style.transform = 'scale(1.25) translateY(-6px)';
         el.style.zIndex = '999';
+        el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.8) contrast(1.3) saturate(2.2)';
       });
       el.addEventListener('mouseleave', () => {
         el.style.transform = 'scale(1)';
         el.style.zIndex = isConfirmed ? '100' : '10';
+        el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2)';
       });
       el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
 
