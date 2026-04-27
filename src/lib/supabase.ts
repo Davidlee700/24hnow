@@ -10,4 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create a single supabase client for interacting with your database
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Provide fallback strings so the Vercel build doesn't crash during static generation
+export const supabase = createClient(
+  supabaseUrl || 'https://dummy.supabase.co', 
+  supabaseAnonKey || 'dummy_key'
+);

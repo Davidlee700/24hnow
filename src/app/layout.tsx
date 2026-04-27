@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
@@ -6,7 +6,14 @@ export const metadata: Metadata = {
   title: "24시나우 (24h Now) - 야간 작업자를 위한 전국 24시 점포 정보",
   description: "밤샘 카공족, 야간 작업자들을 위한 전국 24시간 영업 카페, 식당, 편의점의 진짜 운영 정보를 확인하세요.",
   keywords: ["24시", "24시간 카페", "야간 작업", "카공", "밤샘", "24시나우"],
+};
+
+export const viewport: Viewport = {
   themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
