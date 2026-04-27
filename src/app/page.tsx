@@ -1,72 +1,146 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import KakaoMap from "@/components/KakaoMap";
+import { supabase } from '@/lib/supabase';
+
+interface Store {
+  id: string;
+  name: string;
+  category: string;
+  latitude: number;
+  longitude: number;
+  trust_score: number;
+  road_address: string;
+  metadata: any;
+}
+
 export default function Home() {
+  const [activeFilter, setActiveFilter] = useState("전체");
+  const [stores, setStores] = useState<Store[]>([]);
+  const [bounds, setBounds] = useState<{ sw: { lat: number; lng: number }; ne: { lat: number; lng: number } } | null>(null);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [requestGps, setRequestGps] = useState(true); // Default request on load
+
+  const filters = ["전체", "카페", "편의점", "셀프세차장"];
+
+  // Fetch stores whenever bounds or filter changes
+  useEffect(() => {
+    if (bounds) {
+      fetchStoresInBounds();
+    }
+  }, [bounds, activeFilter]);
+
+  async function fetchStoresInBounds() {
+    if (!bounds) return;
+
+    let query = supabase
+      .from('stores')
+      .select('*')
+      .gte('latitude', bounds.sw.lat)
+      .lte('latitude', bounds.ne.lat)
+      .gte('longitude', bounds.sw.lng)
+      .lte('longitude', bounds.ne.lng);
+
+    if (activeFilter !== "전체") {
+      query = query.eq('category', activeFilter);
+    }
+
+    // Limit to prevent massive loads if zoomed out too far
+    const { data, error } = await query.order('trust_score', { ascending: false }).limit(100);
+
+    if (!error && data) {
+      setStores(data);
+    }
+  }
+
+  const handleMarkerClick = (store: Store) => {
+    setSelectedStore(store);
+  };
+
+  const closeBottomSheet = () => {
+    setSelectedStore(null);
+  };
+
   return (
     <>
-      <section style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-          현재 위치 주변 <br/>
-          <span className="text-neon">진짜 24시</span> 매장
-        </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-          사용자 제보와 데이터 검증을 통해 믿을 수 있는 정보만 제공합니다.
-        </p>
-      </section>
+      <KakaoMap 
+        stores={stores} 
+        onBoundsChange={setBounds} 
+        onMarkerClick={handleMarkerClick}
+        requestGps={requestGps}
+        onGpsComplete={() => setRequestGps(false)}
+      />
 
-      {/* Mock Store Card to show Liquid Glass UI */}
-      <article className="liquid-glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>할리스커피 신촌점</h3>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-              카페
-            </span>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: 'var(--accent-neon-green)', borderRadius: '50%', marginRight: '6px', boxShadow: '0 0 8px var(--accent-neon-green)' }}></span>
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--accent-neon-green)' }}>운영 중</span>
-          </div>
+      {/* Floating UI: Top */}
+      <div className="floating-top">
+        <div className="floating-search-bar">
+          <div className="brand-title">24h <span style={{color: 'var(--accent-neon)'}}>Now</span></div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </div>
+
+        <div className="filter-container">
+          {filters.map((filter) => (
+            <div 
+              key={filter} 
+              className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
+              onClick={() => {
+                setActiveFilter(filter);
+                setSelectedStore(null); // Close sheet on filter change
+              }}
+            >
+              {filter}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Floating UI: GPS Button */}
+      <div className={`gps-button ${requestGps ? 'active' : ''}`} onClick={() => setRequestGps(true)}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+      </div>
+
+      {/* Bottom Sheet Drawer */}
+      <div className={`bottom-sheet ${selectedStore ? 'open' : ''}`}>
+        <div className="drag-handle" onClick={closeBottomSheet}></div>
         
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-          서울 서대문구 연세로 34
-        </p>
+        {selectedStore && (
+          <div className="sheet-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h2 className="title-1" style={{ marginBottom: '4px' }}>{selectedStore.name}</h2>
+                <p className="caption">{selectedStore.category} · {selectedStore.road_address}</p>
+              </div>
+              <span className={`badge ${selectedStore.trust_score > 60 ? 'badge-verified' : 'badge-warning'}`}>
+                {selectedStore.trust_score > 60 ? '● 운영 중' : '확인 필요'}
+              </span>
+            </div>
 
-        <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', backgroundColor: 'rgba(173, 255, 47, 0.1)', border: '1px solid rgba(173, 255, 47, 0.2)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-            ✓ 3일 전 확인됨
-          </span>
-          <button style={{ background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer' }}>
-            제보하기
-          </button>
-        </div>
-      </article>
+            <div style={{ display: 'flex', gap: '8px', margin: '8px 0' }}>
+              <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+                신뢰도 {selectedStore.trust_score}점
+              </span>
+              {selectedStore.metadata?.source === 'kakao_api' && (
+                <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+                  카카오 검증됨
+                </span>
+              )}
+            </div>
 
-      <article className="liquid-glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>GS25 홍대중앙점</h3>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-              편의점
-            </span>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              <button className="ios-button primary" onClick={closeBottomSheet}>
+                닫기
+              </button>
+              <button 
+                className="ios-button" 
+                onClick={() => window.open(`https://map.kakao.com/link/to/${selectedStore.name},${selectedStore.latitude},${selectedStore.longitude}`, '_blank')}
+              >
+                길찾기
+              </button>
+            </div>
           </div>
-          <div style={{ textAlign: 'right', opacity: 0.7 }}>
-            <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: 'var(--text-secondary)', borderRadius: '50%', marginRight: '6px' }}></span>
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)' }}>확인 필요</span>
-          </div>
-        </div>
-        
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-          서울 마포구 홍익로 10
-        </p>
-
-        <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-            ? 45일 전 확인됨
-          </span>
-          <button style={{ background: 'var(--accent-neon-green)', border: 'none', color: '#000', padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>
-            제보하기
-          </button>
-        </div>
-      </article>
+        )}
+      </div>
     </>
   );
 }
