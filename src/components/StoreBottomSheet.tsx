@@ -113,9 +113,20 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
   const shareToKakao = (e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
-    if (!store || !(window as any).Kakao) return;
+    const kakao = (window as any).Kakao;
     
-    (window as any).Kakao.Share.sendDefault({
+    if (!store) return;
+    if (!kakao || !kakao.isInitialized()) {
+      setToastMsg('카카오톡 공유를 준비 중이에요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    
+    if (!kakao.Share) {
+      setToastMsg('공유 기능을 사용할 수 없는 환경이에요.');
+      return;
+    }
+    
+    kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
         title: `[24시나우] ${store.name}`,

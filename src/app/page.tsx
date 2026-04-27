@@ -26,6 +26,7 @@ function HomeContent() {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [requestGps, setRequestGps] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
   // Handle deep linking from URL (?store=uuid)
   useEffect(() => {
@@ -39,6 +40,7 @@ function HomeContent() {
         .then(({ data }) => {
           if (data) {
             setSelectedStore(data as Store);
+            setMapCenter({ lat: data.latitude, lng: data.longitude });
           }
         });
     }
@@ -93,6 +95,7 @@ function HomeContent() {
     <>
       <KakaoMap
         stores={stores}
+        center={mapCenter}
         onBoundsChange={handleBoundsChange}
         onMarkerClick={setSelectedStore}
         onMapClick={() => setSelectedStore(null)}

@@ -5,6 +5,7 @@ import type { Store, MapBounds } from '@/types/store';
 
 interface KakaoMapProps {
   stores?: Store[];
+  center?: { lat: number; lng: number } | null;
   onBoundsChange?: (bounds: MapBounds) => void;
   onMarkerClick?: (store: Store) => void;
   onMapClick?: () => void;
@@ -26,7 +27,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
-export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onLocationUpdate }: KakaoMapProps) {
+export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onLocationUpdate }: KakaoMapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -86,7 +87,15 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, o
     );
   }, [requestGps, mapLoaded]);
 
-  // 3. Render markers
+  // 3. Handle external center change (e.g., deep linking)
+  useEffect(() => {
+    if (!mapRef.current || !center) return;
+    const kakao = window.kakao;
+    const moveLatLng = new kakao.maps.LatLng(center.lat, center.lng);
+    mapRef.current.panTo(moveLatLng);
+  }, [center]);
+
+  // 4. Render markers
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return;
     const kakao = window.kakao;
