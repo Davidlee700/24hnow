@@ -7,7 +7,7 @@ import { useStores } from '@/hooks/useStores';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
 
-const FILTERS = ['카페', '편의점', '셀프세차장'];
+const FILTERS = ['카페', '편의점', '셀프세차장', 'PC방', '약국'];
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
   const el = e.currentTarget;
@@ -113,20 +113,20 @@ export default function Home() {
             ))}
           </div>
         )}
-
-        {/* 이 지역에서 검색 버튼 */}
-        {showSearchHere && (
-          <div className={`search-here-wrapper ${searchHideAnim ? 'hiding' : ''}`}>
-            <button
-              className="search-here-btn"
-              onClick={handleSearchHere}
-            >
-              여기서 찾기 🔍
-            </button>
-            <p className="search-hint">원하는 위치로 지도를 이동한 뒤 탭해보세요</p>
-          </div>
-        )}
       </div>
+
+      {/* 이 지역에서 검색 버튼 (하단 레이어) */}
+      {showSearchHere && !selectedStore && (
+        <div className={`search-here-wrapper ${searchHideAnim ? 'hiding' : ''}`}>
+          <button
+            className="search-here-btn"
+            onClick={handleSearchHere}
+          >
+            여기서 찾기 🔍
+          </button>
+          <p className="search-hint">원하는 위치로 지도를 이동한 뒤 탭해보세요</p>
+        </div>
+      )}
 
       {/* Empty State */}
       {searchedBounds && stores.length === 0 && !showSearchHere && (

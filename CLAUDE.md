@@ -1,4 +1,5 @@
 @AGENTS.md
+@RULES.md
 
 # 24시 나우 - 밤샘지도 | 프로젝트 가이드
 
@@ -40,6 +41,16 @@ src/
 - **데이터 패칭 로직은 `useStores` hook** — page.tsx는 UI 조합만 담당한다.
 - **마커는 CustomOverlay (DOM 요소)** — Kakao Maps API 호출 없음, 추가 과금 없음.
 - **인증 구현은 Supabase Auth** — 로그인/커뮤니티 추가 시 `supabase-server.ts` 별도 생성.
+
+---
+
+## 🚫 절대 규칙 (Absolute Rules)
+
+1. **배포의 절대권한**: Production Push는 반드시 사용자의 명시적인 승인 시에만 실행한다.
+2. **Apple Soul**: Apple HIG 최우선. 유리(Glass), 계층(Layer), 4배수 여백, 정중하고 간결한 한국어 페르소나.
+3. **무결한 모듈화**: Atomic Design 준수, 기능별 컴포넌트 분리, 중복 코드 금지.
+4. **물리적 interaction**: 0.1초 단위의 탄성(Elasticity) 있는 애니메이션 (Scale, Opacity, Blur).
+5. **데이터 보수성**: 불확실한 정보는 "정보 확인 중" 표기. 허위 데이터(Hallucination) 절대 금지.
 
 ---
 

@@ -20,6 +20,8 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
   '카페':       { bg: '#B07B40', emoji: '☕' },
   '편의점':     { bg: '#0A84FF', emoji: '🏪' },
   '셀프세차장': { bg: '#30D158', emoji: '🚗' },
+  'PC방':       { bg: '#5856D6', emoji: '🎮' },
+  '약국':       { bg: '#FF2D55', emoji: '💊' },
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
@@ -91,27 +93,38 @@ export default function KakaoMap({ stores = [], onBoundsChange, onMarkerClick, r
 
       const position = new kakao.maps.LatLng(store.latitude, store.longitude);
       const { bg, emoji } = CATEGORY_STYLE[store.category] ?? DEFAULT_STYLE;
-      const verified = store.trust_score > 60;
+      const isConfirmed = store.class_type === 'A';
+      const isEstimated = store.class_type === 'B';
 
       const el = document.createElement('div');
       el.style.cssText = `
-        width:36px;height:36px;background:${bg};border-radius:50%;
-        border:2px solid rgba(255,255,255,0.9);
-        box-shadow:0 2px 10px rgba(0,0,0,0.7)${verified ? `,0 0 12px ${bg}cc` : ''};
-        opacity:${verified ? 1 : 0.55};cursor:pointer;
+        width:40px;height:40px;
+        background:${isConfirmed ? bg : `rgba(25, 25, 25, 0.65)`};
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        border-radius:50%;
+        border:2px solid ${isConfirmed ? 'white' : 'rgba(255,255,255,0.4)'};
+        box-shadow:0 4px 12px rgba(0,0,0,0.6)${isConfirmed ? `, 0 0 15px ${bg}cc` : ''};
+        opacity:1;cursor:pointer;
         display:flex;align-items:center;justify-content:center;
-        font-size:18px;line-height:1;user-select:none;
-        filter:invert(1) hue-rotate(180deg) brightness(1.28) contrast(0.93) saturate(1.82);
-        transition:transform 0.18s cubic-bezier(0.34,1.56,0.64,1);
+        font-size:20px;line-height:1;user-select:none;
+        filter:invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1);
+        transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        z-index: ${isConfirmed ? '100' : '10'};
       `;
+      
+      // Class A 전용 펄스 애니메이션 (추가 CSS 필요)
+      if (isConfirmed) {
+        el.classList.add('marker-pulse');
+      }
+
       el.textContent = emoji;
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.35)';
+        el.style.transform = 'scale(1.3) translateY(-4px)';
         el.style.zIndex = '999';
       });
       el.addEventListener('mouseleave', () => {
         el.style.transform = 'scale(1)';
-        el.style.zIndex = '';
+        el.style.zIndex = isConfirmed ? '100' : '10';
       });
       el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
 

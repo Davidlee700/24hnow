@@ -76,26 +76,26 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
               <h2 className="title-1" style={{ marginBottom: '4px' }}>{store.name}</h2>
               <p className="caption">{store.category} · {store.road_address}</p>
             </div>
-            <span className={`badge ${store.trust_score > 60 ? 'badge-verified' : 'badge-warning'}`}>
-              {store.trust_score > 60
+            <span className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`}>
+              {store.class_type === 'A'
                 ? <><span className="status-dot" />운영 중</>
-                : '확인 필요'}
+                : store.class_type === 'C' ? '영업시간 확인 필요' : '정보 확인 중'}
             </span>
           </div>
 
           {/* Info chips */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontSize: '12px', background: 'rgba(48,209,88,0.1)', padding: '6px 12px', borderRadius: '8px', color: 'var(--accent-green)', fontWeight: 600 }}>
-              🕐 24시간 운영
+            <span style={{ fontSize: '12px', background: store.class_type === 'A' ? 'rgba(48,209,88,0.1)' : 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: store.class_type === 'A' ? 'var(--accent-green)' : 'var(--text-secondary)', fontWeight: 600 }}>
+              🕐 {store.class_type === 'A' ? '24시간 운영' : store.class_type === 'B' ? '24시간 운영 (추정)' : '시간 확인 필요'}
             </span>
+            {store.inference_note && (
+              <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', opacity: 0.8 }}>
+                💡 {store.inference_note}
+              </span>
+            )}
             <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
               신뢰도 {store.trust_score}점
             </span>
-            {store.last_verified_at && (
-              <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
-                {relativeTime(store.last_verified_at)}
-              </span>
-            )}
           </div>
 
           {/* Phone */}

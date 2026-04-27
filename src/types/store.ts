@@ -8,12 +8,15 @@ export interface Store {
   road_address: string;
   last_verified_at: string;
   tags?: string[];
+  class_type?: 'A' | 'B' | 'C' | 'UNKNOWN';
+  raw_hours?: string;
+  inference_note?: string;
   metadata: {
     phone?: string;
     place_url?: string;
     naver_place_url?: string;
     kakao_category_full?: string;
-    source?: 'kakao_api' | 'naver_api';
+    source?: string;
     kakao_id?: string;
   };
 }
