@@ -4,28 +4,22 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Store, MapBounds } from '@/types/store';
 
-export function useStores(bounds: MapBounds | null, category: string) {
+export function useStores(bounds: MapBounds | null, categories: string[]) {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
-  const [reportedStores, setReportedStores] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!bounds) return;
+    if (!bounds || categories.length === 0) return;
     setLoading(true);
 
-    let query = supabase
+    supabase
       .from('stores')
       .select('*')
       .gte('latitude', bounds.sw.lat)
       .lte('latitude', bounds.ne.lat)
       .gte('longitude', bounds.sw.lng)
-      .lte('longitude', bounds.ne.lng);
-
-    if (category !== '전체') {
-      query = query.eq('category', category);
-    }
-
-    query
+      .lte('longitude', bounds.ne.lng)
+      .in('category', categories)
       .order('trust_score', { ascending: false })
       .limit(100)
       .then(({ data, error }) => {
@@ -42,27 +36,7 @@ export function useStores(bounds: MapBounds | null, category: string) {
         }
         setLoading(false);
       });
-  }, [bounds, category]);
+  }, [bounds, categories.join(',')]);
 
-  async function reportStore(storeId: string, report: 'open' | 'closed') {
-    if (reportedStores.has(storeId)) return;
-
-    const store = stores.find(s => s.id === storeId);
-    if (!store) return;
-
-    const delta = report === 'open' ? 10 : -30;
-    const newScore = Math.max(0, Math.min(100, store.trust_score + delta));
-
-    await supabase
-      .from('stores')
-      .update({ trust_score: newScore, last_verified_at: new Date().toISOString() })
-      .eq('id', storeId);
-
-    setStores(prev =>
-      prev.map(s => s.id === storeId ? { ...s, trust_score: newScore } : s)
-    );
-    setReportedStores(prev => new Set(prev).add(storeId));
-  }
-
-  return { stores, loading, reportedStores, reportStore };
+  return { stores, loading };
 }

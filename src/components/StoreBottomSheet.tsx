@@ -1,13 +1,13 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import type { Store } from '@/types/store';
+import { useTagVotes } from '@/hooks/useTagVotes';
 
 interface Props {
   store: Store | null;
-  reportedStores: Set<string>;
   userLocation: { lat: number; lng: number } | null;
   onClose: () => void;
-  onReport: (storeId: string, report: 'open' | 'closed') => void;
 }
 
 function relativeTime(isoString: string): string {
@@ -17,7 +17,24 @@ function relativeTime(isoString: string): string {
   return `${days}일 전 확인됨`;
 }
 
-export default function StoreBottomSheet({ store, reportedStores, userLocation, onClose, onReport }: Props) {
+function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
+  const el = e.currentTarget;
+  el.classList.remove('tap-bounce');
+  void (el as HTMLElement).offsetWidth;
+  el.classList.add('tap-bounce');
+  el.addEventListener('animationend', () => el.classList.remove('tap-bounce'), { once: true });
+}
+
+export default function StoreBottomSheet({ store, userLocation, onClose }: Props) {
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { votes, vote, hasVoted, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
+
+  // Clear toast when store changes
+  useEffect(() => {
+    setToastMsg(null);
+  }, [store?.id]);
+
   const openDirections = () => {
     if (!store) return;
     const dest = `${encodeURIComponent(store.name)},${store.latitude},${store.longitude}`;
@@ -27,9 +44,29 @@ export default function StoreBottomSheet({ store, reportedStores, userLocation, 
     window.open(url, '_blank');
   };
 
+  const handleVote = async (e: React.MouseEvent<HTMLElement>, tag: string) => {
+    tapEffect(e);
+    e.currentTarget.classList.add('vote-glow-anim');
+    e.currentTarget.addEventListener('animationend', (ev) => {
+      (ev.target as HTMLElement).classList.remove('vote-glow-anim');
+    }, { once: true });
+
+    const msg = await vote(tag);
+    if (msg) {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToastMsg(msg);
+      toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+    }
+  };
+
   return (
-    <div className={`bottom-sheet ${store ? 'open' : ''}`}>
-      <div className="drag-handle" onClick={onClose}></div>
+    <div className={`bottom-sheet ${store ? 'open' : ''}`} style={{ position: 'absolute' }}>
+      {/* Toast notification */}
+      {toastMsg && (
+        <div className="vote-toast">{toastMsg}</div>
+      )}
+
+      <div className="drag-handle" onClick={onClose} />
 
       {store && (
         <div className="sheet-content">
@@ -45,7 +82,7 @@ export default function StoreBottomSheet({ store, reportedStores, userLocation, 
           </div>
 
           {/* Info chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '10px 0' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
               신뢰도 {store.trust_score}점
             </span>
@@ -54,20 +91,15 @@ export default function StoreBottomSheet({ store, reportedStores, userLocation, 
                 {relativeTime(store.last_verified_at)}
               </span>
             )}
-            {store.metadata?.kakao_category_full && (
-              <span style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)' }}>
-                {store.metadata.kakao_category_full}
-              </span>
-            )}
           </div>
 
           {/* Phone */}
           {store.metadata?.phone && (
             <a
               href={`tel:${store.metadata.phone}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 0', color: 'var(--accent-blue, #0a84ff)', fontSize: '15px', textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', color: 'var(--accent-blue)', fontSize: '15px', textDecoration: 'none' }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.09a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
               {store.metadata.phone}
@@ -75,44 +107,51 @@ export default function StoreBottomSheet({ store, reportedStores, userLocation, 
           )}
 
           {/* Map links */}
-          <div style={{ display: 'flex', gap: '8px', margin: '4px 0 12px' }}>
-            {store.metadata?.place_url && (
-              <a href={store.metadata.place_url} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                카카오맵 보기 →
-              </a>
-            )}
-            {store.metadata?.naver_place_url && (
-              <a href={store.metadata.naver_place_url} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                네이버지도 보기 →
-              </a>
-            )}
-          </div>
+          {(store.metadata?.place_url || store.metadata?.naver_place_url) && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {store.metadata.place_url && (
+                <a href={store.metadata.place_url} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                  카카오맵 →
+                </a>
+              )}
+              {store.metadata.naver_place_url && (
+                <a href={store.metadata.naver_place_url} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: '12px', background: 'var(--tertiary-bg)', padding: '6px 12px', borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                  네이버지도 →
+                </a>
+              )}
+            </div>
+          )}
 
-          {/* Report buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>정보 신고:</span>
-            <button
-              onClick={() => onReport(store.id, 'open')}
-              disabled={reportedStores.has(store.id)}
-              style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '8px', border: '1px solid #30D158', background: 'transparent', color: '#30D158', cursor: reportedStores.has(store.id) ? 'default' : 'pointer', opacity: reportedStores.has(store.id) ? 0.4 : 1 }}
-            >
-              ✓ 운영중
-            </button>
-            <button
-              onClick={() => onReport(store.id, 'closed')}
-              disabled={reportedStores.has(store.id)}
-              style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '8px', border: '1px solid #FF453A', background: 'transparent', color: '#FF453A', cursor: reportedStores.has(store.id) ? 'default' : 'pointer', opacity: reportedStores.has(store.id) ? 0.4 : 1 }}
-            >
-              ✕ 폐업
-            </button>
-          </div>
+          {/* Tag voting */}
+          {tags.length > 0 && (
+            <div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                {hasVoted ? '방문 정보가 반영됐어요 ✓' : '이 장소는 어떤가요?'}
+              </p>
+              <div className="tag-vote-grid">
+                {tags.map(tag => (
+                  <button
+                    key={tag}
+                    className="tag-vote-btn"
+                    disabled={hasVoted}
+                    onClick={(e) => handleVote(e, tag)}
+                  >
+                    <span>{tag}</span>
+                    {(votes[tag] ?? 0) > 0 && (
+                      <span className="tag-count">{votes[tag]}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="ios-button primary" onClick={onClose}>닫기</button>
-            <button className="ios-button" onClick={openDirections}>길찾기</button>
+            <button className="ios-button primary" onClick={(e) => { tapEffect(e); onClose(); }}>닫기</button>
+            <button className="ios-button" onClick={(e) => { tapEffect(e); openDirections(); }}>길찾기</button>
           </div>
         </div>
       )}
