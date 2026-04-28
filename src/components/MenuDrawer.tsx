@@ -40,11 +40,11 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast }: Props) {
               <span>로그인 / 내 프로필</span>
               <span className="menu-chevron">›</span>
             </div>
-            <div className="menu-item" onClick={() => { onClose(); onShowToast('Max님을 위한 멋진 아지트를 준비하고 있어요 🪄'); }}>
+            <div className="menu-item" onClick={() => { onClose(); onShowToast('나만의 아지트 저장 기능을 열심히 만들고 있어요 🪄'); }}>
               <span>내 아지트</span>
               <span className="coming-soon">준비 중</span>
             </div>
-            <div className="menu-item" onClick={() => { onClose(); onShowToast('Max님을 위한 심야 가이드를 열심히 만들고 있어요 🪄'); }}>
+            <div className="menu-item" onClick={() => { onClose(); onShowToast('심야 가이드를 열심히 만들고 있어요 🪄'); }}>
               <span>심야 가이드</span>
               <span className="coming-soon">준비 중</span>
             </div>

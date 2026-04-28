@@ -28,19 +28,22 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
     }
 
     query.then(({ data, error }) => {
-        if (!error && data) {
-          const deduped = (data as Store[]).filter((store, idx) =>
-            !data.slice(0, idx).some(
-              prev =>
-                prev.name === store.name &&
-                Math.abs(prev.latitude - store.latitude) < 0.0005 &&
-                Math.abs(prev.longitude - store.longitude) < 0.0005
-            )
-          );
-          setStores(deduped);
-        }
-        setLoading(false);
-      });
+      if (!error && data) {
+        const deduped = (data as Store[]).filter((store, idx) =>
+          !data.slice(0, idx).some(
+            prev =>
+              prev.name === store.name &&
+              Math.abs(prev.latitude - store.latitude) < 0.0005 &&
+              Math.abs(prev.longitude - store.longitude) < 0.0005
+          )
+        );
+        setStores(deduped);
+      } else if (error) {
+        console.error('[useStores] fetch error:', error.message);
+        setStores([]);
+      }
+      setLoading(false);
+    });
   }, [bounds, categories.join(','), tagFilter ?? '']);
 
   return { stores, loading };

@@ -39,19 +39,23 @@ function HomeContent() {
   // Handle deep linking from URL (?store=uuid)
   useEffect(() => {
     const storeId = searchParams.get('store');
-    if (storeId) {
-      supabase
-        .from('stores')
-        .select('*')
-        .eq('id', storeId)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setSelectedStore(data as Store);
-            setMapCenter({ lat: data.latitude, lng: data.longitude });
-          }
-        });
-    }
+    if (!storeId) return;
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', storeId)
+          .single();
+        if (data) {
+          setSelectedStore(data as Store);
+          setMapCenter({ lat: data.latitude, lng: data.longitude });
+        }
+      } catch {
+        showToast('링크의 매장 정보를 불러오지 못했어요.');
+      }
+    })();
   }, [searchParams]);
 
   // "이 지역에서 검색" logic

@@ -165,7 +165,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     
     if (!kakao.isInitialized()) {
       try {
-        kakao.init('267ae86d30c2a074fc1f69eb82b93c8f');
+        kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY ?? '');
       } catch (e) {
         setToastMsg('카카오 초기화에 실패했습니다. 도메인 설정을 확인해 주세요.');
         return;
@@ -197,16 +197,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           },
         },
       ],
-    });
-  };
-
-  const copyLink = (e: React.MouseEvent<HTMLElement>) => {
-    tapEffect(e);
-    const url = `https://24hnow.vercel.app/?store=${store?.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-      setToastMsg('공유 링크가 복사되었습니다! 🔗');
-      toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
     });
   };
 
