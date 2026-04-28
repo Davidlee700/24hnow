@@ -7,9 +7,10 @@ interface Props {
   onClose: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  onShowToast: (msg: string) => void;
 }
 
-export default function MenuDrawer({ isOpen, onClose, onOpenTerms, onOpenPrivacy }: Props) {
+export default function MenuDrawer({ isOpen, onClose, onOpenTerms, onOpenPrivacy, onShowToast }: Props) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -41,15 +42,15 @@ export default function MenuDrawer({ isOpen, onClose, onOpenTerms, onOpenPrivacy
               <span>로그인 / 내 프로필</span>
               <span className="menu-chevron">›</span>
             </div>
-            <div className="menu-item" onClick={onClose}>
+            <div className="menu-item" onClick={() => { onClose(); onShowToast('Max님을 위한 멋진 아지트를 준비하고 있어요 🪄'); }}>
               <span>내 아지트</span>
               <span className="coming-soon">준비 중</span>
             </div>
-            <div className="menu-item" onClick={onClose}>
+            <div className="menu-item" onClick={() => { onClose(); onShowToast('Max님을 위한 심야 가이드를 열심히 만들고 있어요 🪄'); }}>
               <span>심야 가이드</span>
               <span className="coming-soon">준비 중</span>
             </div>
-            <div className="menu-item" onClick={onClose}>
+            <div className="menu-item" onClick={() => { onClose(); onShowToast('제휴 및 수정 문의는 준비 중이에요. 곧 만나요! 🪄'); }}>
               <span>제휴 및 수정 문의</span>
               <span className="menu-chevron">›</span>
             </div>

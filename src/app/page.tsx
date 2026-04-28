@@ -32,6 +32,12 @@ function HomeContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   // Handle deep linking from URL (?store=uuid)
   useEffect(() => {
@@ -204,10 +210,17 @@ function HomeContent() {
         onClose={() => setIsMenuOpen(false)} 
         onOpenTerms={() => setIsTermsOpen(true)}
         onOpenPrivacy={() => setIsPrivacyOpen(true)}
+        onShowToast={showToast}
       />
 
       <LegalModal isOpen={isTermsOpen} type="terms" onClose={() => setIsTermsOpen(false)} />
       <LegalModal isOpen={isPrivacyOpen} type="privacy" onClose={() => setIsPrivacyOpen(false)} />
+
+      {toastMessage && (
+        <div className="global-toast">
+          {toastMessage}
+        </div>
+      )}
     </>
   );
 }

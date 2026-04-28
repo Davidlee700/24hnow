@@ -770,3 +770,29 @@ body, html {
   line-height: 1.6;
   letter-spacing: -0.022em;
 }
+
+/* ─── Global Toast (Apple Style) ──────────────────────── */
+.global-toast {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+  white-space: nowrap;
+  animation: slide-up-fade 0.3s ease-out forwards;
+}
+
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
