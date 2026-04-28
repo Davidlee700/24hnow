@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import { ALL_REGIONS } from './regions';
+import { ALL_REGIONS, SEOUL, GYEONGGI, INCHEON } from './regions';
 
 dotenv.config({ path: '.env.local' });
 
@@ -15,7 +15,28 @@ const NAVER_SECRET = process.env.NAVER_SEARCH_CLIENT_SECRET;
 const NCP_ID = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
 const NCP_SECRET = process.env.NAVER_CLIENT_SECRET;
 
-const TARGET_REGIONS = ALL_REGIONS;
+const args = process.argv.slice(2);
+const isRemainingOnly = args.includes('--remaining');
+const startArg = args.find(a => a.startsWith('--start='));
+const startRegion = startArg ? startArg.split('=')[1] : null;
+
+let TARGET_REGIONS = ALL_REGIONS;
+
+if (isRemainingOnly) {
+  const excludeRegions = [...SEOUL, ...GYEONGGI, ...INCHEON];
+  TARGET_REGIONS = ALL_REGIONS.filter(r => !excludeRegions.includes(r));
+  console.log(`ℹ️ 수도권(서울/경기/인천)을 제외한 잔여 ${TARGET_REGIONS.length}개 지역 수집 진행`);
+}
+
+if (startRegion) {
+  const startIndex = TARGET_REGIONS.indexOf(startRegion);
+  if (startIndex !== -1) {
+    TARGET_REGIONS = TARGET_REGIONS.slice(startIndex);
+    console.log(`ℹ️ ${startRegion}부터 수집 시작 (${TARGET_REGIONS.length}개 지역 남음)`);
+  } else {
+    console.warn(`⚠️ 시작 지역 [${startRegion}]을 찾을 수 없습니다. 처음부터 진행합니다.`);
+  }
+}
 
 const TARGET_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방'];
 

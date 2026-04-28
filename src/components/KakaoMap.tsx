@@ -12,6 +12,7 @@ interface KakaoMapProps {
   requestGps?: boolean;
   onGpsComplete?: () => void;
   onLocationUpdate?: (lat: number, lng: number) => void;
+  dimmed?: boolean;
 }
 
 declare global {
@@ -27,7 +28,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
-export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onLocationUpdate }: KakaoMapProps) {
+export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onLocationUpdate, dimmed }: KakaoMapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -149,5 +150,5 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
     });
   }, [stores, mapLoaded]);
 
-  return <div ref={mapElement} className="map-container" />;
+  return <div ref={mapElement} className={`map-container${dimmed ? ' dimmed' : ''}`} />;
 }

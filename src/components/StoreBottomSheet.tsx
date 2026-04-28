@@ -47,6 +47,27 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
   el.addEventListener('animationend', () => el.classList.remove('tap-bounce'), { once: true });
 }
 
+const FRANCHISE_DEFAULTS: Record<string, string[]> = {
+  '스타벅스': ['여유로운 충전 환경', '몰입을 돕는 분위기'],
+  '투썸': ['여유로운 충전 환경'],
+  '이디야': ['몰입을 돕는 분위기'],
+  '메가커피': ['몰입을 돕는 분위기'],
+  'CU': ['상비약 완비'],
+  'GS25': ['상비약 완비'],
+  '세븐일레븐': ['상비약 완비'],
+  '이마트24': ['상비약 완비'],
+  '미니스톱': ['상비약 완비'],
+};
+
+function getDefaultTags(name: string, tags: string[]): Set<string> {
+  for (const [franchise, defaults] of Object.entries(FRANCHISE_DEFAULTS)) {
+    if (name.includes(franchise)) {
+      return new Set(defaults.filter(d => tags.includes(d)));
+    }
+  }
+  return new Set();
+}
+
 export default function StoreBottomSheet({ store, userLocation, onClose }: Props) {
   const [showFullHours, setShowFullHours] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
@@ -54,6 +75,8 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [reportComment, setReportComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkFilling, setBookmarkFilling] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
@@ -63,6 +86,8 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setIsReporting(false);
     setReportType(null);
     setReportComment('');
+    setBookmarked(false);
+    setBookmarkFilling(false);
   }, [store?.id]);
 
   const openDirections = () => {
@@ -72,6 +97,16 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
       ? `https://map.kakao.com/link/from/현재위치,${userLocation.lat},${userLocation.lng}/to/${dest}`
       : `https://map.kakao.com/link/to/${dest}`;
     window.open(url, '_blank');
+  };
+
+  const handleBookmark = (e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    setBookmarked(true);
+    setBookmarkFilling(true);
+    setTimeout(() => setBookmarkFilling(false), 400);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMsg('로그인 후 저장 기능을 이용할 수 있어요');
+    toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleVote = async (e: React.MouseEvent<HTMLElement>, tag: string) => {
@@ -198,11 +233,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                       <h2 className="title-1" style={{ letterSpacing: '-0.5px', margin: 0 }}>{store.name}</h2>
-                      <button 
-                        onClick={copyLink}
-                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      <button
+                        onClick={handleBookmark}
+                        className={`bookmark-btn${bookmarkFilling ? ' filling' : ''}`}
+                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '15px' }}
                       >
-                        🔗
+                        {bookmarked ? '🧡' : '🤍'}
                       </button>
                     </div>
                     <p className="caption" style={{ color: 'var(--text-secondary)' }}>
@@ -245,8 +281,8 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                   {store.class_type !== 'A' && !hasVoted && (
                     <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-                      <button className="ios-button" style={{ flex: 1, padding: '8px', fontSize: '13px', background: 'rgba(48,209,88,0.15)', color: '#30D158' }} onClick={(e) => handleVote(e, '24시간 운영')}>24시 맞아요 👍</button>
-                      <button className="ios-button" style={{ flex: 1, padding: '8px', fontSize: '13px', background: 'rgba(255,69,58,0.15)', color: '#FF453A' }} onClick={() => setIsReporting(true)}>아니에요 👎</button>
+                      <button className="confirm-vote-btn yes" onClick={(e) => handleVote(e, '24시간 운영')}>👍 맞아요</button>
+                      <button className="confirm-vote-btn no" onClick={() => setIsReporting(true)}>👎 아니에요</button>
                     </div>
                   )}
                 </div>
@@ -255,30 +291,50 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 500 }}>
                     {hasVoted ? '방문 정보가 반영되었습니다 ✓' : '이곳의 밤샘 분위기는 어떤가요?'}
                   </p>
-                  <div className="tag-vote-grid">
-                    {tags.map(tag => (
-                      <button
-                        key={tag}
-                        className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
-                        disabled={hasVoted}
-                        onClick={(e) => handleVote(e, tag)}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {tag}
-                          {(votes[tag] ?? 0) > 0 && <span style={{ opacity: 0.6, fontSize: '10px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                  {(() => {
+                    const totalVotes = tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0);
+                    const isEmptyState = totalVotes === 0 && !hasVoted;
+                    const defaultTags = store ? getDefaultTags(store.name, tags) : new Set<string>();
+                    return (
+                      <>
+                        {isEmptyState && (
+                          <div className="empty-tag-cta">
+                            <p>아직 이곳의 밤샘 정보가 없어요</p>
+                            <span>첫 번째로 분위기를 알려주시겠어요?</span>
+                          </div>
+                        )}
+                        <div className="tag-vote-grid">
+                          {tags.map(tag => {
+                            const isDefault = isEmptyState && defaultTags.has(tag);
+                            return (
+                              <button
+                                key={tag}
+                                className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
+                                disabled={hasVoted}
+                                onClick={(e) => handleVote(e, tag)}
+                              >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  {tag}
+                                  {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
+                                  {(votes[tag] ?? 0) > 0 && <span style={{ opacity: 0.6, fontSize: '10px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <button 
-                    className="ios-button" 
-                    style={{ flex: 1, background: '#FEE500', color: '#191919', fontWeight: 600 }} 
+                  <button
+                    className="ios-button"
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', border: '0.5px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     onClick={shareToKakao}
                   >
-                    💬 카톡 공유
+                    <span style={{ color: '#FEE500', fontSize: '18px', lineHeight: 1 }}>💬</span>
+                    카톡 공유
                   </button>
                   <button className="ios-button primary" style={{ flex: 1.5 }} onClick={openDirections}>길찾기</button>
                 </div>

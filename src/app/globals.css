@@ -83,6 +83,12 @@ body, html {
   z-index: 1;
   /* Night map: invert tiles + restore hue, slight brightness reduction */
   filter: invert(1) hue-rotate(180deg) brightness(0.78) contrast(1.08) saturate(0.55);
+  transform-origin: center center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
+}
+.map-container.dimmed {
+  transform: scale(0.94);
+  filter: invert(1) hue-rotate(180deg) brightness(0.35) contrast(1.0) saturate(0.3) blur(6px);
 }
 
 /* Floating Top Area (Logo + Filters) */
@@ -157,12 +163,13 @@ body, html {
 }
 
 .filter-chip.active {
-  background: var(--text-primary);
-  color: var(--bg-black);
-  border-color: var(--text-primary);
+  background: rgba(173, 255, 47, 0.12);
+  color: var(--accent-neon);
+  border-color: rgba(173, 255, 47, 0.45);
+  box-shadow: 0 0 12px rgba(173, 255, 47, 0.15);
 }
 .filter-chip.active:hover {
-  background: #f0f0f0;
+  background: rgba(173, 255, 47, 0.18);
 }
 
 /* Floating GPS Button */
@@ -396,7 +403,7 @@ body, html {
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.65);
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s, color 0.15s;
@@ -518,4 +525,248 @@ body, html {
   pointer-events: none;
   z-index: 30;
   box-shadow: var(--shadow-lg);
+}
+
+/* ─── 24시 확인 투표 버튼 (아웃라인 스타일) ──────────── */
+.confirm-vote-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.confirm-vote-btn:active { transform: scale(0.95); }
+.confirm-vote-btn.yes {
+  border-color: rgba(48, 209, 88, 0.45);
+  color: #30D158;
+}
+.confirm-vote-btn.yes:hover { background: rgba(48, 209, 88, 0.1); }
+.confirm-vote-btn.no {
+  border-color: rgba(255, 69, 58, 0.45);
+  color: #FF453A;
+}
+.confirm-vote-btn.no:hover { background: rgba(255, 69, 58, 0.1); }
+
+/* ─── 빈 태그 유도 블록 ──────────────────────────────── */
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1; }
+}
+.empty-tag-cta {
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 18px 20px;
+  text-align: center;
+  animation: gentle-pulse 2.8s ease-in-out infinite;
+  margin-bottom: 12px;
+}
+.empty-tag-cta p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.empty-tag-cta span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ─── 북마크 버튼 ────────────────────────────────────── */
+@keyframes bookmark-fill {
+  0%   { transform: scale(0.75); }
+  55%  { transform: scale(1.35); }
+  100% { transform: scale(1.0); }
+}
+.bookmark-btn { transition: opacity 0.15s; }
+.bookmark-btn:active { opacity: 0.7; }
+.bookmark-btn.filling { animation: bookmark-fill 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* ─── 메뉴 드로어 ────────────────────────────────────── */
+.menu-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.menu-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(28, 28, 30, 0.96);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top: 0.5px solid var(--border-light);
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  padding: 8px 24px calc(24px + var(--safe-area-inset-bottom));
+  z-index: 26;
+}
+.menu-drag-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--text-tertiary);
+  border-radius: var(--radius-full);
+  margin: 12px auto 20px;
+}
+.menu-item {
+  padding: 15px 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-primary);
+  border-bottom: 0.5px solid var(--border-extra-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-item:active { opacity: 0.6; }
+.menu-item.legal {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.menu-divider {
+  height: 0.5px;
+  background: var(--border-light);
+  margin: 8px 0;
+}
+.coming-soon {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.menu-chevron {
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+/* ─── Legal Modal (Apple Style) ───────────────────────── */
+.legal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.legal-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  z-index: 101;
+  box-shadow: var(--shadow-lg);
+}
+
+.legal-header {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.legal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  margin-bottom: 8px;
+}
+
+.legal-header p {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  letter-spacing: -0.022em;
+}
+
+.legal-close-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.legal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.legal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legal-accordion {
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.legal-accordion:last-child {
+  border-bottom: none;
+}
+
+.legal-summary {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none; /* Hide default arrow */
+}
+
+.legal-summary::-webkit-details-marker {
+  display: none; /* Hide default arrow in Safari */
+}
+
+.legal-arrow {
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.legal-accordion[open] .legal-arrow {
+  transform: rotate(90deg);
+}
+
+.legal-content {
+  padding-top: 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  letter-spacing: -0.022em;
 }

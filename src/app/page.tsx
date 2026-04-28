@@ -4,6 +4,8 @@ import { useState, useRef, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import KakaoMap from '@/components/KakaoMap';
 import StoreBottomSheet from '@/components/StoreBottomSheet';
+import MenuDrawer from '@/components/MenuDrawer';
+import LegalModal from '@/components/LegalModal';
 import { useStores } from '@/hooks/useStores';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
@@ -27,6 +29,9 @@ function HomeContent() {
   const [requestGps, setRequestGps] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
   // Handle deep linking from URL (?store=uuid)
   useEffect(() => {
@@ -108,12 +113,23 @@ function HomeContent() {
         requestGps={requestGps}
         onGpsComplete={() => setRequestGps(false)}
         onLocationUpdate={(lat, lng) => setUserLocation({ lat, lng })}
+        dimmed={isMenuOpen}
       />
 
       {/* Top bar */}
       <div className="floating-top">
-        <div className="floating-search-bar">
+        <div className="floating-search-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div className="brand-title">24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span></div>
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          >
+            <svg width="20" height="16" viewBox="0 0 20 16" fill="currentColor">
+              <rect x="0" y="0" width="20" height="1.8" rx="0.9"/>
+              <rect x="0" y="7.1" width="20" height="1.8" rx="0.9"/>
+              <rect x="0" y="14.2" width="20" height="1.8" rx="0.9"/>
+            </svg>
+          </button>
         </div>
 
         {/* 1차 필터 */}
@@ -182,6 +198,16 @@ function HomeContent() {
         userLocation={userLocation}
         onClose={() => setSelectedStore(null)}
       />
+
+      <MenuDrawer 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        onOpenTerms={() => setIsTermsOpen(true)}
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
+      />
+
+      <LegalModal isOpen={isTermsOpen} type="terms" onClose={() => setIsTermsOpen(false)} />
+      <LegalModal isOpen={isPrivacyOpen} type="privacy" onClose={() => setIsPrivacyOpen(false)} />
     </>
   );
 }
