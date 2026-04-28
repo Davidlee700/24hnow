@@ -47,8 +47,13 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         setMapLoaded(true);
 
         kakao.maps.event.addListener(mapRef.current, 'idle', () => {
-          if (!onBoundsChange) return;
           const level = mapRef.current.getLevel();
+          const labels = document.querySelectorAll('.marker-label');
+          labels.forEach((l: any) => {
+            l.style.opacity = level <= 4 ? '1' : '0';
+          });
+
+          if (!onBoundsChange) return;
           if (level > 7) {
             onBoundsChange(null);
             return;
@@ -123,40 +128,66 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
 
       const el = document.createElement('div');
       el.style.cssText = `
-        width:42px;height:42px;
+        width:40px;height:40px;
         background:${isConfirmed ? bg : 'rgba(255, 255, 255, 0.95)'};
         border-radius:50%;
-        border:2.5px solid white;
+        border:2px solid white;
         box-shadow:0 0 15px ${isConfirmed ? bg : 'rgba(255,255,255,0.4)'}, 0 6px 15px rgba(0,0,0,0.8);
         opacity:1;cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:22px;line-height:1;user-select:none;
-        /* 인버전된 다크 맵에서 튀어나와 보이도록 밝기/채도 대폭 강화 */
         filter:invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2);
         transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
         z-index: ${isConfirmed ? '100' : '10'};
+        position: relative;
       `;
+      
+      el.textContent = emoji;
+
+      const label = document.createElement('div');
+      label.className = 'marker-label';
+      label.style.cssText = `
+        position: absolute;
+        bottom: -28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(20, 20, 20, 0.88);
+        backdrop-filter: blur(8px);
+        border: 0.5px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 4px 8px;
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        opacity: ${mapRef.current?.getLevel() <= 4 ? '1' : '0'};
+        transition: opacity 0.2s ease;
+        filter: invert(1) hue-rotate(180deg);
+      `;
+      label.textContent = store.name;
+      el.appendChild(label);
       
       if (isConfirmed) {
         el.classList.add('marker-pulse');
       }
 
-      el.textContent = emoji;
+      const overlay = new kakao.maps.CustomOverlay({ position, content: el, yAnchor: 0.5, xAnchor: 0.5, clickable: true });
+      overlay.setMap(mapRef.current);
+      markersRef.current.push(overlay);
+
       el.addEventListener('mouseenter', () => {
         el.style.transform = 'scale(1.25) translateY(-6px)';
-        el.style.zIndex = '999';
+        overlay.setZIndex(999);
         el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.8) contrast(1.3) saturate(2.2)';
       });
       el.addEventListener('mouseleave', () => {
         el.style.transform = 'scale(1)';
-        el.style.zIndex = isConfirmed ? '100' : '10';
+        overlay.setZIndex(isConfirmed ? 100 : 10);
         el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2)';
       });
       el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
-
-      const overlay = new kakao.maps.CustomOverlay({ position, content: el, yAnchor: 0.5, xAnchor: 0.5, clickable: true });
-      overlay.setMap(mapRef.current);
-      markersRef.current.push(overlay);
     });
   }, [stores, mapLoaded]);
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Store } from '@/types/store';
 import { useTagVotes } from '@/hooks/useTagVotes';
+import StoreReviews from './StoreReviews';
 
 interface Props {
   store: Store | null;
@@ -93,8 +94,21 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [bookmarkFilling, setBookmarkFilling] = useState(false);
   const [hasVotedHours, setHasVotedHours] = useState(false);
   const [showBadgeInfo, setShowBadgeInfo] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const badgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
+
+  const toggleBadgeInfo = () => {
+    setShowBadgeInfo(prev => {
+      const next = !prev;
+      if (next) {
+        if (badgeTimer.current) clearTimeout(badgeTimer.current);
+        badgeTimer.current = setTimeout(() => setShowBadgeInfo(false), 1500);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     setToastMsg(null);
@@ -105,6 +119,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setBookmarked(false);
     setBookmarkFilling(false);
     setShowBadgeInfo(false);
+    setIsExpanded(false);
     setHasVotedHours(!!localStorage.getItem(`voted_hours_${store?.id}`));
   }, [store?.id]);
 
@@ -119,9 +134,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
   const handleBookmark = (e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
-    setBookmarked(true);
-    setBookmarkFilling(true);
-    setTimeout(() => setBookmarkFilling(false), 400);
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToastMsg('로그인 후 저장 기능을 이용할 수 있어요');
     toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
@@ -199,11 +211,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           webUrl: `https://24hnow.vercel.app/?store=${store.id}`,
         },
       },
-      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`, webUrl: `https://24hnow.vercel.app/?store=${store.id}` } }],
+      buttons: [{ title: '지금 바로 확인', link: { mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`, webUrl: `https://24hnow.vercel.app/?store=${store.id}` } }],
     });
   };
 
-  const trustPct = Math.round((store?.trust_score ?? 0) * 100);
+  const rawScore = store?.trust_score ?? 0;
+  const trustPct = Math.min(100, Math.round(rawScore > 1 ? rawScore : rawScore * 100));
 
   return (
     <AnimatePresence>
@@ -213,14 +226,26 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           className="bottom-sheet open"
           style={{ position: 'absolute', zIndex: 1000 }}
           initial={{ y: '100%' }}
-          animate={{ y: 0 }}
+          animate={isExpanded ? { y: -380 } : { y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           drag="y"
-          dragConstraints={{ top: 0 }}
+          dragConstraints={{ top: isExpanded ? -380 : 0, bottom: 0 }}
           dragElastic={0.15}
           onDragEnd={(_, info) => {
-            if (info.offset.y > 100 || info.velocity.y > 500) onClose();
+            if (isExpanded) {
+              if (info.offset.y > 100) {
+                setIsExpanded(false);
+              } else if (info.offset.y > 300) {
+                onClose();
+              }
+            } else {
+              if (info.offset.y < -50) {
+                setIsExpanded(true);
+              } else if (info.offset.y > 100) {
+                onClose();
+              }
+            }
           }}
         >
           {toastMsg && <div className="vote-toast">{toastMsg}</div>}
@@ -260,7 +285,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       <div style={{ position: 'relative' }}>
                         <button
                           className="badge-info-btn"
-                          onClick={() => setShowBadgeInfo(v => !v)}
+                          onClick={toggleBadgeInfo}
                         >ⓘ</button>
                         {showBadgeInfo && (
                           <div className="badge-popover">
@@ -353,6 +378,11 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                         </>
                       );
                     })()}
+                    
+                    {/* 확장 상태(2단계)일 때만 추가 노출되는 댓글 영역 */}
+                    {isExpanded && (
+                      <StoreReviews storeId={store.id} availableTags={tags} />
+                    )}
                   </div>
                 )}
 

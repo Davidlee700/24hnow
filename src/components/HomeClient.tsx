@@ -1,0 +1,270 @@
+'use client';
+
+import { useState, useRef, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import KakaoMap from '@/components/KakaoMap';
+import StoreBottomSheet from '@/components/StoreBottomSheet';
+import MenuDrawer from '@/components/MenuDrawer';
+import { useStores } from '@/hooks/useStores';
+import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
+import type { Store, MapBounds } from '@/types/store';
+import { supabase } from '@/lib/supabase';
+
+const FILTERS = ['카페', '셀프세차장', '약국', 'PC방', '편의점'];
+
+function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
+  const el = e.currentTarget;
+  el.classList.remove('tap-bounce');
+  void (el as HTMLElement).offsetWidth;
+  el.classList.add('tap-bounce');
+  el.addEventListener('animationend', () => el.classList.remove('tap-bounce'), { once: true });
+}
+
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const [activeFilter, setActiveFilter] = useState<string>('카페');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [requestGps, setRequestGps] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Handle deep linking from URL (?store=uuid)
+  useEffect(() => {
+    const storeId = searchParams.get('store');
+    if (!storeId) return;
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', storeId)
+          .single();
+        if (data) {
+          setSelectedStore(data as Store);
+          setMapCenter({ lat: data.latitude, lng: data.longitude });
+        }
+      } catch {
+        showToast('링크의 매장 정보를 불러오지 못했어요.');
+      }
+    })();
+  }, [searchParams]);
+
+  // "이 지역에서 검색" logic
+  const pendingBoundsRef = useRef<MapBounds | null>(null);
+  const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
+  const [showSearchHere, setShowSearchHere] = useState(false);
+  const [searchHideAnim, setSearchHideAnim] = useState(false);
+  const [showZoomHint, setShowZoomHint] = useState(false);
+
+  const handleBoundsChange = useCallback((bounds: MapBounds | null) => {
+    if (!bounds) {
+      setShowSearchHere(false);
+      setShowZoomHint(true);
+      return;
+    }
+    setShowZoomHint(false);
+    pendingBoundsRef.current = bounds;
+    setShowSearchHere(true);
+    setSearchHideAnim(false);
+  }, []);
+
+  const handleSearchHere = (e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    setSearchHideAnim(true);
+    setTimeout(() => {
+      setShowSearchHere(false);
+      setSearchHideAnim(false);
+      if (pendingBoundsRef.current) setSearchedBounds(pendingBoundsRef.current);
+    }, 180);
+  };
+
+  const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined);
+
+  // Ensure the selectedStore is ALWAYS in the markers list, even if filtered out or outside bounds
+  const stores = [...fetchedStores];
+  if (selectedStore && !stores.some(s => s.id === selectedStore.id)) {
+    stores.push(selectedStore);
+  }
+
+  const selectFilter = (filter: string, e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    setActiveFilter(filter);
+    setActiveTag(null);
+    setSelectedStore(null);
+    if (pendingBoundsRef.current) {
+      setSearchedBounds(pendingBoundsRef.current);
+      setShowSearchHere(false);
+    }
+  };
+
+  const toggleTag = (tag: string, e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    setActiveTag(prev => prev === tag ? null : tag);
+    setSelectedStore(null);
+    if (pendingBoundsRef.current) {
+      setSearchedBounds(pendingBoundsRef.current);
+      setShowSearchHere(false);
+    }
+  };
+
+  const categoryTags = CATEGORY_TAGS[activeFilter] ?? [];
+
+  return (
+    <>
+      <KakaoMap
+        stores={stores}
+        center={mapCenter}
+        onBoundsChange={handleBoundsChange}
+        onMarkerClick={setSelectedStore}
+        onMapClick={() => setSelectedStore(null)}
+        requestGps={requestGps}
+        onGpsComplete={() => setRequestGps(false)}
+        onLocationUpdate={(lat, lng) => setUserLocation({ lat, lng })}
+        dimmed={isMenuOpen}
+      />
+
+      {/* Top bar */}
+      <div className="floating-top">
+        {/* 통합 네비게이션 바: 브랜드 | 카테고리 스크롤 | 메뉴 */}
+        <div className="floating-search-bar">
+          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
+          <div className="nav-divider" />
+          <div className="nav-categories">
+            {FILTERS.map(filter => (
+              <button
+                key={filter}
+                className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
+                onClick={(e) => selectFilter(filter, e)}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+          <button className="nav-menu-btn" onClick={() => setIsMenuOpen(true)}>
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
+              <rect x="0" y="0" width="18" height="1.6" rx="0.8"/>
+              <rect x="0" y="6.2" width="18" height="1.6" rx="0.8"/>
+              <rect x="0" y="12.4" width="18" height="1.6" rx="0.8"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* 2차 필터 */}
+        {categoryTags.length > 0 && (
+          <div className="sub-filter-container">
+            {categoryTags.map(tag => (
+              <button
+                key={tag}
+                className={`sub-filter-chip ${activeTag === tag ? 'active' : ''}`}
+                onClick={(e) => toggleTag(tag, e)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 줌아웃 안내 */}
+      {showZoomHint && !selectedStore && (
+        <div className="zoom-hint-banner">
+          <span style={{ fontSize: '20px' }}>🗺️</span>
+          <div>
+            <p>지도를 좀 더 확대해보세요</p>
+            <span>확대하면 주변 24시간 매장을 찾을 수 있어요</span>
+          </div>
+        </div>
+      )}
+
+      {/* 이 지역에서 검색 버튼 (하단 레이어) */}
+      {showSearchHere && !selectedStore && (
+        <div className={`search-here-wrapper ${searchHideAnim ? 'hiding' : ''}`}>
+          <button
+            className="search-here-btn"
+            onClick={handleSearchHere}
+          >
+            여기서 찾기 🔍
+          </button>
+          <p className="search-hint">원하는 위치로 지도를 이동한 뒤 탭해보세요</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {searchedBounds && stores.length === 0 && !showSearchHere && (
+        <div className="empty-state">
+          <p>이 근처엔 24시간 운영 매장이 없어요</p>
+          <span>지도를 이동해 다른 지역을 확인해보세요</span>
+        </div>
+      )}
+
+      {/* GPS button */}
+      <div
+        className={`gps-button ${requestGps ? 'active' : ''}`}
+        onClick={(e) => { tapEffect(e); setRequestGps(true); }}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+
+      <StoreBottomSheet
+        store={selectedStore}
+        userLocation={userLocation}
+        onClose={() => setSelectedStore(null)}
+      />
+
+      <MenuDrawer 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        onShowToast={showToast}
+        user={user}
+      />
+
+      {toastMessage && (
+        <div className="global-toast">
+          {toastMessage}
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function HomeClient() {
+  return (
+    <Suspense fallback={
+      <div className="loading-overlay">
+        <div className="loading-spinner-wrapper">
+          <div className="loading-logo">
+            24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span>
+          </div>
+          <div className="loading-pulse-dot" />
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
+  );
+}

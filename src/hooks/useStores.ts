@@ -10,6 +10,7 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
 
   useEffect(() => {
     if (!bounds || categories.length === 0) return;
+    let ignore = false;
     setLoading(true);
 
     let query = supabase
@@ -28,6 +29,7 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
     }
 
     query.then(({ data, error }) => {
+      if (ignore) return;
       if (!error && data) {
         const deduped = (data as Store[]).filter((store, idx) =>
           !data.slice(0, idx).some(
@@ -44,6 +46,10 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
       }
       setLoading(false);
     });
+
+    return () => {
+      ignore = true;
+    };
   }, [bounds, categories.join(','), tagFilter ?? '']);
 
   return { stores, loading };

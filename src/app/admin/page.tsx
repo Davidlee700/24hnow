@@ -291,7 +291,7 @@ export default function AdminPage() {
           <main className="admin-main">
 
             {/* 콘텐츠 에디터 */}
-            {selectedView !== 'messages' && (
+            {selectedView !== 'messages' && selectedView !== 'users' && (
               <div className="admin-editor">
                 {editingPage ? (
                   <>
