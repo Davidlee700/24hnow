@@ -94,14 +94,14 @@ body, html {
 /* Floating Top Area (Logo + Filters) */
 .floating-top {
   position: absolute;
-  top: var(--safe-area-inset-top);
+  top: max(var(--safe-area-inset-top), 12px);
   left: 0;
   width: 100%;
   z-index: 10;
-  padding: 0 16px;
+  padding: 12px 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   pointer-events: none; /* Let clicks pass through empty space */
 }
 
@@ -190,11 +190,11 @@ body, html {
   font-weight: 600;
 }
 
-/* Floating GPS Button */
+/* Floating GPS Button — nav bar 아래 고정, 2차 필터와 겹치지 않는 위치 */
 .gps-button {
   position: absolute;
   right: 16px;
-  top: calc(var(--safe-area-inset-top) + 60px);
+  top: calc(max(var(--safe-area-inset-top), 12px) + 12px + 44px + 10px + 36px + 14px);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -395,19 +395,14 @@ body, html {
   line-height: 1.4;
 }
 
-/* ─── 2차 필터 ───────────────────────────────────────── */
+/* ─── 2차 필터 — 개별 glass pill ─────────────────────── */
 .sub-filter-container {
   display: flex;
-  gap: 2px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
-  background: var(--material-thick);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 0.5px solid var(--border-light);
-  border-radius: var(--radius-full);
-  padding: 4px 6px;
-  box-shadow: var(--shadow-sm);
+  background: transparent;
+  padding: 0;
 }
 .sub-filter-container::-webkit-scrollbar { display: none; }
 
@@ -415,19 +410,27 @@ body, html {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
-  background: transparent;
-  border: none;
+  padding: 6px 14px;
+  background: var(--material-thick);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid var(--border-light);
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.65);
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.sub-filter-chip:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: var(--tertiary-bg);
 }
 .sub-filter-chip.active {
-  background: rgba(173, 255, 47, 0.15);
+  background: rgba(173, 255, 47, 0.14);
+  border-color: rgba(173, 255, 47, 0.4);
   color: var(--accent-neon);
 }
 

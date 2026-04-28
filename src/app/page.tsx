@@ -56,20 +56,14 @@ function HomeContent() {
 
   // "이 지역에서 검색" logic
   const pendingBoundsRef = useRef<MapBounds | null>(null);
-  const isFirstBoundsRef = useRef(true);
   const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
   const [showSearchHere, setShowSearchHere] = useState(false);
   const [searchHideAnim, setSearchHideAnim] = useState(false);
 
   const handleBoundsChange = useCallback((bounds: MapBounds) => {
     pendingBoundsRef.current = bounds;
-    if (isFirstBoundsRef.current) {
-      isFirstBoundsRef.current = false;
-      setSearchedBounds(bounds);
-    } else {
-      setShowSearchHere(true);
-      setSearchHideAnim(false);
-    }
+    setShowSearchHere(true);
+    setSearchHideAnim(false);
   }, []);
 
   const handleSearchHere = (e: React.MouseEvent<HTMLElement>) => {
@@ -95,12 +89,20 @@ function HomeContent() {
     setActiveFilter(filter);
     setActiveTag(null);
     setSelectedStore(null);
+    if (pendingBoundsRef.current) {
+      setSearchedBounds(pendingBoundsRef.current);
+      setShowSearchHere(false);
+    }
   };
 
   const toggleTag = (tag: string, e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
     setActiveTag(prev => prev === tag ? null : tag);
     setSelectedStore(null);
+    if (pendingBoundsRef.current) {
+      setSearchedBounds(pendingBoundsRef.current);
+      setShowSearchHere(false);
+    }
   };
 
   const categoryTags = CATEGORY_TAGS[activeFilter] ?? [];

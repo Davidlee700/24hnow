@@ -137,10 +137,17 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
       const data = await res.json();
       if (data.success) {
         setToastMsg(data.message);
-        setIsReporting(false);
+      } else {
+        setToastMsg('제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
       }
+      setIsReporting(false);
+      setReportType(null);
+      setReportComment('');
     } catch (err) {
       setToastMsg('제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      setIsReporting(false);
+      setReportType(null);
+      setReportComment('');
     } finally {
       setIsSubmitting(false);
     }
