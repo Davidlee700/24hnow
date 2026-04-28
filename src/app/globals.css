@@ -796,3 +796,43 @@ body, html {
   from { opacity: 0; transform: translate(-50%, 20px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* ─── Loading Overlay (Apple Style) ───────────────────── */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-black);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-spinner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-logo {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.loading-pulse-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-neon);
+  box-shadow: 0 0 12px var(--accent-neon);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 12px var(--accent-neon); }
+  50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 24px var(--accent-neon); }
+}

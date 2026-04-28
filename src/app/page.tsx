@@ -227,7 +227,16 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="loading-overlay">지도를 불러오고 있어요...</div>}>
+    <Suspense fallback={
+      <div className="loading-overlay">
+        <div className="loading-spinner-wrapper">
+          <div className="loading-logo">
+            24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span>
+          </div>
+          <div className="loading-pulse-dot" />
+        </div>
+      </div>
+    }>
       <HomeContent />
     </Suspense>
   );
