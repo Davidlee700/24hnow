@@ -1660,3 +1660,54 @@ body, html {
 }
 
 .admin-reply-btn:hover { background: rgba(10,132,255,0.2); }
+
+/* ── Zoom hint banner ── */
+.zoom-hint-banner {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: rgba(20,20,20,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  z-index: 30;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.zoom-hint-banner p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.zoom-hint-banner span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── Report form nav ── */
+.report-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.report-back-btn {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  letter-spacing: -0.3px;
+}

@@ -77,6 +77,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkFilling, setBookmarkFilling] = useState(false);
+  const [hasVotedHours, setHasVotedHours] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
@@ -88,6 +89,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setReportComment('');
     setBookmarked(false);
     setBookmarkFilling(false);
+    setHasVotedHours(!!localStorage.getItem(`voted_hours_${store?.id}`));
   }, [store?.id]);
 
   const openDirections = () => {
@@ -115,6 +117,24 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     if (msg) {
       if (toastTimer.current) clearTimeout(toastTimer.current);
       setToastMsg(msg);
+      toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+    }
+  };
+
+  const handleHoursVote = async (e: React.MouseEvent<HTMLElement>) => {
+    tapEffect(e);
+    if (!store || hasVotedHours) return;
+    setHasVotedHours(true);
+    localStorage.setItem(`voted_hours_${store.id}`, '1');
+    const res = await fetch('/api/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_id: store.id, tag: '24시간 운영' }),
+    });
+    const data = await res.json();
+    if (data.message) {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToastMsg(data.message);
       toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
     }
   };
@@ -276,9 +296,9 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     </div>
                   )}
 
-                  {store.class_type !== 'A' && !hasVoted && (
+                  {store.class_type !== 'A' && !hasVotedHours && (
                     <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-                      <button className="confirm-vote-btn yes" onClick={(e) => handleVote(e, '24시간 운영')}>👍 맞아요</button>
+                      <button className="confirm-vote-btn yes" onClick={handleHoursVote}>👍 맞아요</button>
                       <button className="confirm-vote-btn no" onClick={() => setIsReporting(true)}>👎 아니에요</button>
                     </div>
                   )}
@@ -339,9 +359,10 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
               </>
             ) : (
               <div className="reporting-form" style={{ animation: 'fade-in 0.3s ease-out' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h2 className="title-1">정보 수정 제보</h2>
-                  <button className="caption" style={{ background: 'none', border: 'none', color: 'var(--accent-blue)' }} onClick={() => setIsReporting(false)}>취소</button>
+                <div className="report-nav-header">
+                  <button className="report-back-btn" onClick={() => setIsReporting(false)}>‹ 뒤로</button>
+                  <h2 className="title-1" style={{ margin: 0 }}>정보 수정 제보</h2>
+                  <div style={{ width: 52 }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>

@@ -6,7 +6,7 @@ import type { Store, MapBounds } from '@/types/store';
 interface KakaoMapProps {
   stores?: Store[];
   center?: { lat: number; lng: number } | null;
-  onBoundsChange?: (bounds: MapBounds) => void;
+  onBoundsChange?: (bounds: MapBounds | null) => void;
   onMarkerClick?: (store: Store) => void;
   onMapClick?: () => void;
   requestGps?: boolean;
@@ -48,6 +48,11 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
 
         kakao.maps.event.addListener(mapRef.current, 'idle', () => {
           if (!onBoundsChange) return;
+          const level = mapRef.current.getLevel();
+          if (level > 7) {
+            onBoundsChange(null);
+            return;
+          }
           const b = mapRef.current.getBounds();
           onBoundsChange({
             sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
@@ -75,6 +80,11 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         mapRef.current.setCenter(locPosition);
         onLocationUpdate?.(lat, lng);
         setTimeout(() => {
+          const level = mapRef.current.getLevel();
+          if (level > 7) {
+            onBoundsChange?.(null);
+            return;
+          }
           const b = mapRef.current.getBounds();
           onBoundsChange?.({
             sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },

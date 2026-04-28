@@ -60,7 +60,7 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast }: Props) {
               <span className="footer-dot">·</span>
               <a href="/terms" target="_blank" rel="noopener noreferrer">이용약관</a>
               <span className="footer-dot">·</span>
-              <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700 }}>개인정보처리방침</a>
               <span className="footer-dot">·</span>
               <a href="/contact" target="_blank" rel="noopener noreferrer">문의하기</a>
             </div>

@@ -63,8 +63,15 @@ function HomeContent() {
   const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
   const [showSearchHere, setShowSearchHere] = useState(false);
   const [searchHideAnim, setSearchHideAnim] = useState(false);
+  const [showZoomHint, setShowZoomHint] = useState(false);
 
-  const handleBoundsChange = useCallback((bounds: MapBounds) => {
+  const handleBoundsChange = useCallback((bounds: MapBounds | null) => {
+    if (!bounds) {
+      setShowSearchHere(false);
+      setShowZoomHint(true);
+      return;
+    }
+    setShowZoomHint(false);
     pendingBoundsRef.current = bounds;
     setShowSearchHere(true);
     setSearchHideAnim(false);
@@ -129,7 +136,7 @@ function HomeContent() {
       <div className="floating-top">
         {/* 통합 네비게이션 바: 브랜드 | 카테고리 스크롤 | 메뉴 */}
         <div className="floating-search-bar">
-          <div className="brand-title">24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span></div>
+          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
           <div className="nav-divider" />
           <div className="nav-categories">
             {FILTERS.map(filter => (
@@ -166,6 +173,17 @@ function HomeContent() {
           </div>
         )}
       </div>
+
+      {/* 줌아웃 안내 */}
+      {showZoomHint && !selectedStore && (
+        <div className="zoom-hint-banner">
+          <span style={{ fontSize: '20px' }}>🗺️</span>
+          <div>
+            <p>지도를 좀 더 확대해보세요</p>
+            <span>확대하면 주변 24시간 매장을 찾을 수 있어요</span>
+          </div>
+        </div>
+      )}
 
       {/* 이 지역에서 검색 버튼 (하단 레이어) */}
       {showSearchHere && !selectedStore && (
