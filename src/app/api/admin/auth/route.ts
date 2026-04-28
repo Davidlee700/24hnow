@@ -13,15 +13,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Admin not configured' }, { status: 500 });
   }
 
-  if (password !== adminPassword) {
+  if (password.trim() !== adminPassword.trim()) {
     return NextResponse.json({ error: '비밀번호가 올바르지 않습니다.' }, { status: 401 });
   }
 
-  return NextResponse.json({ token: makeToken(adminPassword) });
+  const trimmed = adminPassword.trim();
+  return NextResponse.json({ token: makeToken(trimmed) });
 }
 
 export function validateToken(req: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
   if (!adminPassword) return false;
   const token = req.headers.get('authorization')?.replace('Bearer ', '');
   return token === makeToken(adminPassword);
