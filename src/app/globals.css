@@ -1148,7 +1148,8 @@ body, html {
 .admin-gate-btn:disabled { opacity: 0.5; }
 
 .admin-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--bg-black);
   color: var(--text-primary);
   display: flex;
