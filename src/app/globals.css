@@ -884,6 +884,17 @@ body, html {
 }
 
 /* ─── Legal Pages (Apple Style) ───────────────────────── */
+
+/* 콘텐츠 페이지에서 body/app-wrapper 스크롤 잠금 해제 */
+html:has(.legal-page) { overflow-y: auto; }
+body:has(.legal-page) { overflow-y: auto; }
+
+.app-wrapper:has(.legal-page) {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
 .legal-page {
   max-width: 600px;
   margin: 0 auto;
