@@ -141,6 +141,7 @@ function HomeContent() {
         onMapClick={() => setSelectedStore(null)}
         requestGps={requestGps}
         onGpsComplete={() => setRequestGps(false)}
+        onGpsError={showToast}
         onLocationUpdate={(lat, lng) => setUserLocation({ lat, lng })}
         dimmed={isMenuOpen}
       />

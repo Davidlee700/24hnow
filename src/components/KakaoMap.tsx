@@ -11,6 +11,7 @@ interface KakaoMapProps {
   onMapClick?: () => void;
   requestGps?: boolean;
   onGpsComplete?: () => void;
+  onGpsError?: (msg: string) => void;
   onLocationUpdate?: (lat: number, lng: number) => void;
   dimmed?: boolean;
 }
@@ -28,7 +29,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
-export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onLocationUpdate, dimmed }: KakaoMapProps) {
+export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onGpsError, onLocationUpdate, dimmed }: KakaoMapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -98,7 +99,17 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         }, 300);
         onGpsComplete?.();
       },
-      (err) => { console.warn('GPS Error:', err); onGpsComplete?.(); },
+      (err) => {
+        console.warn('GPS Error:', err);
+        if (err.code === 1) { // PERMISSION_DENIED
+          const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          const msg = isMobile 
+            ? "위치 권한이 꺼져 있어요. 브라우저 설정에서 위치 권한을 '허용'으로 변경해 주세요."
+            : "위치 권한이 꺼져 있어요. 주소창 옆 자물쇠 아이콘을 눌러 위치 권한을 허용해 주세요.";
+          onGpsError?.(msg);
+        }
+        onGpsComplete?.();
+      },
       { enableHighAccuracy: true, timeout: 5000 }
     );
   }, [requestGps, mapLoaded]);
