@@ -26,7 +26,18 @@ interface ContactMessage {
   created_at: string;
 }
 
-type SelectedView = 'notice' | 'terms' | 'privacy' | 'messages';
+interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  is_banned: boolean;
+  is_withdrawn: boolean;
+  admin_memo: string;
+  created_at: string;
+}
+
+type SelectedView = 'notice' | 'terms' | 'privacy' | 'messages' | 'users';
 
 const NAV_CONTENT: { slug: SelectedView; label: string }[] = [
   { slug: 'notice', label: '공지사항' },
@@ -47,6 +58,8 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('admin_token');
@@ -69,11 +82,20 @@ export default function AdminPage() {
     }
   }, []);
 
+  const fetchUsers = useCallback(async (t: string) => {
+    const res = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${t}` } });
+    if (res.ok) {
+      const data = await res.json();
+      setUsers(data.users ?? []);
+    }
+  }, []);
+
   useEffect(() => {
     if (!token) return;
     fetchPages(token);
     fetchMessages(token);
-  }, [token, fetchPages, fetchMessages]);
+    fetchUsers(token);
+  }, [token, fetchPages, fetchMessages, fetchUsers]);
 
   // Sync editingPage when pages load or view changes
   useEffect(() => {
@@ -255,6 +277,13 @@ export default function AdminPage() {
                 문의 내역
                 {unreadCount > 0 && <span className="admin-badge">{unreadCount}</span>}
               </button>
+              <button
+                className={`admin-nav-item${selectedView === 'users' ? ' active' : ''}`}
+                onClick={() => handleSelectView('users')}
+              >
+                <span className="admin-nav-dot" />
+                회원 관리
+              </button>
             </div>
           </aside>
 
@@ -399,6 +428,135 @@ export default function AdminPage() {
                 ) : (
                   <div className="admin-empty-hint">
                     <p>문의를 선택하면 내용이 표시됩니다.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {selectedView === 'users' && (
+              <div className="admin-messages-panel">
+                <div className="admin-message-list">
+                  <p className="admin-message-list-title">
+                    전체 회원 <span>{users.length}명</span>
+                  </p>
+                  {users.length === 0 && (
+                    <p className="admin-empty-hint-text">가입된 회원이 없어요.</p>
+                  )}
+                  {users.map(u => (
+                    <button
+                      key={u.id}
+                      className={`admin-message-item${u.is_banned ? ' unread' : ''}${selectedUser?.id === u.id ? ' active' : ''}`}
+                      onClick={() => setSelectedUser(u)}
+                    >
+                      <div className="admin-msg-top">
+                        <span className="admin-msg-name">{u.full_name}</span>
+                        {u.is_banned && <span className="admin-msg-dot" style={{ backgroundColor: '#FF453A' }} />}
+                      </div>
+                      <span className="admin-msg-preview">{u.email}</span>
+                      <span className="admin-msg-date">
+                        {new Date(u.created_at).toLocaleDateString('ko-KR')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedUser ? (
+                  <div className="admin-message-detail">
+                    <div className="admin-msg-detail-header">
+                      {selectedUser.avatar_url ? (
+                        <img src={selectedUser.avatar_url} alt={selectedUser.full_name} className="admin-msg-detail-avatar" style={{ objectFit: 'cover' }} />
+                      ) : (
+                        <div className="admin-msg-detail-avatar">
+                          {selectedUser.full_name.slice(0, 1)}
+                        </div>
+                      )}
+                      <div>
+                        <h2>{selectedUser.full_name}</h2>
+                        <span className="admin-msg-email">{selectedUser.email}</span>
+                      </div>
+                      <span className="admin-msg-detail-date">
+                        가입일: {new Date(selectedUser.created_at).toLocaleString('ko-KR')}
+                      </span>
+                    </div>
+
+                    <div className="admin-field" style={{ marginTop: '20px' }}>
+                      <label>회원별 메모</label>
+                      <textarea
+                        value={selectedUser.admin_memo || ''}
+                        onChange={e => setSelectedUser({ ...selectedUser, admin_memo: e.target.value })}
+                        placeholder="회원에 대한 메모를 남겨주세요."
+                        rows={4}
+                      />
+                      <button 
+                        className="admin-save-btn" 
+                        style={{ alignSelf: 'flex-end', marginTop: '8px' }}
+                        onClick={async () => {
+                          const res = await fetch('/api/admin/users', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                            body: JSON.stringify({ id: selectedUser.id, admin_memo: selectedUser.admin_memo }),
+                          });
+                          if (res.ok) {
+                            setSaveMsg('메모가 저장되었습니다.');
+                            setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, admin_memo: selectedUser.admin_memo } : u));
+                            setTimeout(() => setSaveMsg(null), 3000);
+                          }
+                        }}
+                      >
+                        메모 저장
+                      </button>
+                    </div>
+
+                    <div className="confidence-divider" style={{ margin: '20px 0' }} />
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button
+                        className="confirm-vote-btn no"
+                        style={{ flex: 'none', width: '120px', padding: '12px' }}
+                        onClick={async () => {
+                          const newStatus = !selectedUser.is_banned;
+                          const res = await fetch('/api/admin/users', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                            body: JSON.stringify({ id: selectedUser.id, is_banned: newStatus }),
+                          });
+                          if (res.ok) {
+                            setSaveMsg(newStatus ? '제재 처리되었습니다.' : '제재가 해제되었습니다.');
+                            setSelectedUser({ ...selectedUser, is_banned: newStatus });
+                            setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, is_banned: newStatus } : u));
+                            setTimeout(() => setSaveMsg(null), 3000);
+                          }
+                        }}
+                      >
+                        {selectedUser.is_banned ? '제재 해제' : '활동 제재'}
+                      </button>
+
+                      <button
+                        className="confirm-vote-btn no"
+                        style={{ flex: 'none', width: '120px', padding: '12px', borderColor: '#FF453A', color: '#FF453A' }}
+                        onClick={async () => {
+                          if (confirm('정말 탈퇴 처리하시겠습니까?')) {
+                            const res = await fetch('/api/admin/users', {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({ id: selectedUser.id, is_withdrawn: true }),
+                            });
+                            if (res.ok) {
+                              setSaveMsg('탈퇴 처리되었습니다.');
+                              setSelectedUser(null);
+                              setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
+                              setTimeout(() => setSaveMsg(null), 3000);
+                            }
+                          }
+                        }}
+                      >
+                        탈퇴 처리
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="admin-empty-hint">
+                    <p>회원을 선택하면 상세 정보가 표시됩니다.</p>
                   </div>
                 )}
               </div>

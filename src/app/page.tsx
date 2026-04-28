@@ -30,6 +30,19 @@ function HomeContent() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -227,6 +240,7 @@ function HomeContent() {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)} 
         onShowToast={showToast}
+        user={user}
       />
 
       {toastMessage && (

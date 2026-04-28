@@ -1939,3 +1939,79 @@ body:has(.legal-page) { overflow-y: auto; }
 }
 
 .report-text-btn:hover { color: var(--text-secondary); }
+
+/* ─── Kakao Login & Profile (Apple Style) ─────────────── */
+.login-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.kakao-login-btn {
+  width: 100%;
+  background: #FEE500;
+  color: #000000;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.2s;
+}
+
+.kakao-login-btn:active {
+  transform: scale(0.98);
+}
+
+.kakao-logo-svg {
+  flex-shrink: 0;
+}
+
+.menu-profile {
+  padding: 8px 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-email {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
