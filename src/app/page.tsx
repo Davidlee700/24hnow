@@ -5,13 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import KakaoMap from '@/components/KakaoMap';
 import StoreBottomSheet from '@/components/StoreBottomSheet';
 import MenuDrawer from '@/components/MenuDrawer';
-import LegalModal from '@/components/LegalModal';
 import { useStores } from '@/hooks/useStores';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
 import { supabase } from '@/lib/supabase';
 
-const FILTERS = ['카페', '편의점', '셀프세차장', 'PC방', '약국'];
+const FILTERS = ['카페', '셀프세차장', '약국', 'PC방', '편의점'];
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
   const el = e.currentTarget;
@@ -30,8 +29,6 @@ function HomeContent() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -124,34 +121,31 @@ function HomeContent() {
 
       {/* Top bar */}
       <div className="floating-top">
-        <div className="floating-search-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        {/* 통합 네비게이션 바: 브랜드 | 카테고리 스크롤 | 메뉴 */}
+        <div className="floating-search-bar">
           <div className="brand-title">24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span></div>
-          <button
-            onClick={() => setIsMenuOpen(true)}
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-          >
-            <svg width="20" height="16" viewBox="0 0 20 16" fill="currentColor">
-              <rect x="0" y="0" width="20" height="1.8" rx="0.9"/>
-              <rect x="0" y="7.1" width="20" height="1.8" rx="0.9"/>
-              <rect x="0" y="14.2" width="20" height="1.8" rx="0.9"/>
+          <div className="nav-divider" />
+          <div className="nav-categories">
+            {FILTERS.map(filter => (
+              <button
+                key={filter}
+                className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
+                onClick={(e) => selectFilter(filter, e)}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+          <button className="nav-menu-btn" onClick={() => setIsMenuOpen(true)}>
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
+              <rect x="0" y="0" width="18" height="1.6" rx="0.8"/>
+              <rect x="0" y="6.2" width="18" height="1.6" rx="0.8"/>
+              <rect x="0" y="12.4" width="18" height="1.6" rx="0.8"/>
             </svg>
           </button>
         </div>
 
-        {/* 1차 필터 */}
-        <div className="filter-container">
-          {FILTERS.map(filter => (
-            <div
-              key={filter}
-              className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
-              onClick={(e) => selectFilter(filter, e)}
-            >
-              {filter}
-            </div>
-          ))}
-        </div>
-
-        {/* 2차 필터: 카테고리 태그 */}
+        {/* 2차 필터 */}
         {categoryTags.length > 0 && (
           <div className="sub-filter-container">
             {categoryTags.map(tag => (
@@ -208,13 +202,8 @@ function HomeContent() {
       <MenuDrawer 
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)} 
-        onOpenTerms={() => setIsTermsOpen(true)}
-        onOpenPrivacy={() => setIsPrivacyOpen(true)}
         onShowToast={showToast}
       />
-
-      <LegalModal isOpen={isTermsOpen} type="terms" onClose={() => setIsTermsOpen(false)} />
-      <LegalModal isOpen={isPrivacyOpen} type="privacy" onClose={() => setIsPrivacyOpen(false)} />
 
       {toastMessage && (
         <div className="global-toast">

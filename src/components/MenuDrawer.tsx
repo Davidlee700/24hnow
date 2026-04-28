@@ -5,12 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onOpenTerms: () => void;
-  onOpenPrivacy: () => void;
   onShowToast: (msg: string) => void;
 }
 
-export default function MenuDrawer({ isOpen, onClose, onOpenTerms, onOpenPrivacy, onShowToast }: Props) {
+export default function MenuDrawer({ isOpen, onClose, onShowToast }: Props) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -55,15 +53,16 @@ export default function MenuDrawer({ isOpen, onClose, onOpenTerms, onOpenPrivacy
               <span className="menu-chevron">›</span>
             </div>
 
-            <div className="menu-divider" style={{ margin: '8px 0' }} />
+            <div className="menu-divider" style={{ margin: '16px 0 8px' }} />
 
-            <div className="menu-item legal" onClick={() => { onClose(); onOpenTerms(); }}>
-              <span>이용약관</span>
-              <span className="menu-chevron">›</span>
-            </div>
-            <div className="menu-item legal" onClick={() => { onClose(); onOpenPrivacy(); }}>
-              <span>개인정보처리방침</span>
-              <span className="menu-chevron">›</span>
+            <div className="menu-footer">
+              <a href="/notice" target="_blank" rel="noopener noreferrer">공지사항</a>
+              <span className="footer-dot">·</span>
+              <a href="/terms" target="_blank" rel="noopener noreferrer">이용약관</a>
+              <span className="footer-dot">·</span>
+              <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>
+              <span className="footer-dot">·</span>
+              <a href="/contact" target="_blank" rel="noopener noreferrer">문의하기</a>
             </div>
           </motion.div>
         </>
