@@ -27,16 +27,32 @@ function getTodayHours(rawHours?: string): string {
   if (!rawHours) return '24시간 운영 (추정)';
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   const today = days[new Date().getDay()];
-  
   const match = rawHours.match(new RegExp(`${today}: (\\d{4})-(\\d{4})`));
-  if (match) {
-    const start = formatApiTime(match[1]);
-    const end = formatApiTime(match[2]);
-    return `오늘(${today})은 ${start} - ${end}`;
-  }
-  
-  if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return `오늘(${today})은 24시간 운영`;
+  if (match) return `오늘(${today}) ${formatApiTime(match[1])} - ${formatApiTime(match[2])}`;
+  if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return `오늘(${today}) 24시간 운영`;
   return '영업시간 확인 필요';
+}
+
+function calcDistance(user: { lat: number; lng: number }, store: { latitude: number; longitude: number }): string {
+  const R = 6371;
+  const dLat = (store.latitude - user.lat) * Math.PI / 180;
+  const dLng = (store.longitude - user.lng) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(user.lat * Math.PI / 180) * Math.cos(store.latitude * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  if (d < 0.15) return '바로 근처';
+  if (d < 1.5) return `도보 ${Math.round(d / 0.067)}분`;
+  return `차로 ${Math.round(d / 0.4)}분`;
+}
+
+function relativeTime(dateStr?: string): string {
+  if (!dateStr) return '';
+  const h = Math.floor((Date.now() - new Date(dateStr).getTime()) / 3600000);
+  if (h < 1) return '방금 확인됨';
+  if (h < 24) return `${h}시간 전 확인`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? '어제 확인' : `${d}일 전 확인`;
 }
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
@@ -61,9 +77,7 @@ const FRANCHISE_DEFAULTS: Record<string, string[]> = {
 
 function getDefaultTags(name: string, tags: string[]): Set<string> {
   for (const [franchise, defaults] of Object.entries(FRANCHISE_DEFAULTS)) {
-    if (name.includes(franchise)) {
-      return new Set(defaults.filter(d => tags.includes(d)));
-    }
+    if (name.includes(franchise)) return new Set(defaults.filter(d => tags.includes(d)));
   }
   return new Set();
 }
@@ -78,6 +92,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkFilling, setBookmarkFilling] = useState(false);
   const [hasVotedHours, setHasVotedHours] = useState(false);
+  const [showBadgeInfo, setShowBadgeInfo] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
@@ -89,6 +104,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setReportComment('');
     setBookmarked(false);
     setBookmarkFilling(false);
+    setShowBadgeInfo(false);
     setHasVotedHours(!!localStorage.getItem(`voted_hours_${store?.id}`));
   }, [store?.id]);
 
@@ -143,31 +159,20 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     tapEffect(e);
     if (!store || !reportType) return;
     setIsSubmitting(true);
-    
     try {
       const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          store_id: store.id,
-          report_type: reportType,
-          comment: reportComment
-        })
+        body: JSON.stringify({ store_id: store.id, report_type: reportType, comment: reportComment }),
       });
       const data = await res.json();
-      if (data.success) {
-        setToastMsg(data.message);
-      } else {
-        setToastMsg('제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
-      }
+      setToastMsg(data.success ? data.message : '제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
       setIsReporting(false);
       setReportType(null);
       setReportComment('');
-    } catch (err) {
+    } catch {
       setToastMsg('제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
       setIsReporting(false);
-      setReportType(null);
-      setReportComment('');
     } finally {
       setIsSubmitting(false);
     }
@@ -177,26 +182,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     tapEffect(e);
     if (!store) return;
     const kakao = (window as any).Kakao;
-    
-    if (!kakao) {
-      setToastMsg('카카오 SDK를 불러오는 중이에요. 1~2초 후 다시 시도해 주세요.');
-      return;
-    }
-    
+    if (!kakao) { setToastMsg('카카오 SDK를 불러오는 중이에요. 1~2초 후 다시 시도해 주세요.'); return; }
     if (!kakao.isInitialized()) {
-      try {
-        kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY ?? '');
-      } catch (e) {
-        setToastMsg('카카오 초기화에 실패했습니다. 도메인 설정을 확인해 주세요.');
-        return;
-      }
+      try { kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY ?? ''); }
+      catch { setToastMsg('카카오 초기화에 실패했습니다.'); return; }
     }
-    
-    if (!kakao.Share) {
-      setToastMsg('공유 기능을 사용할 수 없는 환경이에요.');
-      return;
-    }
-    
+    if (!kakao.Share) { setToastMsg('공유 기능을 사용할 수 없는 환경이에요.'); return; }
     kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -208,17 +199,11 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           webUrl: `https://24hnow.vercel.app/?store=${store.id}`,
         },
       },
-      buttons: [
-        {
-          title: '지도에서 보기',
-          link: {
-            mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`,
-            webUrl: `https://24hnow.vercel.app/?store=${store.id}`,
-          },
-        },
-      ],
+      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`, webUrl: `https://24hnow.vercel.app/?store=${store.id}` } }],
     });
   };
+
+  const trustPct = Math.round((store?.trust_score ?? 0) * 100);
 
   return (
     <AnimatePresence>
@@ -235,9 +220,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           dragConstraints={{ top: 0 }}
           dragElastic={0.15}
           onDragEnd={(_, info) => {
-            if (info.offset.y > 100 || info.velocity.y > 500) {
-              onClose();
-            }
+            if (info.offset.y > 100 || info.velocity.y > 500) onClose();
           }}
         >
           {toastMsg && <div className="vote-toast">{toastMsg}</div>}
@@ -246,48 +229,68 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           <div className="sheet-content">
             {!isReporting ? (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <h2 className="title-1" style={{ letterSpacing: '-0.5px', margin: 0 }}>{store.name}</h2>
-                      <button
-                        onClick={handleBookmark}
-                        className={`bookmark-btn${bookmarkFilling ? ' filling' : ''}`}
-                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '15px' }}
-                      >
-                        {bookmarked ? '🧡' : '🤍'}
-                      </button>
-                    </div>
-                    <p className="caption" style={{ color: 'var(--text-secondary)' }}>
-                      {store.category} · {store.road_address}
+                {/* ── Layer 1: Identity ── */}
+                <div className="sheet-layer sheet-identity">
+                  <div className="sheet-identity-main">
+                    <h2 className="sheet-store-name">{store.name}</h2>
+                    <p className="sheet-store-meta">
+                      {store.category}
+                      {userLocation && ` · ${calcDistance(userLocation, store)}`}
                     </p>
                   </div>
-                  <div className={`badge ${store.class_type === 'A' ? 'badge-verified' : 'badge-warning'}`} style={{ padding: '6px 12px', borderRadius: '20px' }}>
-                    {store.class_type === 'A' ? <><span className="status-dot" />운영 중</> : '정보 확인 중'}
-                  </div>
+                  <button
+                    className={`bookmark-btn${bookmarkFilling ? ' filling' : ''}`}
+                    onClick={handleBookmark}
+                    style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}
+                  >
+                    {bookmarked ? '🧡' : '🤍'}
+                  </button>
                 </div>
 
-                <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-                  <div 
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-                    onClick={() => setShowFullHours(!showFullHours)}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '20px' }}>🕐</span>
-                      <div>
-                        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {getTodayHours(store.raw_hours)}
-                        </p>
-                        {store.class_type !== 'A' && (
-                          <p style={{ fontSize: '12px', color: 'var(--accent-orange)', marginTop: '2px' }}>💡 {store.inference_note}</p>
+                {/* ── Layer 2: Confidence ── */}
+                <div className="sheet-layer sheet-confidence">
+                  <div className="confidence-header">
+                    <div className="confidence-status">
+                      {store.class_type === 'A'
+                        ? <><span className="status-dot" /><span>운영 확인됨</span></>
+                        : <><span>🔍</span><span>정보 확인 중</span></>
+                      }
+                    </div>
+                    {store.class_type !== 'A' && (
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          className="badge-info-btn"
+                          onClick={() => setShowBadgeInfo(v => !v)}
+                        >ⓘ</button>
+                        {showBadgeInfo && (
+                          <div className="badge-popover">
+                            네이버·카카오 데이터 기반으로 24시간 운영이 추정되나, 아직 커뮤니티 검증이 충분하지 않아요.
+                          </div>
                         )}
                       </div>
-                    </div>
-                    <span style={{ transform: showFullHours ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>▼</span>
+                    )}
                   </div>
-                  
+
+                  <div className="trust-bar-row">
+                    <div className="trust-bar-track">
+                      <div className="trust-bar-fill" style={{ width: `${trustPct}%` }} />
+                    </div>
+                    <span className="trust-score-label">신뢰도 {trustPct}%</span>
+                  </div>
+                  {store.last_verified_at && (
+                    <p className="last-verified-label">{relativeTime(store.last_verified_at)}</p>
+                  )}
+
+                  <div className="confidence-divider" />
+
+                  <button className="hours-toggle" onClick={() => setShowFullHours(!showFullHours)}>
+                    <span>🕐</span>
+                    <span className="hours-toggle-text">{getTodayHours(store.raw_hours)}</span>
+                    <span className={`hours-chevron${showFullHours ? ' open' : ''}`}>▾</span>
+                  </button>
+
                   {showFullHours && store.raw_hours && (
-                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    <div className="hours-detail">
                       {store.raw_hours.split(' ').map((h, i) => {
                         const parts = h.match(/(.*): (\d{4})-(\d{4})/);
                         if (parts) return <p key={i}>{parts[1]}: {formatApiTime(parts[2])} - {formatApiTime(parts[3])}</p>;
@@ -296,66 +299,75 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     </div>
                   )}
 
+                  {store.class_type !== 'A' && store.inference_note && (
+                    <p className="inference-note">💡 {store.inference_note}</p>
+                  )}
+
                   {store.class_type !== 'A' && !hasVotedHours && (
-                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                    <div className="hours-vote-row">
                       <button className="confirm-vote-btn yes" onClick={handleHoursVote}>👍 맞아요</button>
                       <button className="confirm-vote-btn no" onClick={() => setIsReporting(true)}>👎 아니에요</button>
                     </div>
                   )}
                 </div>
 
-                <div style={{ marginBottom: '24px' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 500 }}>
-                    {hasVoted ? '방문 정보가 반영되었습니다 ✓' : '이곳의 밤샘 분위기는 어떤가요?'}
-                  </p>
-                  {(() => {
-                    const totalVotes = tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0);
-                    const isEmptyState = totalVotes === 0 && !hasVoted;
-                    const defaultTags = store ? getDefaultTags(store.name, tags) : new Set<string>();
-                    return (
-                      <>
-                        {isEmptyState && (
-                          <div className="empty-tag-cta">
-                            <p>아직 이곳의 밤샘 정보가 없어요</p>
-                            <span>첫 번째로 분위기를 알려주시겠어요?</span>
+                {/* ── Layer 3: Community ── */}
+                {tags.length > 0 && (
+                  <div className="sheet-layer sheet-community">
+                    <p className="community-label">
+                      {hasVoted ? '밤샘 정보 반영 완료 ✓' : '밤샘 분위기를 알려주세요'}
+                    </p>
+                    {(() => {
+                      const totalVotes = tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0);
+                      const isEmptyState = totalVotes === 0 && !hasVoted;
+                      const defaultTags = getDefaultTags(store.name, tags);
+                      return (
+                        <>
+                          {isEmptyState && (
+                            <div className="empty-tag-cta">
+                              <p>아직 이곳의 밤샘 정보가 없어요</p>
+                              <span>첫 번째로 분위기를 알려주시겠어요?</span>
+                            </div>
+                          )}
+                          <div className="tag-vote-grid">
+                            {tags.map(tag => {
+                              const isDefault = isEmptyState && defaultTags.has(tag);
+                              return (
+                                <button
+                                  key={tag}
+                                  className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
+                                  disabled={hasVoted}
+                                  onClick={(e) => handleVote(e, tag)}
+                                >
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    {tag}
+                                    {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
+                                    {(votes[tag] ?? 0) > 0 && (
+                                      <span style={{ opacity: 0.6, fontSize: '10px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>
+                                    )}
+                                  </span>
+                                </button>
+                              );
+                            })}
                           </div>
-                        )}
-                        <div className="tag-vote-grid">
-                          {tags.map(tag => {
-                            const isDefault = isEmptyState && defaultTags.has(tag);
-                            return (
-                              <button
-                                key={tag}
-                                className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
-                                disabled={hasVoted}
-                                onClick={(e) => handleVote(e, tag)}
-                              >
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  {tag}
-                                  {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
-                                  {(votes[tag] ?? 0) > 0 && <span style={{ opacity: 0.6, fontSize: '10px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
 
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    className="ios-button"
-                    style={{ flex: 1, background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', border: '0.5px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                    onClick={shareToKakao}
-                  >
-                    <span style={{ color: '#FEE500', fontSize: '18px', lineHeight: 1 }}>💬</span>
-                    카톡 공유
+                {/* ── Actions ── */}
+                <div className="sheet-actions">
+                  <button className="share-icon-btn" onClick={shareToKakao}>
+                    <span style={{ fontSize: '20px' }}>💬</span>
                   </button>
-                  <button className="ios-button primary" style={{ flex: 1.5 }} onClick={openDirections}>길찾기</button>
+                  <button className="ios-button primary" style={{ flex: 1 }} onClick={openDirections}>
+                    길찾기
+                  </button>
                 </div>
-                <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px', opacity: 0.6, cursor: 'pointer' }} onClick={() => setIsReporting(true)}>정보가 다른가요? 수정 제보하기</p>
+                <button className="report-text-btn" onClick={() => setIsReporting(true)}>
+                  수정 제보하기
+                </button>
               </>
             ) : (
               <div className="reporting-form" style={{ animation: 'fade-in 0.3s ease-out' }}>
@@ -369,15 +381,15 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   {[
                     { id: 'NOT_24H', label: '24시간 운영이 아니에요' },
                     { id: 'CLOSED', label: '장소가 존재하지 않아요' },
-                    { id: 'OTHER', label: '기타 정보가 잘못되었어요' }
+                    { id: 'OTHER', label: '기타 정보가 잘못되었어요' },
                   ].map((opt) => (
-                    <div 
+                    <div
                       key={opt.id}
                       onClick={() => setReportType(opt.id)}
-                      style={{ 
+                      style={{
                         padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
                         border: reportType === opt.id ? '1.5px solid var(--accent-blue)' : '1.5px solid transparent',
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer'
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
                       }}
                     >
                       <span style={{ fontSize: '15px' }}>{opt.label}</span>
@@ -388,21 +400,18 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                 <div style={{ marginBottom: '24px' }}>
                   <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>상세 내용 (선택, 최대 20자)</p>
-                  <input 
+                  <input
                     type="text"
                     placeholder="예: 일요일은 밤 12시까지만 해요"
                     maxLength={20}
                     value={reportComment}
                     onChange={(e) => setReportComment(e.target.value)}
-                    style={{ 
-                      width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)',
-                      border: 'none', color: 'white', fontSize: '15px', outline: 'none'
-                    }}
+                    style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
 
-                <button 
-                  className={`ios-button primary ${!reportType || isSubmitting ? 'disabled' : ''}`} 
+                <button
+                  className={`ios-button primary${!reportType || isSubmitting ? ' disabled' : ''}`}
                   style={{ width: '100%' }}
                   disabled={!reportType || isSubmitting}
                   onClick={handleReport}
