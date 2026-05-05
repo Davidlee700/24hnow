@@ -205,13 +205,13 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
       content: {
         title: `[24시나우] ${store.name}`,
         description: `${store.category} · 지금 당장 이용 가능해요!`,
-        imageUrl: 'https://24hnow.vercel.app/og-image.png',
+        imageUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/og-image.png`,
         link: {
-          mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`,
-          webUrl: `https://24hnow.vercel.app/?store=${store.id}`,
+          mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
+          webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
         },
       },
-      buttons: [{ title: '지금 바로 확인', link: { mobileWebUrl: `https://24hnow.vercel.app/?store=${store.id}`, webUrl: `https://24hnow.vercel.app/?store=${store.id}` } }],
+      buttons: [{ title: '지금 바로 확인', link: { mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`, webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}` } }],
     });
   };
 

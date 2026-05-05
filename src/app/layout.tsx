@@ -2,7 +2,17 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://24now.kr";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#000000",
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: "24시나우 | 지금 당장 갈 수 있는 밤샘 장소 찾기",
   description: "서울/경기/인천 전 지역의 24시 카페, 편의점, 세차장, PC방, 약국을 가장 정확하게 찾아보세요. 실시간 데이터와 사용자 제보로 가장 신뢰할 수 있는 밤샘 정보를 제공합니다.",
   keywords: [
@@ -11,17 +21,21 @@ export const metadata: Metadata = {
     "야간 세차장", "24시 셀프세차", "24시간 세차",
     "밤샘지도", "24시 나우", "24now", "약국", "PC방"
   ],
+  alternates: {
+    canonical: BASE_URL,
+  },
   openGraph: {
     title: "24시나우 | 지금 내 주변 밤샘 장소 찾기",
     description: "어둡고 낯선 길 위에서도 24시나우와 함께라면 든든합니다.",
     type: "website",
-    url: "https://24hnow.vercel.app",
+    url: BASE_URL,
     siteName: "24시나우",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 1200,
+        alt: "24시나우 — 내 주변 밤샘 장소 찾기",
       },
     ],
     locale: "ko_KR",
@@ -31,6 +45,11 @@ export const metadata: Metadata = {
     title: "24시나우",
     description: "지금 당장 이용 가능한 밤샘 장소 찾기",
     images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
 };
 

@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase';
 import HomeClient from '@/components/HomeClient';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
+
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
@@ -102,7 +104,7 @@ export default async function Page(props: Props) {
                 "latitude": storeData.latitude,
                 "longitude": storeData.longitude
               },
-              "url": `https://24hnow.vercel.app/?store=${storeData.id}`,
+              "url": `${BASE_URL}/?store=${storeData.id}`,
             }),
           }}
         />
