@@ -72,7 +72,7 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast, user }: Props
               </div>
             ) : (
               <div style={{ padding: '0 8px 16px' }}>
-                <div className="login-hint">Max님의 취향이 담긴 아지트를 저장해보세요 🪄</div>
+                <div className="login-hint">나만의 취향이 담긴 아지트를 저장해보세요 🪄</div>
                 <button className="kakao-login-btn" onClick={handleLogin}>
                   <svg className="kakao-logo-svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                     <path d="M12 3c-4.97 0-9 3.185-9 7.115 0 2.558 1.712 4.8 4.37 6.04-.19.643-.69 2.338-.79 2.697-.13.483.17.478.36.35.15-.1.2.14 2.89-1.883.71.1 1.45.15 2.16.15 4.97 0 9-3.185 9-7.115S16.97 3 12 3z"/>
@@ -85,10 +85,10 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast, user }: Props
               <span>내 아지트</span>
               <span className="coming-soon">준비 중</span>
             </div>
-            <div className="menu-item" onClick={() => { onClose(); onShowToast('심야 가이드를 열심히 만들고 있어요 🪄'); }}>
+            <a href="/guide" className="menu-item" onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
               <span>심야 가이드</span>
-              <span className="coming-soon">준비 중</span>
-            </div>
+              <span className="menu-chevron">›</span>
+            </a>
             <div className="menu-item" onClick={() => { onClose(); onShowToast('제휴 및 수정 문의는 준비 중이에요. 곧 만나요! 🪄'); }}>
               <span>제휴 및 수정 문의</span>
               <span className="menu-chevron">›</span>
