@@ -72,9 +72,9 @@ async function enrichPlaces() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': googleApiKey,
+          'X-Goog-Api-Key': googleApiKey as string,
           'X-Goog-FieldMask': 'places.id,places.displayName'
-        },
+        } as any,
         body: JSON.stringify({
           textQuery: decodeURIComponent(query),
           languageCode: 'ko'
