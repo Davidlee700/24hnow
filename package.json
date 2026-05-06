@@ -9,7 +9,8 @@
     "lint": "eslint",
     "ingest": "tsx src/scripts/run_all.ts",
     "ingest:v2": "tsx src/scripts/ingest_v2.ts",
-    "ingest:pharmacy": "tsx src/scripts/fetch_pharmacy.ts"
+    "ingest:pharmacy": "tsx src/scripts/fetch_pharmacy.ts",
+    "enrich": "tsx src/scripts/enrich_places.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

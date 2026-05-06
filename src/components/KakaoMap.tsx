@@ -179,7 +179,8 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
 
       const position = new kakao.maps.LatLng(store.latitude, store.longitude);
       const { bg, emoji } = CATEGORY_STYLE[store.category] ?? DEFAULT_STYLE;
-      const isConfirmed = store.class_type === 'A';
+      const isConfirmed = store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A');
+      const isLowConfidence = store.confidence_level === 'LOW';
 
       const el = document.createElement('div');
       el.style.cssText = `
@@ -188,7 +189,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         border-radius:50%;
         border:2px solid white;
         box-shadow:0 0 15px ${isConfirmed ? bg : 'rgba(255,255,255,0.4)'}, 0 6px 15px rgba(0,0,0,0.8);
-        opacity:1;cursor:pointer;
+        opacity:${isLowConfidence ? '0.4' : '1'};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:22px;line-height:1;user-select:none;
         filter:invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2);

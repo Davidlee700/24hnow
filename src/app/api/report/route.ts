@@ -7,9 +7,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
   }
 
-  const { store_id, report_type, comment } = await req.json();
+  const { store_id, report_type, comment, session_id } = await req.json();
 
-  if (!store_id || !report_type) {
+  if (!store_id || !report_type || !session_id) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -19,9 +19,10 @@ export async function POST(req: NextRequest) {
   );
 
   const { error } = await supabase
-    .from('store_reports')
+    .from('user_reports')
     .insert({
       store_id,
+      session_id,
       report_type,
       comment: comment?.slice(0, 20) // Ensure 20 chars limit
     });

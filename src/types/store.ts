@@ -11,6 +11,10 @@ export interface Store {
   class_type?: 'A' | 'B' | 'C' | 'UNKNOWN';
   raw_hours?: string;
   inference_note?: string;
+  confidence_level?: 'HIGH' | 'MEDIUM' | 'LOW';
+  business_hours?: any;
+  google_place_id?: string;
+  verification_source?: string;
   metadata: {
     phone?: string;
     place_url?: string;

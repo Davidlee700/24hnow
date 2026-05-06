@@ -167,21 +167,36 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     }
   };
 
-  const handleHoursVote = async (e: React.MouseEvent<HTMLElement>) => {
+  const getSessionId = () => {
+    let sid = localStorage.getItem('24hnow_session_id');
+    if (!sid) {
+      sid = crypto.randomUUID();
+      localStorage.setItem('24hnow_session_id', sid);
+    }
+    return sid;
+  };
+
+  const handleMicroFeedback = async (e: React.MouseEvent<HTMLElement>, type: string) => {
     tapEffect(e);
     if (!store || hasVotedHours) return;
     setHasVotedHours(true);
     localStorage.setItem(`voted_hours_${store.id}`, '1');
-    const res = await fetch('/api/vote', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ store_id: store.id, tag: '24시간 운영' }),
-    });
-    const data = await res.json();
-    if (data.message) {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-      setToastMsg(data.message);
-      toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+
+    try {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ store_id: store.id, report_type: type, session_id: getSessionId() }),
+      });
+      const data = await res.json();
+      if (data.message) {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToastMsg(data.message);
+        toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+      }
+    } catch {
+      setHasVotedHours(false);
+      localStorage.removeItem(`voted_hours_${store.id}`);
     }
   };
 
@@ -193,7 +208,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
       const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ store_id: store.id, report_type: reportType, comment: reportComment }),
+        body: JSON.stringify({ store_id: store.id, report_type: reportType, comment: reportComment, session_id: getSessionId() }),
       });
       const data = await res.json();
       setToastMsg(data.success ? data.message : '제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
@@ -264,6 +279,13 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           <div className="sheet-content">
             {!isReporting ? (
               <>
+                {/* ── Context Banner ── */}
+                {!(store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A')) && (
+                  <div style={{ background: 'rgba(255,149,0,0.1)', border: '1px solid rgba(255,149,0,0.2)', padding: '12px 16px', borderRadius: '12px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span style={{ fontSize: '18px', lineHeight: '1', color: '#FF9F0A' }}>ⓘ</span>
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.4' }}>상호명 기반으로 심야 영업이 추정되는 곳이에요.<br/>방문 전 <b>전화 확인</b>을 권장합니다.</span>
+                  </div>
+                )}
                 {/* ── Layer 1: Identity ── */}
                 <div className="sheet-layer sheet-identity">
                   <div className="sheet-identity-main">
@@ -286,12 +308,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                 <div className="sheet-layer sheet-confidence">
                   <div className="confidence-header">
                     <div className="confidence-status">
-                      {store.class_type === 'A'
+                      {(store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A'))
                         ? <><span className="status-dot" /><span>운영 확인됨</span></>
-                        : <><span>🔍</span><span>정보 확인 중</span></>
+                        : <><span style={{ opacity: 0.6 }}>ⓘ</span><span style={{ color: 'var(--text-secondary)' }}>심야 영업 추정</span></>
                       }
                     </div>
-                    {store.class_type !== 'A' && (
+                    {!(store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A')) && (
                       <div style={{ position: 'relative' }}>
                         <button
                           className="badge-info-btn"
@@ -299,7 +321,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                         >ⓘ</button>
                         {showBadgeInfo && (
                           <div className="badge-popover">
-                            네이버·카카오 데이터 기반으로 24시간 운영이 추정되나, 아직 커뮤니티 검증이 충분하지 않아요.
+                            데이터 기반으로 24시간 운영이 추정되나, 아직 커뮤니티 검증이 충분하지 않아요.
                           </div>
                         )}
                       </div>
@@ -334,14 +356,18 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     </div>
                   )}
 
-                  {store.class_type !== 'A' && store.inference_note && (
+                  {!(store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A')) && store.inference_note && (
                     <p className="inference-note">💡 {store.inference_note}</p>
                   )}
 
-                  {store.class_type !== 'A' && !hasVotedHours && (
-                    <div className="hours-vote-row">
-                      <button className="confirm-vote-btn yes" onClick={handleHoursVote}>👍 맞아요</button>
-                      <button className="confirm-vote-btn no" onClick={() => setIsReporting(true)}>👎 아니에요</button>
+                  {!(store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A')) && !hasVotedHours && (
+                    <div className="micro-feedback-container" style={{ marginTop: '16px', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '16px' }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>지금 이 곳에 다녀오셨나요?</p>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="ios-button" style={{ flex: 1, padding: '10px 0', fontSize: '13px', background: 'rgba(255,255,255,0.1)' }} onClick={(e) => handleMicroFeedback(e, 'OPEN')}>🟢 영업 중</button>
+                        <button className="ios-button" style={{ flex: 1, padding: '10px 0', fontSize: '13px', background: 'rgba(255,255,255,0.1)' }} onClick={(e) => handleMicroFeedback(e, 'CLOSED')}>🔴 문 닫음</button>
+                        <button className="ios-button" style={{ flex: 1, padding: '10px 0', fontSize: '13px', background: 'rgba(255,255,255,0.1)' }} onClick={(e) => { tapEffect(e); setIsReporting(true); }}>🕒 시간 다름</button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -401,6 +427,11 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   <button className="share-icon-btn" onClick={shareToKakao}>
                     <span style={{ fontSize: '20px' }}>💬</span>
                   </button>
+                  {store.metadata?.phone && (
+                    <button className="ios-button primary" style={{ flex: 1, backgroundColor: '#34C759', color: 'white' }} onClick={() => window.location.href = `tel:${store.metadata?.phone}`}>
+                      전화걸기
+                    </button>
+                  )}
                   <button className="ios-button primary" style={{ flex: 1 }} onClick={openDirections}>
                     길찾기
                   </button>
