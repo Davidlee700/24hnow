@@ -1,6 +1,12 @@
+import { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: '공지사항 | 24시나우',
+  description: '24시나우의 새로운 소식과 업데이트를 확인하세요.',
+};
 
 interface NoticeItem {
   id: number;

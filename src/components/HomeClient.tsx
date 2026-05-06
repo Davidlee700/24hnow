@@ -146,11 +146,15 @@ function HomeContent() {
         dimmed={isMenuOpen}
       />
 
+      <h1 style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+        서울·경기·인천 24시간 카페, 편의점, 세차장 찾기 - 24시나우
+      </h1>
+
       {/* Top bar */}
       <div className="floating-top">
         {/* 통합 네비게이션 바: 브랜드 | 카테고리 스크롤 | 메뉴 */}
         <div className="floating-search-bar">
-          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
+          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시<span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
           <div className="nav-divider" />
           <div className="nav-categories">
             {FILTERS.map(filter => (
@@ -259,7 +263,7 @@ export default function HomeClient() {
       <div className="loading-overlay">
         <div className="loading-spinner-wrapper">
           <div className="loading-logo">
-            24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span>
+            24시<span style={{ color: 'var(--accent-neon)' }}>나우</span>
           </div>
           <div className="loading-pulse-dot" />
         </div>

@@ -1,4 +1,10 @@
+import { Metadata } from 'next';
 import ContactForm from './ContactForm';
+
+export const metadata: Metadata = {
+  title: '문의하기 | 24시나우',
+  description: '제휴, 오류 제보, 서비스 개선 의견을 보내주세요.',
+};
 
 export default function ContactPage() {
   return (
