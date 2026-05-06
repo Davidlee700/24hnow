@@ -23,19 +23,30 @@ if (!googleApiKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Max places to process per run to control Google API cost
-const BATCH_LIMIT = 50; 
+// Max places to process per run
+const args = process.argv.slice(2);
+const limitArg = args.find(a => a.startsWith('--limit='));
+const BATCH_LIMIT = limitArg ? parseInt(limitArg.split('=')[1]) : 100; 
 
 async function enrichPlaces() {
+  const regionArg = args.find(a => a.startsWith('--region='));
+  const region = regionArg ? regionArg.split('=')[1] : null;
+
   console.log(`Starting Data Enrichment... (Limit: ${BATCH_LIMIT} places)`);
+  if (region) console.log(`Filtering by region: ${region}`);
 
   // Find places with MEDIUM confidence or class_type 'B' that don't have a google_place_id yet
-  const { data: places, error } = await supabase
+  let queryBuilder = supabase
     .from('stores')
     .select('id, name, road_address, class_type, confidence_level')
     .is('google_place_id', null)
-    .or('confidence_level.eq.MEDIUM,class_type.eq.B')
-    .limit(BATCH_LIMIT);
+    .or('confidence_level.eq.MEDIUM,class_type.eq.B');
+
+  if (region) {
+    queryBuilder = queryBuilder.like('road_address', `%${region}%`);
+  }
+
+  const { data: places, error } = await queryBuilder.limit(BATCH_LIMIT);
 
   if (error) {
     console.error("Error fetching places:", error);
@@ -108,7 +119,8 @@ async function enrichPlaces() {
           business_hours: businessHours,
           confidence_level: confidence,
           verification_source: 'GOOGLE_PLACES',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          last_verified_at: new Date().toISOString()
         })
         .eq('id', place.id);
 
