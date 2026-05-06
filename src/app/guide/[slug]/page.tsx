@@ -16,12 +16,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPostBySlug(slug);
   if (!post) return {};
 
+  const seoTitle = post.dong
+    ? `${post.city} ${post.dong} 24시간 ${post.category} 추천 BEST ${post.stores.length} | 24시나우`
+    : `${post.title} | 심야 가이드 · 24시나우`;
+
+  const seoDesc = post.dong
+    ? `${post.city} ${post.dong}에서 새벽에도 문 여는 ${post.category} ${post.stores.length}곳. 영업시간·주소·분위기를 직접 선별했습니다.`
+    : post.description;
+
   return {
-    title: `${post.title} | 심야 가이드 · 24시나우`,
-    description: post.description,
+    title: seoTitle,
+    description: seoDesc,
     openGraph: {
-      title: post.title,
-      description: post.description,
+      title: seoTitle,
+      description: seoDesc,
       url: `https://24now.kr/guide/${post.slug}`,
       type: 'article',
     },
