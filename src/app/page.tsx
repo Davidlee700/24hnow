@@ -64,7 +64,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       };
     }
   } catch (err) {
-    console.error('Failed to generate dynamic metadata:', err);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to generate dynamic metadata:', err);
   }
 
   return {

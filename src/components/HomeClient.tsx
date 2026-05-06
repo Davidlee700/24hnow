@@ -167,7 +167,12 @@ function HomeContent() {
               </button>
             ))}
           </div>
-          <button className="nav-menu-btn" onClick={() => setIsMenuOpen(true)}>
+          <button
+            className="nav-menu-btn"
+            onClick={() => setIsMenuOpen(true)}
+            aria-label="메뉴 열기"
+            aria-expanded={isMenuOpen}
+          >
             <svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
               <rect x="0" y="0" width="18" height="1.6" rx="0.8"/>
               <rect x="0" y="6.2" width="18" height="1.6" rx="0.8"/>
@@ -248,11 +253,9 @@ function HomeContent() {
         user={user}
       />
 
-      {toastMessage && (
-        <div className="global-toast">
-          {toastMessage}
-        </div>
-      )}
+      <div className="global-toast" role="status" aria-live="polite" aria-atomic="true">
+        {toastMessage}
+      </div>
     </>
   );
 }

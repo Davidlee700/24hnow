@@ -42,7 +42,7 @@ export default function StoreReviews({ storeId, availableTags }: Props) {
         setComments(data.comments ?? []);
       }
     } catch (err) {
-      console.error('Failed to fetch comments', err);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch comments', err);
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function StoreReviews({ storeId, availableTags }: Props) {
         fetchComments();
       }
     } catch (err) {
-      console.error('Failed to post comment', err);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to post comment', err);
     } finally {
       setIsSubmitting(false);
     }

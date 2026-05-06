@@ -81,7 +81,7 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast, user }: Props
                 </button>
               </div>
             )}
-            <div className="menu-item" onClick={() => { onClose(); onShowToast('나만의 아지트 저장 기능을 열심히 만들고 있어요 🪄'); }}>
+            <div className="menu-item menu-item-disabled" aria-disabled="true">
               <span>내 아지트</span>
               <span className="coming-soon">준비 중</span>
             </div>

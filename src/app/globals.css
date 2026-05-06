@@ -42,6 +42,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent-neon);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 body, html {
   background-color: var(--bg-black);
   color: var(--text-primary);
@@ -652,6 +659,11 @@ body, html {
 }
 .menu-item:last-child { border-bottom: none; }
 .menu-item:active { opacity: 0.6; }
+.menu-item-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .menu-item.legal {
   font-size: 13px;
   color: var(--text-secondary);

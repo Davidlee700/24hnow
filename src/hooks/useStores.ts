@@ -41,7 +41,7 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
         );
         setStores(deduped);
       } else if (error) {
-        console.error('[useStores] fetch error:', error.message);
+        if (process.env.NODE_ENV === 'development') console.error('[useStores] fetch error:', error.message);
         setStores([]);
       }
       setLoading(false);
