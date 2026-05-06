@@ -257,9 +257,11 @@ function HomeContent() {
         user={user}
       />
 
-      <div className="global-toast" role="status" aria-live="polite" aria-atomic="true">
-        {toastMessage}
-      </div>
+      {toastMessage && (
+        <div className="global-toast" role="status" aria-live="polite" aria-atomic="true">
+          {toastMessage}
+        </div>
+      )}
     </>
   );
 }

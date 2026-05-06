@@ -36,6 +36,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
   const gpsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationOverlayRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(4);
 
   // 1. Initialize map
   useEffect(() => {
@@ -262,13 +263,25 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
     <>
       <div ref={mapElement} className={`map-container${dimmed ? ' dimmed' : ''}`} />
       <div className="zoom-control">
-        <button className="zoom-btn" aria-label="확대" onClick={() => {
-          if (mapRef.current) mapRef.current.setLevel(mapRef.current.getLevel() - 1, { animate: true });
-        }}>+</button>
+        <button 
+          className="zoom-btn" 
+          aria-label="확대" 
+          disabled={zoomLevel <= 1}
+          onClick={() => {
+            if (mapRef.current) mapRef.current.setLevel(zoomLevel - 1, { animate: true });
+          }}
+        >+</button>
         <div className="zoom-divider" />
-        <button className="zoom-btn" aria-label="축소" onClick={() => {
-          if (mapRef.current) mapRef.current.setLevel(mapRef.current.getLevel() + 1, { animate: true });
-        }}>-</button>
+        <div className="zoom-level-indicator">{Math.max(0, 8 - zoomLevel)}</div>
+        <div className="zoom-divider" />
+        <button 
+          className="zoom-btn" 
+          aria-label="축소" 
+          disabled={zoomLevel >= 14}
+          onClick={() => {
+            if (mapRef.current) mapRef.current.setLevel(zoomLevel + 1, { animate: true });
+          }}
+        >-</button>
       </div>
     </>
   );
