@@ -185,10 +185,10 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       const el = document.createElement('div');
       el.style.cssText = `
         width:40px;height:40px;
-        background:${isConfirmed ? bg : 'rgba(255, 255, 255, 0.95)'};
+        background:rgba(255, 255, 255, 0.95);
         border-radius:50%;
-        border:2px solid white;
-        box-shadow:0 0 15px ${isConfirmed ? bg : 'rgba(255,255,255,0.4)'}, 0 6px 15px rgba(0,0,0,0.8);
+        border:2.5px solid ${isConfirmed ? bg : 'white'};
+        box-shadow:0 0 12px ${isConfirmed ? bg : 'rgba(255,255,255,0.3)'}, 0 4px 12px rgba(0,0,0,0.6);
         opacity:${isLowConfidence ? '0.4' : '1'};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:22px;line-height:1;user-select:none;
@@ -243,7 +243,18 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         overlay.setZIndex(isConfirmed ? 100 : 10);
         el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2)';
       });
-      el.onclick = () => { onMarkerClick?.(store); mapRef.current.panTo(position); };
+      el.onclick = () => { 
+        onMarkerClick?.(store); 
+        const proj = mapRef.current.getProjection();
+        if (proj) {
+          const point = proj.pointFromCoords(position);
+          point.y += 180; // Offset map center downwards by 180px
+          const offsetLatLng = proj.coordsFromPoint(point);
+          mapRef.current.panTo(offsetLatLng);
+        } else {
+          mapRef.current.panTo(position);
+        }
+      };
     });
   }, [stores, mapLoaded]);
 

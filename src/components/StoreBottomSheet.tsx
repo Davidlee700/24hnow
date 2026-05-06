@@ -262,8 +262,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           dragElastic={0.1}
           onDragEnd={(_, info) => {
             const { offset, velocity } = info;
-            if (velocity.y > 500 || offset.y > 80) { onClose(); return; }
-            if (velocity.y < -300 || offset.y < -80) { setIsExpanded(true); return; }
+            if (isExpanded) {
+              if (velocity.y > 300 || offset.y > 80) { setIsExpanded(false); return; }
+            } else {
+              if (velocity.y > 500 || offset.y > 80) { onClose(); return; }
+              if (velocity.y < -300 || offset.y < -80) { setIsExpanded(true); return; }
+            }
           }}
           layout
         >
@@ -282,17 +286,21 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       {userLocation && ` · ${calcDistance(userLocation, store)}`}
                     </p>
                   </div>
-                  <button
-                    className={`bookmark-btn${bookmarkFilling ? ' filling' : ''}`}
-                    onClick={handleBookmark}
-                    style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}
-                  >
-                    {store && isBookmarked(store.id) ? '🧡' : '🤍'}
-                  </button>
                 </div>
 
                 {/* ── Layer 2: Action Bar (Primary Actions) ── */}
                 <div className="action-bar">
+                  <button className={`action-btn${bookmarkFilling ? ' filling' : ''}`} onClick={handleBookmark}>
+                    <div className="action-icon-wrapper" style={{ color: store && isBookmarked(store.id) ? '#ff453a' : 'var(--text-primary)' }}>
+                      {store && isBookmarked(store.id) ? (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      ) : (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      )}
+                    </div>
+                    <span className="action-label">{store && isBookmarked(store.id) ? '저장됨' : '저장'}</span>
+                  </button>
+
                   <button className="action-btn" onClick={shareToKakao}>
                     <div className="action-icon-wrapper">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
