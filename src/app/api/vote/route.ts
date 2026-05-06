@@ -1,8 +1,13 @@
 import { createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  if (!rateLimit(`vote:${getIp(req)}`, 10, 60_000)) {
+    return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
+  }
+
   const { store_id, tag } = await req.json();
 
   if (!store_id || !tag) {

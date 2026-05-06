@@ -1,8 +1,32 @@
-import { createHash } from 'crypto';
+import { createHmac } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
-function makeToken(password: string) {
-  return createHash('sha256').update(password + 'admin-24hnow-salt').digest('hex');
+const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+
+function sign(payload: string, secret: string): string {
+  return createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+function makeToken(password: string): string {
+  const expiry = Date.now() + TOKEN_TTL_MS;
+  const payload = String(expiry);
+  const sig = sign(payload, password);
+  return `${Buffer.from(payload).toString('base64url')}.${sig}`;
+}
+
+export function validateToken(req: NextRequest): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
+  if (!adminPassword) return false;
+
+  const raw = req.headers.get('authorization')?.replace('Bearer ', '') ?? '';
+  const [b64, sig] = raw.split('.');
+  if (!b64 || !sig) return false;
+
+  const payload = Buffer.from(b64, 'base64url').toString();
+  const expiry = Number(payload);
+  if (isNaN(expiry) || Date.now() > expiry) return false;
+
+  return sign(payload, adminPassword) === sig;
 }
 
 export async function POST(req: NextRequest) {
@@ -17,13 +41,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '비밀번호가 올바르지 않습니다.' }, { status: 401 });
   }
 
-  const trimmed = adminPassword.trim();
-  return NextResponse.json({ token: makeToken(trimmed) });
-}
-
-export function validateToken(req: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
-  if (!adminPassword) return false;
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  return token === makeToken(adminPassword);
+  return NextResponse.json({ token: makeToken(adminPassword.trim()) });
 }

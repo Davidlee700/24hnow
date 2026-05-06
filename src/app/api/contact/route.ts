@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  if (!rateLimit(`contact:${getIp(req)}`, 5, 60_000)) {
+    return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
+  }
+
   const { name, email, message } = await req.json();
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {
