@@ -88,14 +88,14 @@ body, html {
   width: 100%;
   height: 100%;
   z-index: 1;
-  /* Night map: invert tiles + restore hue, slight brightness reduction */
-  filter: invert(1) hue-rotate(180deg) brightness(0.88) contrast(1.05) saturate(0.6);
+  /* Apple Maps Night Mode 느낌: 너무 까맣지 않고 약간 밝은 Slate Blue 톤 */
+  filter: invert(0.92) hue-rotate(195deg) brightness(1.05) contrast(0.95) saturate(0.7);
   transform-origin: center center;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
 }
 .map-container.dimmed {
   transform: scale(0.94);
-  filter: invert(1) hue-rotate(180deg) brightness(0.35) contrast(1.0) saturate(0.3) blur(6px);
+  filter: invert(0.92) hue-rotate(195deg) brightness(0.4) contrast(0.95) saturate(0.4) blur(6px);
 }
 
 /* Floating Top Area (Logo + Filters) */
