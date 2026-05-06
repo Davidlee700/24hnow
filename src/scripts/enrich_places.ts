@@ -96,9 +96,9 @@ async function enrichPlaces() {
       const detailsRes = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=ko`, {
         method: 'GET',
         headers: {
-          'X-Goog-Api-Key': googleApiKey,
+          'X-Goog-Api-Key': googleApiKey as string,
           'X-Goog-FieldMask': 'id,regularOpeningHours'
-        }
+        } as any
       });
 
       const detailsData = await detailsRes.json();
