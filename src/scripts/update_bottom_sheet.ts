@@ -1,4 +1,6 @@
-'use client';
+import fs from 'fs';
+
+const content = `'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,9 +22,9 @@ function formatApiTime(timeStr: string): string {
   if (time > 2400) {
     const hour = Math.floor((time - 2400) / 100);
     const min = time % 100;
-    return `익일 ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    return \`익일 \${String(hour).padStart(2, '0')}:\${String(min).padStart(2, '0')}\`;
   }
-  return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
+  return \`\${timeStr.slice(0, 2)}:\${timeStr.slice(2, 4)}\`;
 }
 
 function getTodayHours(rawHours: string | undefined, confidence: string | undefined, classType: string | undefined): string {
@@ -31,15 +33,15 @@ function getTodayHours(rawHours: string | undefined, confidence: string | undefi
   
   const days = ['일', '월', '화', '수', '목', '금', '토'];
   const today = days[new Date().getDay()];
-  const match = rawHours.match(new RegExp(`${today}: (\\d{4})-(\\d{4})`));
+  const match = rawHours.match(new RegExp(\`\${today}: (\\\\d{4})-(\\\\d{4})\`));
   
   if (match) {
-    const start = match[1] === '0000' && match[2] === '2400' ? '24시간' : `${formatApiTime(match[1])} - ${formatApiTime(match[2])}`;
-    if (start === '24시간') return isConfirmed ? `오늘(${today}) 24시간 운영` : `오늘(${today}) 24시간 운영 (추정)`;
-    return `오늘(${today}) ${start}`;
+    const start = match[1] === '0000' && match[2] === '2400' ? '24시간' : \`\${formatApiTime(match[1])} - \${formatApiTime(match[2])}\`;
+    if (start === '24시간') return isConfirmed ? \`오늘(\${today}) 24시간 운영\` : \`오늘(\${today}) 24시간 운영 (추정)\`;
+    return \`오늘(\${today}) \${start}\`;
   }
   
-  if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return isConfirmed ? `오늘(${today}) 24시간 운영` : `오늘(${today}) 24시간 운영 (추정)`;
+  if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return isConfirmed ? \`오늘(\${today}) 24시간 운영\` : \`오늘(\${today}) 24시간 운영 (추정)\`;
   return '영업시간 확인 필요';
 }
 
@@ -52,17 +54,17 @@ function calcDistance(user: { lat: number; lng: number }, store: { latitude: num
     Math.sin(dLng / 2) ** 2;
   const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   if (d < 0.15) return '바로 근처';
-  if (d < 1.5) return `도보 ${Math.round(d / 0.067)}분`;
-  return `차로 ${Math.round(d / 0.4)}분`;
+  if (d < 1.5) return \`도보 \${Math.round(d / 0.067)}분\`;
+  return \`차로 \${Math.round(d / 0.4)}분\`;
 }
 
 function relativeTime(dateStr?: string): string {
   if (!dateStr) return '';
   const h = Math.floor((Date.now() - new Date(dateStr).getTime()) / 3600000);
   if (h < 1) return '방금 확인됨';
-  if (h < 24) return `${h}시간 전 확인`;
+  if (h < 24) return \`\${h}시간 전 확인\`;
   const d = Math.floor(h / 24);
-  return d === 1 ? '어제 확인' : `${d}일 전 확인`;
+  return d === 1 ? '어제 확인' : \`\${d}일 전 확인\`;
 }
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
@@ -114,15 +116,15 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setReportComment('');
     setBookmarkFilling(false);
     setIsExpanded(false);
-    setHasVotedHours(!!localStorage.getItem(`voted_hours_${store?.id}`));
+    setHasVotedHours(!!localStorage.getItem(\`voted_hours_\${store?.id}\`));
   }, [store?.id]);
 
   const openDirections = () => {
     if (!store) return;
-    const dest = `${encodeURIComponent(store.name)},${store.latitude},${store.longitude}`;
+    const dest = \`\${encodeURIComponent(store.name)},\${store.latitude},\${store.longitude}\`;
     const url = userLocation
-      ? `https://map.kakao.com/link/from/현재위치,${userLocation.lat},${userLocation.lng}/to/${dest}`
-      : `https://map.kakao.com/link/to/${dest}`;
+      ? \`https://map.kakao.com/link/from/현재위치,\${userLocation.lat},\${userLocation.lng}/to/\${dest}\`
+      : \`https://map.kakao.com/link/to/\${dest}\`;
     window.open(url, '_blank');
   };
 
@@ -174,7 +176,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     tapEffect(e);
     if (!store || hasVotedHours) return;
     setHasVotedHours(true);
-    localStorage.setItem(`voted_hours_${store.id}`, '1');
+    localStorage.setItem(\`voted_hours_\${store.id}\`, '1');
 
     try {
       const res = await fetch('/api/report', {
@@ -190,7 +192,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
       }
     } catch {
       setHasVotedHours(false);
-      localStorage.removeItem(`voted_hours_${store.id}`);
+      localStorage.removeItem(\`voted_hours_\${store.id}\`);
     }
   };
 
@@ -230,15 +232,15 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
-        title: `${store.name} — 새벽에도 문 열어요`,
-        description: `${store.category} · 24시나우에서 발견했어요. 지도에서 바로 확인하세요.`,
-        imageUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/og-image.png`,
+        title: \`\${store.name} — 새벽에도 문 열어요\`,
+        description: \`\${store.category} · 24시나우에서 발견했어요. 지도에서 바로 확인하세요.\`,
+        imageUrl: \`\${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/og-image.png\`,
         link: {
-          mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
-          webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
+          mobileWebUrl: \`\${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=\${store.id}\`,
+          webUrl: \`\${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=\${store.id}\`,
         },
       },
-      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`, webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}` } }],
+      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: \`\${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=\${store.id}\`, webUrl: \`\${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=\${store.id}\` } }],
     });
   };
 
@@ -279,11 +281,11 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     <h2 className="sheet-store-name" style={{ fontSize: '22px', fontWeight: 700 }}>{store.name}</h2>
                     <p className="sheet-store-meta" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                       {store.category}
-                      {userLocation && ` · ${calcDistance(userLocation, store)}`}
+                      {userLocation && \` · \${calcDistance(userLocation, store)}\`}
                     </p>
                   </div>
                   <button
-                    className={`bookmark-btn${bookmarkFilling ? ' filling' : ''}`}
+                    className={\`bookmark-btn\${bookmarkFilling ? ' filling' : ''}\`}
                     onClick={handleBookmark}
                     style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}
                   >
@@ -300,7 +302,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     <span className="action-label">공유</span>
                   </button>
                   
-                  <button className="action-btn" disabled={!store.metadata?.phone} onClick={() => { if (store.metadata?.phone) window.location.href = `tel:${store.metadata?.phone}` }}>
+                  <button className="action-btn" disabled={!store.metadata?.phone} onClick={() => { if (store.metadata?.phone) window.location.href = \`tel:\${store.metadata?.phone}\` }}>
                     <div className="action-icon-wrapper">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                     </div>
@@ -320,7 +322,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   <div className="info-row">
                     <div className="info-icon">📍</div>
                     <div className="info-content">
-                      <span className="info-text" style={{ wordBreak: 'keep-all' }}>{store.road_address || '주소 정보 없음'}</span>
+                      <span className="info-text" style={{ wordBreak: 'keep-all' }}>{store.road_address || store.address || '주소 정보 없음'}</span>
                     </div>
                   </div>
                   
@@ -349,7 +351,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                             style={{ overflow: 'hidden' }}
                           >
                             {store.raw_hours.split(' ').map((h, i) => {
-                              const parts = h.match(/(.*): (\d{4})-(\d{4})/);
+                              const parts = h.match(/(.*): (\\d{4})-(\\d{4})/);
                               if (parts) return <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{parts[1]}</span><span>{formatApiTime(parts[2])} - {formatApiTime(parts[3])}</span></div>;
                               return <div key={i}>{h}</div>;
                             })}
@@ -384,7 +386,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                               return (
                                 <button
                                   key={tag}
-                                  className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
+                                  className={\`tag-vote-btn\${hasVoted && votedTag === tag ? ' voted' : ''}\`}
                                   disabled={hasVoted}
                                   onClick={(e) => handleVote(e, tag)}
                                 >
@@ -418,7 +420,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      신뢰도 {trustPct}% {store.last_verified_at && `· ${relativeTime(store.last_verified_at)}`}
+                      신뢰도 {trustPct}% {store.last_verified_at && \`· \${relativeTime(store.last_verified_at)}\`}
                     </span>
                     <button onClick={() => setIsReporting(true)} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--text-secondary)', textDecoration: 'underline', cursor: 'pointer' }}>
                       정보 수정 제보
@@ -478,7 +480,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                 </div>
 
                 <button
-                  className={`ios-button primary${!reportType || isSubmitting ? ' disabled' : ''}`}
+                  className={\`ios-button primary\${!reportType || isSubmitting ? ' disabled' : ''}\`}
                   style={{ width: '100%' }}
                   disabled={!reportType || isSubmitting}
                   onClick={handleReport}
@@ -493,3 +495,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     </AnimatePresence>
   );
 }
+`;
+
+fs.writeFileSync('src/components/StoreBottomSheet.tsx', content, 'utf8');
+console.log('StoreBottomSheet.tsx updated successfully');
