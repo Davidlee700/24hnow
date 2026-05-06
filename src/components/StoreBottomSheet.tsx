@@ -221,15 +221,15 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
-        title: `[24시나우] ${store.name}`,
-        description: `${store.category} · 지금 당장 이용 가능해요!`,
+        title: `${store.name} — 새벽에도 문 열어요`,
+        description: `${store.category} · 24시나우에서 발견했어요. 지도에서 바로 확인하세요.`,
         imageUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/og-image.png`,
         link: {
           mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
           webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
         },
       },
-      buttons: [{ title: '지금 바로 확인', link: { mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`, webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}` } }],
+      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`, webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}` } }],
     });
   };
 
