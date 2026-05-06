@@ -89,11 +89,6 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast, user }: Props
               <span>심야 가이드</span>
               <span className="menu-chevron">›</span>
             </a>
-            <a href="/contact" className="menu-item" onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <span>제휴 및 수정 문의</span>
-              <span className="menu-chevron">›</span>
-            </a>
-
             <div className="menu-divider" style={{ margin: '16px 0 8px' }} />
 
             <div className="menu-footer">

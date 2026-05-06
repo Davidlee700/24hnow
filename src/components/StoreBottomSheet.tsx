@@ -244,26 +244,18 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           className="bottom-sheet open"
           style={{ position: 'absolute', zIndex: 1000 }}
           initial={{ y: '100%' }}
-          animate={isExpanded ? { y: -380 } : { y: 0 }}
+          animate={isExpanded ? { y: -(typeof window !== 'undefined' ? Math.round(window.innerHeight * 0.52) : 420) } : { y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 220 }}
           drag="y"
-          dragConstraints={{ top: isExpanded ? -380 : 0, bottom: 0 }}
-          dragElastic={0.15}
+          dragConstraints={{ top: -(typeof window !== 'undefined' ? Math.round(window.innerHeight * 0.52) : 420), bottom: 0 }}
+          dragElastic={0.1}
           onDragEnd={(_, info) => {
-            if (isExpanded) {
-              if (info.offset.y > 100) {
-                setIsExpanded(false);
-              } else if (info.offset.y > 300) {
-                onClose();
-              }
-            } else {
-              if (info.offset.y < -50) {
-                setIsExpanded(true);
-              } else if (info.offset.y > 100) {
-                onClose();
-              }
-            }
+            const { offset, velocity } = info;
+            if (velocity.y > 500) { onClose(); return; }
+            if (velocity.y < -300 || offset.y < -80) { setIsExpanded(true); return; }
+            if (isExpanded && (velocity.y > 300 || offset.y > 80)) { setIsExpanded(false); return; }
+            if (!isExpanded && offset.y > 80) { onClose(); return; }
           }}
         >
           {toastMsg && <div className="vote-toast">{toastMsg}</div>}
