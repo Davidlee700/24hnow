@@ -20,16 +20,21 @@ const CATEGORY_FILTERS: { label: string; value: GuideCategory | 'all' }[] = [
 ];
 
 interface Props {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; city?: string }>;
 }
 
 export default async function GuidePage({ searchParams }: Props) {
-  const { category } = await searchParams;
+  const { category, city } = await searchParams;
   const all = getAllPosts();
-  const posts =
-    category && category !== 'all'
-      ? all.filter(p => p.category === category)
-      : all;
+
+  const cities = Array.from(new Set(all.filter(p => p.city).map(p => p.city!)));
+  const showCityFilter = cities.length >= 2;
+
+  const posts = all.filter(p => {
+    const catMatch = !category || category === 'all' || p.category === category;
+    const cityMatch = !city || city === 'all' || p.city === city;
+    return catMatch && cityMatch;
+  });
 
   return (
     <div className="guide-page">
@@ -50,13 +55,40 @@ export default async function GuidePage({ searchParams }: Props) {
         {CATEGORY_FILTERS.map(f => (
           <Link
             key={f.value}
-            href={f.value === 'all' ? '/guide' : `/guide?category=${f.value}`}
+            href={
+              f.value === 'all'
+                ? city && city !== 'all' ? `/guide?city=${city}` : '/guide'
+                : `/guide?category=${f.value}${city && city !== 'all' ? `&city=${city}` : ''}`
+            }
             className={`guide-filter-chip ${(!category && f.value === 'all') || category === f.value ? 'active' : ''}`}
           >
             {f.label}
           </Link>
         ))}
       </div>
+
+      {/* 지역(시) 필터 */}
+      {showCityFilter && (
+        <div className="guide-filter-bar" style={{ paddingTop: 8 }}>
+          <Link
+            href={city && city !== 'all'
+              ? `/guide${category && category !== 'all' ? `?category=${category}` : ''}`
+              : '/guide'}
+            className={`guide-filter-chip ${!city || city === 'all' ? 'active' : ''}`}
+          >
+            전체
+          </Link>
+          {cities.map(c => (
+            <Link
+              key={c}
+              href={`/guide?city=${c}${category && category !== 'all' ? `&category=${category}` : ''}`}
+              className={`guide-filter-chip ${city === c ? 'active' : ''}`}
+            >
+              {c}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* 게시글 목록 */}
       <main className="guide-list">
