@@ -47,7 +47,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       if (!mapRef.current) {
         const center = new kakao.maps.LatLng(37.5665, 126.9780);
         mapRef.current = new kakao.maps.Map(mapElement.current, { center, level: 5 });
-        mapRef.current.setMaxLevel(10);
+        mapRef.current.setMaxLevel(8);
         setMapLoaded(true);
 
         kakao.maps.event.addListener(mapRef.current, 'idle', () => {
@@ -278,12 +278,12 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
           }}
         >+</button>
         <div className="zoom-divider" />
-        <div className="zoom-level-indicator">{11 - zoomLevel}</div>
+        <div className="zoom-level-indicator">{9 - zoomLevel}</div>
         <div className="zoom-divider" />
         <button 
           className="zoom-btn" 
           aria-label="축소" 
-          disabled={zoomLevel >= 10}
+          disabled={zoomLevel >= 8}
           onClick={() => {
             if (mapRef.current) mapRef.current.setLevel(zoomLevel + 1, { animate: true });
           }}
