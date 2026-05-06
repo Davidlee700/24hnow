@@ -66,6 +66,13 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <KakaoScript />
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9289780368966069"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {/* Load Kakao Maps SDK with libraries (services, clusterer, drawing) if needed later */}
         <Script
           strategy="beforeInteractive"
