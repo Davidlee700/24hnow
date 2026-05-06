@@ -34,6 +34,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const gpsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationOverlayRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // 1. Initialize map
@@ -86,6 +87,44 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         const locPosition = new window.kakao.maps.LatLng(lat, lng);
         mapRef.current.setCenter(locPosition);
         onLocationUpdate?.(lat, lng);
+
+        // 현재 위치 블루닷 + 정확도 반경
+        if (locationOverlayRef.current) locationOverlayRef.current.setMap(null);
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+          position: relative; width: 18px; height: 18px;
+          filter: invert(1) hue-rotate(180deg);
+          pointer-events: none;
+        `;
+        const accuracyRing = document.createElement('div');
+        accuracyRing.style.cssText = `
+          position: absolute; top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          width: 56px; height: 56px;
+          border-radius: 50%;
+          background: rgba(10,132,255,0.12);
+          border: 1.5px solid rgba(10,132,255,0.35);
+        `;
+        const dot = document.createElement('div');
+        dot.style.cssText = `
+          width: 18px; height: 18px;
+          background: #0A84FF;
+          border: 3px solid #ffffff;
+          border-radius: 50%;
+          position: relative; z-index: 1;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+          animation: location-pulse 2.5s ease-in-out infinite;
+        `;
+        wrapper.appendChild(accuracyRing);
+        wrapper.appendChild(dot);
+
+        const locOverlay = new window.kakao.maps.CustomOverlay({
+          position: locPosition, content: wrapper,
+          yAnchor: 0.5, xAnchor: 0.5, zIndex: 400,
+        });
+        locOverlay.setMap(mapRef.current);
+        locationOverlayRef.current = locOverlay;
         if (gpsTimerRef.current) clearTimeout(gpsTimerRef.current);
         gpsTimerRef.current = setTimeout(() => {
           const level = mapRef.current.getLevel();
@@ -114,7 +153,9 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
-    return () => { if (gpsTimerRef.current) clearTimeout(gpsTimerRef.current); };
+    return () => {
+      if (gpsTimerRef.current) clearTimeout(gpsTimerRef.current);
+    };
   }, [requestGps, mapLoaded]);
 
   // 3. Handle external center change (e.g., deep linking)

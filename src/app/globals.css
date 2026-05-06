@@ -89,7 +89,7 @@ body, html {
   height: 100%;
   z-index: 1;
   /* Night map: invert tiles + restore hue, slight brightness reduction */
-  filter: invert(1) hue-rotate(180deg) brightness(0.78) contrast(1.08) saturate(0.55);
+  filter: invert(1) hue-rotate(180deg) brightness(0.88) contrast(1.05) saturate(0.6);
   transform-origin: center center;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
 }
@@ -343,6 +343,11 @@ body, html {
 }
 .marker-pulse {
   animation: marker-pulse-glow 2s infinite;
+}
+
+@keyframes location-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.45), 0 2px 10px rgba(0,0,0,0.5); }
+  50%       { box-shadow: 0 0 0 7px rgba(10, 132, 255, 0),  0 2px 10px rgba(0,0,0,0.5); }
 }
 
 @keyframes vote-glow-pulse {
