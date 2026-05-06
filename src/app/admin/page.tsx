@@ -39,6 +39,42 @@ interface UserProfile {
 
 type SelectedView = 'notice' | 'terms' | 'privacy' | 'messages' | 'users';
 
+const DEFAULT_PAGES: Partial<Record<SelectedView, PageContent>> = {
+  privacy: {
+    slug: 'privacy',
+    title: '개인정보처리방침',
+    subtitle: '이용자님의 소중한 정보를 보호하기 위해 최선을 다하고 있습니다.',
+    updated_at: new Date().toISOString(),
+    body_json: [
+      { id: 1, title: '1. 수집하는 개인정보 항목', content: '24시나우는 서비스 제공을 위해 아래와 같은 개인정보를 수집합니다.\n\n• 위치 정보(GPS): 주변 24시간 운영 장소 검색 기능 제공\n• IP 주소(해시 처리): 서비스 남용 방지 및 보안\n• 이름·이메일(문의 시): 문의 접수 및 답변 제공\n\n위치 정보는 이용자의 기기에서만 처리되며, 서버에 저장되지 않습니다.' },
+      { id: 2, title: '2. 개인정보의 수집 및 이용 목적', content: '수집한 개인정보는 다음의 목적을 위해서만 이용합니다.\n\n• 위치 기반 서비스 제공: 현재 위치 주변의 24시간 운영 매장 안내\n• 서비스 품질 개선: 이용 패턴 분석 및 서비스 개선\n• 문의 응대: 이용자 문의 접수 및 답변' },
+      { id: 3, title: '3. 개인정보의 보유 및 이용 기간', content: '24시나우는 원칙적으로 개인정보 수집 및 이용 목적이 달성된 후에는 해당 정보를 즉시 파기합니다.\n\n• 위치 정보: 서비스 이용 즉시 파기 (서버 미저장)\n• IP 해시: 수집 후 30일\n• 문의 이메일(이름·주소): 문의 처리 완료 후 1년\n\n단, 관계 법령의 규정에 의하여 보존할 필요가 있는 경우 법령에서 정한 기간 동안 보존합니다.' },
+      { id: 4, title: '4. 개인정보의 제3자 제공', content: '24시나우는 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다.\n\n다만, 아래의 경우에는 예외로 합니다.\n\n• 이용자가 사전에 동의한 경우\n• 법령의 규정에 의거하거나, 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우' },
+      { id: 5, title: '5. 개인정보 처리 위탁', content: '24시나우는 서비스 제공을 위해 아래와 같이 개인정보 처리를 위탁하고 있습니다.\n\n• 수탁자: Supabase Inc.\n  위탁 업무: 데이터베이스 저장 및 운영\n  보유 기간: 위탁 계약 종료 시까지\n\n• 수탁자: Kakao Corp.\n  위탁 업무: 지도 서비스 SDK, 소셜 로그인\n  보유 기간: 위탁 계약 종료 시까지' },
+      { id: 6, title: '6. 이용자의 권리 및 행사 방법', content: '이용자는 언제든지 다음의 권리를 행사할 수 있습니다.\n\n• 개인정보 열람 요구\n• 오류 정정 요구\n• 삭제 요구\n• 처리 정지 요구\n\n권리 행사는 이메일(contact@24now.kr)로 요청하시면 지체 없이 처리합니다.' },
+      { id: 7, title: '7. 개인정보 보호책임자', content: '개인정보 보호책임자\n이메일: contact@24now.kr\n서비스명: 24시나우' },
+      { id: 8, title: '8. 개인정보처리방침의 변경', content: '이 개인정보처리방침은 2026년 5월 6일부터 적용됩니다.\n\n법령, 정책 또는 보안 기술의 변경에 따라 내용의 추가·삭제 및 수정이 있을 경우, 시행일 7일 전부터 서비스 내 공지사항을 통해 고지합니다.' },
+    ],
+  },
+  terms: {
+    slug: 'terms',
+    title: '서비스 이용약관',
+    subtitle: '24시나우를 안전하게 이용하기 위한 약속입니다.',
+    updated_at: new Date().toISOString(),
+    body_json: [
+      { id: 1, title: '제1조 (목적)', content: '이 약관은 24시나우(이하 "서비스")가 제공하는 24시간 운영 장소 정보 서비스의 이용 조건 및 절차, 이용자와 서비스 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.' },
+      { id: 2, title: '제2조 (정의)', content: '• "서비스"란 24시나우가 제공하는 24시간 운영 장소 검색 및 관련 부가 기능 일체를 말합니다.\n• "이용자"란 서비스에 접속하여 이 약관에 따라 서비스를 이용하는 자를 말합니다.\n• "콘텐츠"란 이용자가 서비스에 등록하는 댓글, 평가, 제보 등 일체의 정보를 말합니다.' },
+      { id: 3, title: '제3조 (서비스의 내용)', content: '• 서울·경기·인천 지역 24시간 운영 카페, 편의점, 셀프세차장 등의 위치 정보 제공\n• 지도 기반 주변 24시간 매장 검색\n• 매장별 이용자 댓글 및 정보 제보 기능\n• 심야 가이드 콘텐츠 제공' },
+      { id: 4, title: '제4조 (이용자의 의무)', content: '• 서비스 이용 시 정확한 정보를 제공해야 합니다.\n• 타인의 개인정보, 저작권, 기타 권리를 침해하지 않아야 합니다.\n• 관련 법령 및 이 약관의 규정을 준수해야 합니다.\n• 서비스의 정상적인 운영을 방해하는 행위를 해서는 안 됩니다.' },
+      { id: 5, title: '제5조 (금지 행위)', content: '• 허위 정보 제보 또는 허위 신고\n• 스팸성 댓글 반복 게시\n• 자동화된 프로그램을 이용한 데이터 크롤링 또는 수집\n• 서비스 데이터의 상업적 무단 이용\n• 타인을 사칭하거나 타인의 정보를 도용하는 행위\n• 서비스 서버나 시스템에 과부하를 유발하는 행위\n• 음란, 폭력적, 혐오적 콘텐츠 게시' },
+      { id: 6, title: '제6조 (서비스 이용 제한)', content: '이용자가 이 약관을 위반하거나 다음에 해당하는 경우, 사전 통보 없이 서비스 이용을 제한하거나 계정을 삭제할 수 있습니다.\n\n• 제5조의 금지 행위를 한 경우\n• 서비스의 정상적인 운영을 방해한 경우\n• 법령 위반 행위를 한 경우' },
+      { id: 7, title: '제7조 (면책 조항)', content: '• 서비스에 제공된 매장 정보의 정확성, 완전성, 최신성\n• 천재지변, 서버 장애, 인터넷 통신 장애 등 불가항력으로 인한 서비스 중단\n• 이용자 간 또는 이용자와 제3자 간에 발생한 분쟁\n• 이용자가 서비스를 이용하여 얻은 정보로 인해 발생한 손해' },
+      { id: 8, title: '제8조 (분쟁 해결 및 관할)', content: '이 약관과 서비스 이용에 관한 분쟁은 대한민국 법률을 적용합니다.\n\n분쟁에 대해서는 서울중앙지방법원을 관할 법원으로 합니다.\n\n분쟁 발생 시 먼저 이메일(contact@24now.kr)로 문의해 주시면 신속히 처리하겠습니다.' },
+      { id: 9, title: '제9조 (시행일)', content: '이 약관은 2026년 5월 6일부터 시행됩니다.\n\n약관이 변경되는 경우, 변경 내용과 시행일을 서비스 공지사항을 통해 사전 공지합니다.' },
+    ],
+  },
+};
+
 const NAV_CONTENT: { slug: SelectedView; label: string }[] = [
   { slug: 'notice', label: '공지사항' },
   { slug: 'terms', label: '서비스 이용약관' },
@@ -99,9 +135,13 @@ export default function AdminPage() {
 
   // Sync editingPage when pages load or view changes
   useEffect(() => {
-    if (selectedView === 'messages') return;
+    if (selectedView === 'messages' || selectedView === 'users') return;
     const page = pages.find(p => p.slug === selectedView);
-    if (page) setEditingPage(JSON.parse(JSON.stringify(page)));
+    if (page) {
+      setEditingPage(JSON.parse(JSON.stringify(page)));
+    } else if (DEFAULT_PAGES[selectedView]) {
+      setEditingPage(JSON.parse(JSON.stringify(DEFAULT_PAGES[selectedView])));
+    }
   }, [pages, selectedView]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -131,9 +171,13 @@ export default function AdminPage() {
   const handleSelectView = (view: SelectedView) => {
     setSelectedView(view);
     setSaveMsg(null);
-    if (view !== 'messages') {
+    if (view !== 'messages' && view !== 'users') {
       const page = pages.find(p => p.slug === view);
-      if (page) setEditingPage(JSON.parse(JSON.stringify(page)));
+      if (page) {
+        setEditingPage(JSON.parse(JSON.stringify(page)));
+      } else if (DEFAULT_PAGES[view]) {
+        setEditingPage(JSON.parse(JSON.stringify(DEFAULT_PAGES[view])));
+      }
     }
   };
 
