@@ -13,8 +13,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
-  title: "24시나우 | 지금 당장 갈 수 있는 밤샘 장소 찾기",
-  description: "서울/경기/인천 전 지역의 24시 카페, 편의점, 세차장, PC방, 약국을 가장 정확하게 찾아보세요. 실시간 데이터와 사용자 제보로 가장 신뢰할 수 있는 밤샘 정보를 제공합니다.",
+  title: "24시나우 | 지금 내 주변 24시간 장소 찾기",
+  description: "새벽에도, 휴일에도 — 지금 열려 있는 24시간 카페·편의점·세차장을 지도에서 바로 찾아보세요. 사용자 제보와 실시간 데이터로 가장 신뢰할 수 있는 밤샘 정보를 드립니다.",
   keywords: [
     "24시 카페", "24시간 카페", "야간 카페", "새벽 카페",
     "근처 24시", "24시 편의점", "야간 편의점",
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     canonical: BASE_URL,
   },
   openGraph: {
-    title: "24시나우 | 지금 내 주변 밤샘 장소 찾기",
-    description: "어둡고 낯선 길 위에서도 24시나우와 함께라면 든든합니다.",
+    title: "24시나우 | 새벽에도 문 여는 곳, 지도에서 바로",
+    description: "카페, 편의점, 세차장 — 지금 이 순간 열려 있는 곳을 지도 위에서 찾아보세요.",
     type: "website",
     url: BASE_URL,
     siteName: "24시나우",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 1200,
-        alt: "24시나우 — 내 주변 밤샘 장소 찾기",
+        alt: "24시나우 — 새벽에도 문 여는 곳 지도",
       },
     ],
     locale: "ko_KR",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "24시나우",
-    description: "지금 당장 이용 가능한 밤샘 장소 찾기",
+    description: "새벽에도 문 여는 곳, 지도에서 바로 찾기",
     images: ["/og-image.png"],
   },
   robots: {

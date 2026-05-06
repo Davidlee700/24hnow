@@ -147,7 +147,7 @@ function HomeContent() {
       />
 
       <h1 style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
-        서울·경기·인천 24시간 카페, 편의점, 세차장 찾기 - 24시나우
+        24시간 카페·편의점·세차장 찾기 — 새벽에도 문 여는 곳, 24시나우
       </h1>
 
       {/* Top bar */}
