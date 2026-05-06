@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Store } from '@/types/store';
 import { useTagVotes } from '@/hooks/useTagVotes';
+import { useBookmarks } from '@/hooks/useBookmarks';
 import StoreReviews from './StoreReviews';
 
 interface Props {
@@ -90,8 +91,8 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [reportComment, setReportComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkFilling, setBookmarkFilling] = useState(false);
+  const { isBookmarked, toggleBookmark } = useBookmarks();
   const [hasVotedHours, setHasVotedHours] = useState(false);
   const [showBadgeInfo, setShowBadgeInfo] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -116,7 +117,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setIsReporting(false);
     setReportType(null);
     setReportComment('');
-    setBookmarked(false);
     setBookmarkFilling(false);
     setShowBadgeInfo(false);
     setIsExpanded(false);
@@ -132,10 +132,28 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     window.open(url, '_blank');
   };
 
-  const handleBookmark = (e: React.MouseEvent<HTMLElement>) => {
+  const handleBookmark = async (e: React.MouseEvent<HTMLElement>) => {
+    if (!store) return;
     tapEffect(e);
+    setBookmarkFilling(true);
+    setTimeout(() => setBookmarkFilling(false), 400);
+
+    const result = await toggleBookmark({
+      id: store.id,
+      name: store.name,
+      category: store.category,
+      road_address: store.road_address,
+      latitude: store.latitude,
+      longitude: store.longitude,
+    });
+
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToastMsg('로그인 후 저장 기능을 이용할 수 있어요');
+    const msg = result.needsLogin
+      ? '로그인 후 저장 기능을 이용할 수 있어요'
+      : result.success
+        ? result.added ? '아지트에 저장됐어요 🧡' : '저장이 취소됐어요'
+        : '저장에 실패했어요. 다시 시도해 주세요.';
+    setToastMsg(msg);
     toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
   };
 
@@ -268,7 +286,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     onClick={handleBookmark}
                     style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}
                   >
-                    {bookmarked ? '🧡' : '🤍'}
+                    {store && isBookmarked(store.id) ? '🧡' : '🤍'}
                   </button>
                 </div>
 

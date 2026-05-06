@@ -33,6 +33,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const gpsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // 1. Initialize map
@@ -85,7 +86,8 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         const locPosition = new window.kakao.maps.LatLng(lat, lng);
         mapRef.current.setCenter(locPosition);
         onLocationUpdate?.(lat, lng);
-        setTimeout(() => {
+        if (gpsTimerRef.current) clearTimeout(gpsTimerRef.current);
+        gpsTimerRef.current = setTimeout(() => {
           const level = mapRef.current.getLevel();
           if (level > 7) {
             onBoundsChange?.(null);
@@ -112,6 +114,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
+    return () => { if (gpsTimerRef.current) clearTimeout(gpsTimerRef.current); };
   }, [requestGps, mapLoaded]);
 
   // 3. Handle external center change (e.g., deep linking)

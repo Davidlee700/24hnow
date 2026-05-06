@@ -10,6 +10,11 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: ['/admin', '/api/', '/auth/'],
       },
+      {
+        userAgent: 'Yeti',
+        allow: '/',
+        disallow: ['/admin', '/api/', '/auth/'],
+      },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
     host: BASE_URL,

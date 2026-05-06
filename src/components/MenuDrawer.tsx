@@ -81,10 +81,10 @@ export default function MenuDrawer({ isOpen, onClose, onShowToast, user }: Props
                 </button>
               </div>
             )}
-            <div className="menu-item menu-item-disabled" aria-disabled="true">
+            <a href="/bookmarks" className="menu-item" onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
               <span>내 아지트</span>
-              <span className="coming-soon">준비 중</span>
-            </div>
+              <span className="menu-chevron">›</span>
+            </a>
             <a href="/guide" className="menu-item" onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
               <span>심야 가이드</span>
               <span className="menu-chevron">›</span>
