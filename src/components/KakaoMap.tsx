@@ -258,5 +258,18 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
     });
   }, [stores, mapLoaded]);
 
-  return <div ref={mapElement} className={`map-container${dimmed ? ' dimmed' : ''}`} />;
+  return (
+    <>
+      <div ref={mapElement} className={`map-container${dimmed ? ' dimmed' : ''}`} />
+      <div className="zoom-control">
+        <button className="zoom-btn" aria-label="확대" onClick={() => {
+          if (mapRef.current) mapRef.current.setLevel(mapRef.current.getLevel() - 1, { animate: true });
+        }}>+</button>
+        <div className="zoom-divider" />
+        <button className="zoom-btn" aria-label="축소" onClick={() => {
+          if (mapRef.current) mapRef.current.setLevel(mapRef.current.getLevel() + 1, { animate: true });
+        }}>-</button>
+      </div>
+    </>
+  );
 }

@@ -233,6 +233,55 @@ body, html {
   border-color: rgba(173, 255, 47, 0.3);
 }
 
+/* Custom Zoom Control */
+.zoom-control {
+  position: absolute;
+  right: 16px;
+  top: calc(max(var(--safe-area-inset-top), 12px) + 12px + 44px + 10px + 36px + 14px + 44px + 12px);
+  width: 44px;
+  background: var(--material-thick);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 0.5px solid var(--border-light);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.zoom-btn {
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.zoom-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.zoom-divider {
+  width: 28px;
+  height: 0.5px;
+  background: var(--border-light);
+}
+
 /* Bottom Sheet Drawer */
 .bottom-sheet {
   position: absolute;
