@@ -72,6 +72,10 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         kakao.maps.event.addListener(mapRef.current, 'click', () => {
           onMapClick?.();
         });
+
+        kakao.maps.event.addListener(mapRef.current, 'zoom_changed', () => {
+          setZoomLevel(mapRef.current.getLevel());
+        });
       }
     });
   }, []);
