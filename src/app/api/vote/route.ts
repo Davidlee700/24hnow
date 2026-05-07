@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
   }
 
-  const { store_id, tag } = await req.json();
+  const { store_id, tag, user_id } = await req.json();
 
   if (!store_id || !tag) {
     return NextResponse.json({ error: 'Missing store_id or tag' }, { status: 400 });
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   // Insert vote directly (relying on client-side state for basic duplicate prevention)
   const { error } = await supabase
     .from('store_votes')
-    .insert({ store_id, tag, ip_hash });
+    .insert({ store_id, tag, ip_hash, user_id });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -103,6 +103,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const [hasVotedHours, setHasVotedHours] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
@@ -368,7 +369,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   </div>
                 </div>
 
-                {/* ── Layer 4: Tags / Community ── */}
                 {tags.length > 0 && (
                   <div className="sheet-layer sheet-community">
                     <p className="community-label" style={{ fontSize: '13px', marginBottom: '10px' }}>
@@ -378,16 +378,22 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       const totalVotes = tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0);
                       const isEmptyState = totalVotes === 0 && !hasVoted;
                       const defaultTags = getDefaultTags(store.name, tags);
+                      
+                      // Sort tags by votes descending
+                      const sortedTags = [...tags].sort((a, b) => (votes[b] || 0) - (votes[a] || 0));
+                      const displayTags = showAllTags ? sortedTags : sortedTags.slice(0, 3);
+                      const hasMoreTags = tags.length > 3;
+
                       return (
                         <>
                           {isEmptyState && (
                             <div className="empty-tag-cta">
                               <p>아직 이곳의 밤샘 정보가 없어요</p>
-                              <span>첫 번째로 분위기를 알려주시겠어요?</span>
+                              <span>어울리는 특징을 골라주시겠어요?</span>
                             </div>
                           )}
-                          <div className="tag-vote-grid">
-                            {tags.map(tag => {
+                          <div className="tag-vote-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {displayTags.map(tag => {
                               const isDefault = isEmptyState && defaultTags.has(tag);
                               return (
                                 <button
@@ -395,17 +401,38 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                                   className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
                                   disabled={hasVoted}
                                   onClick={(e) => handleVote(e, tag)}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    padding: '8px 12px', borderRadius: '16px',
+                                    background: hasVoted && votedTag === tag ? 'var(--accent-blue)' : 'rgba(255,255,255,0.08)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white', fontSize: '13px', cursor: hasVoted ? 'default' : 'pointer',
+                                    transition: 'all 0.2s ease',
+                                  }}
                                 >
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    {tag}
-                                    {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
-                                    {(votes[tag] ?? 0) > 0 && (
-                                      <span style={{ opacity: 0.6, fontSize: '10px', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>
-                                    )}
-                                  </span>
+                                  <span>#{tag}</span>
+                                  {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
+                                  {(votes[tag] ?? 0) > 0 && (
+                                    <span style={{ opacity: 0.8, fontSize: '11px', background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>
+                                  )}
                                 </button>
                               );
                             })}
+                            {!showAllTags && hasMoreTags && (
+                              <button
+                                onClick={() => setShowAllTags(true)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '6px',
+                                  padding: '8px 12px', borderRadius: '16px',
+                                  background: 'rgba(255,255,255,0.04)',
+                                  border: '1px dashed rgba(255,255,255,0.2)',
+                                  color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                }}
+                              >
+                                <span>더 보기 ➕</span>
+                              </button>
+                            )}
                           </div>
                         </>
                       );
