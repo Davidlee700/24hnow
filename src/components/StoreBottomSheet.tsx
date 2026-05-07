@@ -279,18 +279,18 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
             {!isReporting ? (
               <>
                 {/* ── Layer 1: Header (Identity) ── */}
-                <div className="sheet-layer sheet-identity" style={{ paddingBottom: '0' }}>
-                  <div className="sheet-identity-main">
-                    <h2 className="sheet-store-name" style={{ fontSize: '22px', fontWeight: 700 }}>{store.name}</h2>
-                    <p className="sheet-store-meta" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                      {store.category}
-                      {userLocation && ` · ${calcDistance(userLocation, store)}`}
-                    </p>
-                  </div>
+                <div className="sheet-layer sheet-identity" style={{ paddingBottom: '12px', textAlign: 'center' }}>
+                  <h2 className="sheet-store-name" style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.5px' }}>{store.name}</h2>
+                  <p className="sheet-store-meta" style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                    {store.category}
+                    {userLocation && ` · ${calcDistance(userLocation, store)}`}
+                    <span style={{ margin: '0 6px', opacity: 0.3 }}>|</span>
+                    신뢰도 {trustPct}% {store.last_verified_at && `· ${relativeTime(store.last_verified_at)}`}
+                  </p>
                 </div>
 
                 {/* ── Layer 2: Action Bar (Primary Actions) ── */}
-                <div className="action-bar">
+                <div className="action-bar" style={{ marginBottom: '16px' }}>
                   <button className={`action-btn${bookmarkFilling ? ' filling' : ''}`} onClick={handleBookmark}>
                     <div className="action-icon-wrapper" style={{ color: store && isBookmarked(store.id) ? '#ff453a' : 'var(--text-primary)' }}>
                       {store && isBookmarked(store.id) ? (
@@ -324,54 +324,76 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   </button>
                 </div>
 
-                {/* ── Layer 3: Info Row (Address & Hours) ── */}
-                <div className="sheet-layer" style={{ padding: '0 8px' }}>
-                  <div className="info-row">
+                {/* ── Layer 3: Info Card (Grouped Settings Style) ── */}
+                <div className="info-card">
+                  <div className="info-row-compact">
                     <div className="info-icon">📍</div>
                     <div className="info-content">
                       <span className="info-text" style={{ wordBreak: 'keep-all' }}>{store.road_address || '주소 정보 없음'}</span>
                     </div>
                   </div>
                   
-                  <div className="info-row">
-                    <div className="info-icon">
-                      {isConfirmed ? '🟢' : '🕒'}
-                    </div>
-                    <div className="info-content">
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setShowFullHours(!showFullHours)}>
-                        <span className="info-text" style={{ fontWeight: isConfirmed ? 600 : 400, color: isConfirmed ? 'var(--accent-neon)' : 'inherit' }}>
-                          {getTodayHours(store.raw_hours, store.confidence_level, store.class_type)}
-                        </span>
-                        {store.raw_hours && (
-                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', transform: showFullHours ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
-                        )}
+                  <div className="info-row-compact" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: 'pointer' }} onClick={() => setShowFullHours(!showFullHours)}>
+                        <div className="info-icon">
+                          {isConfirmed ? '🟢' : '🕒'}
+                        </div>
+                        <div className="info-content">
+                          <span className="info-text" style={{ fontWeight: isConfirmed ? 600 : 400, color: isConfirmed ? 'var(--accent-neon)' : 'inherit' }}>
+                            {getTodayHours(store.raw_hours, store.confidence_level, store.class_type)}
+                          </span>
+                          {store.raw_hours && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              상세시간 {showFullHours ? '▴' : '▾'}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      
-                      {/* Accordion for Full Week Hours */}
-                      <AnimatePresence>
-                        {showFullHours && store.raw_hours && (
-                          <motion.div 
-                            className="hours-accordion"
-                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                            animate={{ height: 'auto', opacity: 1, marginTop: 8 }}
-                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                            style={{ overflow: 'hidden' }}
-                          >
-                            {store.raw_hours.split(' ').map((h, i) => {
-                              const parts = h.match(/(.*): (\d{4})-(\d{4})/);
-                              if (parts) return <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{parts[1]}</span><span>{formatApiTime(parts[2])} - {formatApiTime(parts[3])}</span></div>;
-                              return <div key={i}>{h}</div>;
-                            })}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+
+                      {/* Micro Feedback Inline */}
+                      {!isConfirmed && !hasVotedHours && (
+                        <div className="micro-feedback-group">
+                          <button className="micro-feedback-btn yes" onClick={(e) => handleMicroFeedback(e, 'OPEN')}>영업중</button>
+                          <button className="micro-feedback-btn no" onClick={(e) => handleMicroFeedback(e, 'CLOSED')}>문닫음</button>
+                        </div>
+                      )}
                     </div>
+                    
+                    {/* Accordion for Full Week Hours */}
+                    <AnimatePresence>
+                      {showFullHours && store.raw_hours && (
+                        <motion.div 
+                          className="hours-accordion"
+                          initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                          animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                          exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          {store.raw_hours.split(' ').map((h, i) => {
+                            const parts = h.match(/(.*): (\d{4})-(\d{4})/);
+                            if (parts) return <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{parts[1]}</span><span>{formatApiTime(parts[2])} - {formatApiTime(parts[3])}</span></div>;
+                            return <div key={i}>{h}</div>;
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
+                {!isConfirmed && (
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', padding: '0 8px', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '14px', color: '#FF9F0A' }}>⚠️</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      상호명 기반으로 24시간 영업이 추정되는 곳입니다. 늦은 시간 방문 전 전화 확인을 권장합니다.
+                    </span>
+                  </div>
+                )}
+
+                {/* ── Layer 4: Community Card (Tags) ── */}
                 {tags.length > 0 && (
-                  <div className="sheet-layer sheet-community">
-                    <p className="community-label" style={{ fontSize: '13px', marginBottom: '10px', color: 'var(--text-secondary)' }}>
+                  <div className="info-card" style={{ padding: '16px' }}>
+                    <p className="community-label" style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                       {hasVoted ? '밤샘 정보 반영 완료 ✓' : (
                         tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0) === 0 
                           ? '아직 이곳의 밤샘 정보가 없어요. 분위기를 골라주세요 💡' 
@@ -389,82 +411,67 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       const hasMoreTags = tags.length > 3;
 
                       return (
-                        <>
-                          <div className="tag-vote-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {displayTags.map(tag => {
-                              const isDefault = isEmptyState && defaultTags.has(tag);
-                              return (
-                                <button
-                                  key={tag}
-                                  className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
-                                  disabled={hasVoted}
-                                  onClick={(e) => handleVote(e, tag)}
-                                  style={{
-                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                    padding: '8px 12px', borderRadius: '16px',
-                                    background: hasVoted && votedTag === tag ? 'var(--accent-blue)' : 'rgba(255,255,255,0.08)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    color: 'white', fontSize: '13px', cursor: hasVoted ? 'default' : 'pointer',
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                >
-                                  <span>#{tag}</span>
-                                  {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
-                                  {(votes[tag] ?? 0) > 0 && (
-                                    <span style={{ opacity: 0.8, fontSize: '11px', background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                            {!showAllTags && hasMoreTags && (
+                        <div className="tag-vote-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {displayTags.map(tag => {
+                            const isDefault = isEmptyState && defaultTags.has(tag);
+                            return (
                               <button
-                                onClick={() => setShowAllTags(true)}
+                                key={tag}
+                                className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
+                                disabled={hasVoted}
+                                onClick={(e) => handleVote(e, tag)}
                                 style={{
                                   display: 'flex', alignItems: 'center', gap: '6px',
                                   padding: '8px 12px', borderRadius: '16px',
-                                  background: 'rgba(255,255,255,0.04)',
-                                  border: '1px dashed rgba(255,255,255,0.2)',
-                                  color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
+                                  background: hasVoted && votedTag === tag ? 'var(--accent-blue)' : 'rgba(255,255,255,0.08)',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  color: 'white', fontSize: '13px', cursor: hasVoted ? 'default' : 'pointer',
                                   transition: 'all 0.2s ease',
                                 }}
                               >
-                                <span>더 보기 ➕</span>
+                                <span>#{tag}</span>
+                                {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
+                                {(votes[tag] ?? 0) > 0 && (
+                                  <span style={{ opacity: 0.8, fontSize: '11px', background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>
+                                )}
                               </button>
-                            )}
-                          </div>
-                        </>
+                            );
+                          })}
+                          {!showAllTags && hasMoreTags && (
+                            <button
+                              onClick={() => setShowAllTags(true)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '8px 12px', borderRadius: '16px',
+                                background: 'rgba(255,255,255,0.04)',
+                                border: '1px dashed rgba(255,255,255,0.2)',
+                                color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              <span>더 보기 ➕</span>
+                            </button>
+                          )}
+                        </div>
                       );
                     })()}
                   </div>
                 )}
 
-                {/* ── Layer 5: Secondary Info / Trust Score (Moved to bottom) ── */}
-                <div className="sheet-layer" style={{ background: 'transparent', padding: '0 8px', marginTop: '8px' }}>
-                  {!isConfirmed && (
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', marginBottom: '16px' }}>
-                      <span style={{ fontSize: '14px', color: '#FF9F0A' }}>⚠️</span>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                        상호명 기반으로 24시간 영업이 추정되는 곳입니다. 늦은 시간 방문 전 전화 확인을 권장합니다.
-                      </span>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      신뢰도 {trustPct}% {store.last_verified_at && `· ${relativeTime(store.last_verified_at)}`}
-                    </span>
-                    <button onClick={() => setIsReporting(true)} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--text-secondary)', textDecoration: 'underline', cursor: 'pointer' }}>
-                      정보 수정 제보
-                    </button>
+                {/* ── Layer 5: Review Trigger & Footer ── */}
+                <div style={{ textAlign: 'center', marginTop: '16px', paddingBottom: '24px' }}>
+                  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '8px', opacity: isExpanded ? 0 : 1, transition: 'opacity 0.3s' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'toast-in-out 2s infinite' }}>
+                      <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>위로 당겨서 사진 및 리뷰 보기</span>
                   </div>
                   
-                  {!isConfirmed && !hasVotedHours && (
-                    <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>영업 확인:</span>
-                      <button onClick={(e) => handleMicroFeedback(e, 'OPEN')} style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🟢 영업 중</button>
-                      <button onClick={(e) => handleMicroFeedback(e, 'CLOSED')} style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🔴 문 닫음</button>
-                    </div>
-                  )}
+                  <div style={{ marginTop: '32px' }}>
+                    <button onClick={() => setIsReporting(true)} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--text-tertiary)', textDecoration: 'underline', cursor: 'pointer' }}>
+                      잘못된 정보 제보하기
+                    </button>
+                  </div>
                 </div>
 
                 {isExpanded && <StoreReviews storeId={store.id} availableTags={tags} />}
