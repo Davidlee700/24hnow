@@ -371,8 +371,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                 {tags.length > 0 && (
                   <div className="sheet-layer sheet-community">
-                    <p className="community-label" style={{ fontSize: '13px', marginBottom: '10px' }}>
-                      {hasVoted ? '밤샘 정보 반영 완료 ✓' : '이곳의 분위기는 어떤가요?'}
+                    <p className="community-label" style={{ fontSize: '13px', marginBottom: '10px', color: 'var(--text-secondary)' }}>
+                      {hasVoted ? '밤샘 정보 반영 완료 ✓' : (
+                        tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0) === 0 
+                          ? '아직 이곳의 밤샘 정보가 없어요. 분위기를 골라주세요 💡' 
+                          : '이곳의 분위기는 어떤가요?'
+                      )}
                     </p>
                     {(() => {
                       const totalVotes = tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0);
@@ -386,12 +390,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                       return (
                         <>
-                          {isEmptyState && (
-                            <div className="empty-tag-cta">
-                              <p>아직 이곳의 밤샘 정보가 없어요</p>
-                              <span>어울리는 특징을 골라주시겠어요?</span>
-                            </div>
-                          )}
                           <div className="tag-vote-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {displayTags.map(tag => {
                               const isDefault = isEmptyState && defaultTags.has(tag);
