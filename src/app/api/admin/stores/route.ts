@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   // We'll select essential fields for the dashboard.
   const { data, error } = await supabase
     .from('stores')
-    .select('id, name, address, category, hours, phone, trust_score, created_at')
+    .select('id, name, road_address, category, business_hours, trust_score, created_at')
     .order('trust_score', { ascending: false })
     .limit(100);
 

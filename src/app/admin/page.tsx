@@ -40,10 +40,9 @@ interface UserProfile {
 interface StoreItem {
   id: string;
   name: string;
-  address: string;
+  road_address: string;
   category: string;
-  hours: string;
-  phone: string;
+  business_hours: string;
   trust_score: number;
   created_at: string;
 }
@@ -501,8 +500,8 @@ export default function AdminPage() {
                         <tr key={store.id}>
                           <td className="td-name">{store.name}</td>
                           <td><span className="badge-cat">{store.category}</span></td>
-                          <td className="td-addr">{store.address}</td>
-                          <td className="td-hours">{store.hours}</td>
+                          <td className="td-addr">{store.road_address}</td>
+                          <td className="td-hours">{store.business_hours}</td>
                           <td><span className="score-tag">{store.trust_score}</span></td>
                           <td className="td-date">{new Date(store.created_at).toLocaleDateString()}</td>
                         </tr>

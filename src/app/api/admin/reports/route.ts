@@ -16,9 +16,7 @@ export async function GET(req: NextRequest) {
       store_id,
       report_type,
       comment,
-      created_at,
-      status,
-      stores ( name )
+      created_at
     `)
     .order('created_at', { ascending: false })
     .limit(100);
