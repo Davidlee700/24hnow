@@ -1393,7 +1393,11 @@ body:has(.legal-page) { overflow-y: auto; }
 
 .admin-gate-btn:disabled { opacity: 0.5; }
 
-/* ── Admin Dashboard (PC layout) ── */
+.app-wrapper:has(.admin-wrap) {
+  max-width: 100%;
+  border: none;
+  box-shadow: none;
+}
 
 .admin-wrap {
   min-height: 100vh;
@@ -1402,7 +1406,7 @@ body:has(.legal-page) { overflow-y: auto; }
 }
 
 .admin-page {
-  max-width: 1280px;
+  max-width: 1440px;
   margin: 0 auto;
   height: 100vh;
   overflow: hidden;
@@ -1906,6 +1910,119 @@ body:has(.legal-page) { overflow-y: auto; }
 }
 
 .admin-reply-btn:hover { background: rgba(10,132,255,0.2); }
+
+/* ── Admin Monitoring View ── */
+.admin-db-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.admin-panel-header {
+  padding: 32px 40px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-panel-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.admin-panel-title span {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.admin-refresh-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-table-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 0 40px 40px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+}
+
+.admin-table td {
+  padding: 16px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.05);
+  color: var(--text-secondary);
+}
+
+.admin-table tr:hover { background: rgba(255,255,255,0.02); }
+
+.td-name { font-weight: 600; color: white; }
+.td-addr { font-size: 13px; opacity: 0.8; max-width: 300px; }
+.td-hours { font-size: 13px; }
+.td-comment { font-size: 13px; max-width: 400px; }
+
+.badge-cat {
+  padding: 4px 8px;
+  background: rgba(173,255,47,0.1);
+  color: var(--accent-neon);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-type {
+  padding: 4px 8px;
+  background: rgba(10,132,255,0.1);
+  color: var(--accent-blue);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.score-tag {
+  font-weight: 700;
+  color: var(--accent-neon);
+}
+
+.badge-status {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-status.pending {
+  background: rgba(255,159,10,0.1);
+  color: #FF9F0A;
+}
+
+.badge-status.completed {
+  background: rgba(48,209,88,0.1);
+  color: #30D158;
+}
 
 /* ── Zoom hint banner ── */
 .zoom-hint-banner {

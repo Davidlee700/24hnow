@@ -37,7 +37,28 @@ interface UserProfile {
   created_at: string;
 }
 
-type SelectedView = 'notice' | 'terms' | 'privacy' | 'messages' | 'users';
+interface StoreItem {
+  id: string;
+  name: string;
+  address: string;
+  category: string;
+  hours: string;
+  phone: string;
+  trust_score: number;
+  created_at: string;
+}
+
+interface ReportItem {
+  id: string;
+  store_id: string;
+  report_type: string;
+  comment: string;
+  status: string;
+  created_at: string;
+  stores?: { name: string };
+}
+
+type SelectedView = 'stores' | 'reports' | 'notice' | 'terms' | 'privacy' | 'messages' | 'users';
 
 const DEFAULT_PAGES: Partial<Record<SelectedView, PageContent>> = {
   privacy: {
@@ -87,7 +108,7 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
 
-  const [selectedView, setSelectedView] = useState<SelectedView>('notice');
+  const [selectedView, setSelectedView] = useState<SelectedView>('stores');
   const [pages, setPages] = useState<PageContent[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [editingPage, setEditingPage] = useState<PageContent | null>(null);
@@ -96,6 +117,8 @@ export default function AdminPage() {
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [storesData, setStoresData] = useState<StoreItem[]>([]);
+  const [reports, setReports] = useState<ReportItem[]>([]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('admin_token');
@@ -126,16 +149,34 @@ export default function AdminPage() {
     }
   }, []);
 
+  const fetchStoresData = useCallback(async (t: string) => {
+    const res = await fetch('/api/admin/stores', { headers: { Authorization: `Bearer ${t}` } });
+    if (res.ok) {
+      const data = await res.json();
+      setStoresData(data.stores ?? []);
+    }
+  }, []);
+
+  const fetchReports = useCallback(async (t: string) => {
+    const res = await fetch('/api/admin/reports', { headers: { Authorization: `Bearer ${t}` } });
+    if (res.ok) {
+      const data = await res.json();
+      setReports(data.reports ?? []);
+    }
+  }, []);
+
   useEffect(() => {
     if (!token) return;
     fetchPages(token);
     fetchMessages(token);
     fetchUsers(token);
-  }, [token, fetchPages, fetchMessages, fetchUsers]);
+    fetchStoresData(token);
+    fetchReports(token);
+  }, [token, fetchPages, fetchMessages, fetchUsers, fetchStoresData, fetchReports]);
 
   // Sync editingPage when pages load or view changes
   useEffect(() => {
-    if (selectedView === 'messages' || selectedView === 'users') return;
+    if (selectedView === 'messages' || selectedView === 'users' || selectedView === 'stores' || selectedView === 'reports') return;
     const page = pages.find(p => p.slug === selectedView);
     if (page) {
       setEditingPage(JSON.parse(JSON.stringify(page)));
@@ -171,7 +212,7 @@ export default function AdminPage() {
   const handleSelectView = (view: SelectedView) => {
     setSelectedView(view);
     setSaveMsg(null);
-    if (view !== 'messages' && view !== 'users') {
+    if (view !== 'messages' && view !== 'users' && view !== 'stores' && view !== 'reports') {
       const page = pages.find(p => p.slug === view);
       if (page) {
         setEditingPage(JSON.parse(JSON.stringify(page)));
@@ -299,7 +340,44 @@ export default function AdminPage() {
           {/* Sidebar */}
           <aside className="admin-sidebar">
             <div className="admin-nav-section">
-              <p className="admin-nav-label">콘텐츠 관리</p>
+              <p className="admin-nav-label">매장 관리</p>
+              <button
+                className={`admin-nav-item${selectedView === 'stores' ? ' active' : ''}`}
+                onClick={() => handleSelectView('stores')}
+              >
+                <span className="admin-nav-dot" />
+                전체 매장 DB
+              </button>
+              <button
+                className={`admin-nav-item${selectedView === 'reports' ? ' active' : ''}`}
+                onClick={() => handleSelectView('reports')}
+              >
+                <span className="admin-nav-dot" />
+                정보 수정 제보
+              </button>
+            </div>
+            
+            <div className="admin-nav-section">
+              <p className="admin-nav-label">회원 및 소통</p>
+              <button
+                className={`admin-nav-item${selectedView === 'users' ? ' active' : ''}`}
+                onClick={() => handleSelectView('users')}
+              >
+                <span className="admin-nav-dot" />
+                회원 관리
+              </button>
+              <button
+                className={`admin-nav-item${selectedView === 'messages' ? ' active' : ''}`}
+                onClick={() => handleSelectView('messages')}
+              >
+                <span className="admin-nav-dot" />
+                고객 문의
+                {unreadCount > 0 && <span className="admin-badge">{unreadCount}</span>}
+              </button>
+            </div>
+
+            <div className="admin-nav-section">
+              <p className="admin-nav-label">운영 정책</p>
               {NAV_CONTENT.map(({ slug, label }) => (
                 <button
                   key={slug}
@@ -311,31 +389,13 @@ export default function AdminPage() {
                 </button>
               ))}
             </div>
-            <div className="admin-nav-section">
-              <p className="admin-nav-label">운영</p>
-              <button
-                className={`admin-nav-item${selectedView === 'messages' ? ' active' : ''}`}
-                onClick={() => handleSelectView('messages')}
-              >
-                <span className="admin-nav-dot" />
-                문의 내역
-                {unreadCount > 0 && <span className="admin-badge">{unreadCount}</span>}
-              </button>
-              <button
-                className={`admin-nav-item${selectedView === 'users' ? ' active' : ''}`}
-                onClick={() => handleSelectView('users')}
-              >
-                <span className="admin-nav-dot" />
-                회원 관리
-              </button>
-            </div>
           </aside>
 
           {/* Main */}
           <main className="admin-main">
 
             {/* 콘텐츠 에디터 */}
-            {selectedView !== 'messages' && selectedView !== 'users' && (
+            {(selectedView === 'notice' || selectedView === 'terms' || selectedView === 'privacy') && (
               <div className="admin-editor">
                 {editingPage ? (
                   <>
@@ -412,6 +472,80 @@ export default function AdminPage() {
                     <p>데이터를 불러오는 중이에요...</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* 매장 DB 관리 */}
+            {selectedView === 'stores' && (
+              <div className="admin-db-panel">
+                <div className="admin-panel-header">
+                  <h2 className="admin-panel-title">전체 매장 DB <span>{storesData.length}개</span></h2>
+                  <div className="admin-panel-actions">
+                    <button className="admin-refresh-btn" onClick={() => token && fetchStoresData(token)}>새로고침</button>
+                  </div>
+                </div>
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>이름</th>
+                        <th>카테고리</th>
+                        <th>주소</th>
+                        <th>영업시간</th>
+                        <th>신뢰도</th>
+                        <th>등록일</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {storesData.map(store => (
+                        <tr key={store.id}>
+                          <td className="td-name">{store.name}</td>
+                          <td><span className="badge-cat">{store.category}</span></td>
+                          <td className="td-addr">{store.address}</td>
+                          <td className="td-hours">{store.hours}</td>
+                          <td><span className="score-tag">{store.trust_score}</span></td>
+                          <td className="td-date">{new Date(store.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 정보 수정 제보 */}
+            {selectedView === 'reports' && (
+              <div className="admin-db-panel">
+                <div className="admin-panel-header">
+                  <h2 className="admin-panel-title">정보 수정 제보 <span>{reports.length}건</span></h2>
+                  <div className="admin-panel-actions">
+                    <button className="admin-refresh-btn" onClick={() => token && fetchReports(token)}>새로고침</button>
+                  </div>
+                </div>
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>매장명</th>
+                        <th>유형</th>
+                        <th>내용</th>
+                        <th>상태</th>
+                        <th>제보일</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.map(report => (
+                        <tr key={report.id}>
+                          <td className="td-name">{report.stores?.name || 'ID: ' + report.store_id.slice(0,8)}</td>
+                          <td><span className="badge-type">{report.report_type}</span></td>
+                          <td className="td-comment">{report.comment}</td>
+                          <td><span className={`badge-status ${report.status}`}>{report.status === 'pending' ? '대기중' : '처리완료'}</span></td>
+                          <td className="td-date">{new Date(report.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
