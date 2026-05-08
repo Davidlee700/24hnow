@@ -1979,6 +1979,34 @@ body:has(.legal-page) { overflow-y: auto; }
 
 .admin-table tr:hover { background: rgba(255,255,255,0.02); }
 
+.admin-filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 0 40px 20px;
+}
+
+.admin-filter-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-filter-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.admin-filter-btn.active {
+  background: var(--accent-neon);
+  color: #000;
+  border-color: var(--accent-neon);
+}
+
 .td-name { font-weight: 600; color: white; }
 .td-addr { font-size: 13px; opacity: 0.8; max-width: 300px; }
 .td-hours { font-size: 13px; }

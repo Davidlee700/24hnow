@@ -118,6 +118,12 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [storesData, setStoresData] = useState<StoreItem[]>([]);
   const [reports, setReports] = useState<ReportItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+
+  const CATEGORIES = ['전체', '카페', '편의점', '세차장', '약국', 'PC방'];
+  const filteredStores = selectedCategory === '전체' 
+    ? storesData 
+    : storesData.filter(s => s.category === selectedCategory);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('admin_token');
@@ -478,11 +484,24 @@ export default function AdminPage() {
             {selectedView === 'stores' && (
               <div className="admin-db-panel">
                 <div className="admin-panel-header">
-                  <h2 className="admin-panel-title">전체 매장 DB <span>{storesData.length}개</span></h2>
+                  <h2 className="admin-panel-title">전체 매장 DB <span>{filteredStores.length}개</span></h2>
                   <div className="admin-panel-actions">
                     <button className="admin-refresh-btn" onClick={() => token && fetchStoresData(token)}>새로고침</button>
                   </div>
                 </div>
+                
+                <div className="admin-filter-bar">
+                  {CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      className={`admin-filter-btn${selectedCategory === cat ? ' active' : ''}`}
+                      onClick={() => setSelectedCategory(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
@@ -496,7 +515,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {storesData.map(store => (
+                      {filteredStores.map(store => (
                         <tr key={store.id}>
                           <td className="td-name">{store.name}</td>
                           <td><span className="badge-cat">{store.category}</span></td>
