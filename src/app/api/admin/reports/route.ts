@@ -18,8 +18,7 @@ export async function GET(req: NextRequest) {
       comment,
       created_at
     `)
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .order('created_at', { ascending: false });
 
   if (error) {
     // Fallback if relation doesn't exist

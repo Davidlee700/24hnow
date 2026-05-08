@@ -12,8 +12,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from('stores')
     .select('id, name, road_address, category, business_hours, trust_score, created_at')
-    .order('trust_score', { ascending: false })
-    .limit(100);
+    .order('trust_score', { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
