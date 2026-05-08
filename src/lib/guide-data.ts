@@ -1,4 +1,4 @@
-export type GuideCategory = '카페' | '편의점' | '세차장' | '전체';
+export type GuideCategory = '카페' | '편의점' | '세차장' | 'PC방' | '전체';
 
 export interface StoreEntry {
   rank: number;
@@ -33,6 +33,7 @@ export const CATEGORY_GRADIENTS: Record<GuideCategory, string> = {
   '카페':    'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
   '편의점':  'linear-gradient(135deg, #0d1b2a 0%, #1b4332 50%, #2d6a4f 100%)',
   '세차장':  'linear-gradient(135deg, #0d1b2a 0%, #023e8a 50%, #0077b6 100%)',
+  'PC방':    'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #111 100%)',
   '전체':    'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #111 100%)',
 };
 

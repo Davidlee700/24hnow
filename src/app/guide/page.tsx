@@ -17,6 +17,7 @@ const CATEGORY_FILTERS: { label: string; value: GuideCategory | 'all' }[] = [
   { label: '카페', value: '카페' },
   { label: '편의점', value: '편의점' },
   { label: '세차장', value: '세차장' },
+  { label: 'PC방', value: 'PC방' },
 ];
 
 interface Props {
@@ -108,7 +109,7 @@ export default async function GuidePage({ searchParams }: Props) {
                 <div className="guide-card-thumbnail-inner">
                   <span className="guide-card-region">{post.region}</span>
                   <span className="guide-card-category-icon">
-                    {post.category === '카페' ? '☕' : post.category === '편의점' ? '🏪' : '🚿'}
+                    {post.category === '카페' ? '☕' : post.category === '편의점' ? '🏪' : post.category === '세차장' ? '🚿' : '🎮'}
                   </span>
                 </div>
               </div>
