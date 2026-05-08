@@ -34,21 +34,25 @@ export function validateToken(req: NextRequest): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json();
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  try {
+    const { password } = await req.json();
+    const inputPassword = password?.trim();
+    
+    const newPassword = 'dmsdud12!@';
+    const envPassword = process.env.ADMIN_PASSWORD?.trim();
 
-  if (!adminPassword) {
-    return NextResponse.json({ error: 'Admin not configured' }, { status: 500 });
-  }
+    // 1. Check against the new requested password
+    if (inputPassword === newPassword) {
+      return NextResponse.json({ token: makeToken(newPassword) });
+    }
 
-  const inputPassword = password.trim();
-  const targetPassword = adminPassword.trim();
-  const newPasswordFallback = 'dmsdud12!@';
+    // 2. Check against the environment variable (fallback/legacy)
+    if (envPassword && inputPassword === envPassword) {
+      return NextResponse.json({ token: makeToken(envPassword) });
+    }
 
-  if (inputPassword !== targetPassword && inputPassword !== newPasswordFallback) {
     return NextResponse.json({ error: '비밀번호가 올바르지 않습니다.' }, { status: 401 });
+  } catch (err) {
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
   }
-
-  const activePassword = inputPassword === newPasswordFallback ? newPasswordFallback : targetPassword;
-  return NextResponse.json({ token: makeToken(activePassword) });
 }
