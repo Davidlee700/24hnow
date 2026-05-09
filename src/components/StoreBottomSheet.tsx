@@ -90,6 +90,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [feedbackStep, setFeedbackStep] = useState<0 | 1 | 2>(0);
   const [feedbackChoice, setFeedbackChoice] = useState<'OPEN' | 'CLOSED' | null>(null);
   const [feedbackDetail, setFeedbackDetail] = useState<string | null>(null);
+  const [reviewCount, setReviewCount] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -107,6 +108,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setFeedbackStep(0);
     setFeedbackChoice(null);
     setFeedbackDetail(null);
+    setReviewCount(null);
   }, [store?.id]);
 
   const openDirections = () => {
@@ -256,24 +258,27 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-          drag="y"
+          drag={isExpanded ? false : 'y'}
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={0.1}
           onDragEnd={(_, info) => {
             const { offset, velocity } = info;
-            if (isExpanded) {
-              if (velocity.y > 300 || offset.y > 80) { setIsExpanded(false); return; }
-            } else {
-              if (velocity.y > 500 || offset.y > 80) { onClose(); return; }
-              if (velocity.y < -300 || offset.y < -80) { setIsExpanded(true); return; }
-            }
+            if (velocity.y > 500 || offset.y > 80) { onClose(); return; }
+            if (velocity.y < -300 || offset.y < -80) { setIsExpanded(true); return; }
           }}
           layout
         >
           {toastMsg && <div className="vote-toast">{toastMsg}</div>}
-          <div className="drag-handle" />
+          <div
+            className="drag-handle"
+            onClick={() => isExpanded ? setIsExpanded(false) : undefined}
+            style={{ cursor: isExpanded ? 'pointer' : 'default' }}
+          />
 
-          <div className="sheet-content">
+          <div
+            className="sheet-content"
+            style={isExpanded ? { overflowY: 'auto', maxHeight: '80vh' } : undefined}
+          >
             {!isReporting ? (
               <>
                 {/* ── Layer 1: Header (Identity) ── */}
@@ -400,8 +405,8 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   </div>
                 </div>
 
-                {/* ── Layer 3.5: Hours Feedback Card ── */}
-                {!hasVotedHours && (!isConfirmed || openStatus?.isOpen === null) && (
+                {/* ── Layer 3.5: Hours Feedback Card — UNKNOWN/EXTENDED 또는 영업상태 불명 매장만 표시 ── */}
+                {!hasVotedHours && (store.operation_type === 'UNKNOWN' || store.operation_type === 'EXTENDED' || openStatus?.isOpen === null) && (
                   <div className="info-card" style={{ padding: '16px', marginBottom: '12px' }}>
                     <AnimatePresence mode="wait">
                       {feedbackStep === 0 && (
@@ -583,11 +588,13 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                 {/* ── Layer 5: Review Trigger & Footer ── */}
                 <div style={{ textAlign: 'center', marginTop: '16px', paddingBottom: '24px' }}>
-                  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '8px', opacity: isExpanded ? 0 : 1, transition: 'opacity 0.3s' }}>
+                  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '8px', opacity: isExpanded ? 0 : 1, transition: 'opacity 0.3s', pointerEvents: isExpanded ? 'none' : 'auto' }} onClick={() => setIsExpanded(true)}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'toast-in-out 2s infinite' }}>
                       <polyline points="18 15 12 9 6 15"></polyline>
                     </svg>
-                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>영업시간 전체 보기</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                      {reviewCount === null || reviewCount === 0 ? '첫 리뷰를 남겨보세요' : '방문 경험을 공유해주세요'}
+                    </span>
                   </div>
                   
                   <div style={{ marginTop: '32px' }}>
@@ -597,7 +604,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   </div>
                 </div>
 
-                {isExpanded && <StoreReviews storeId={store.id} availableTags={tags} />}
+                {isExpanded && <StoreReviews storeId={store.id} availableTags={tags} onLoad={setReviewCount} />}
               </>
             ) : (
               <div className="reporting-form" style={{ animation: 'fade-in 0.3s ease-out' }}>

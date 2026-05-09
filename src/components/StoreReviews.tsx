@@ -14,9 +14,10 @@ interface Comment {
 interface Props {
   storeId: string;
   availableTags: string[];
+  onLoad?: (count: number) => void;
 }
 
-export default function StoreReviews({ storeId, availableTags }: Props) {
+export default function StoreReviews({ storeId, availableTags, onLoad }: Props) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
@@ -39,7 +40,9 @@ export default function StoreReviews({ storeId, availableTags }: Props) {
       const res = await fetch(`/api/comments?store_id=${storeId}`);
       if (res.ok) {
         const data = await res.json();
-        setComments(data.comments ?? []);
+        const loaded = data.comments ?? [];
+        setComments(loaded);
+        onLoad?.(loaded.length);
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Failed to fetch comments', err);
