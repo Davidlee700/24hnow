@@ -1,5 +1,15 @@
 export type OperationType = '24H' | 'EXTENDED' | 'REGULAR' | 'UNKNOWN';
-export type HoursSource = 'KAKAO' | 'NAVER' | 'GOOGLE' | 'KAKAO+NAVER' | 'KAKAO+GOOGLE' | 'NAVER+GOOGLE' | 'ALL';
+export type HoursSource = 'KAKAO' | 'NAVER' | 'GOOGLE' | 'KAKAO+NAVER' | 'KAKAO+GOOGLE' | 'NAVER+GOOGLE' | 'ALL' | 'CROWD';
+
+export interface BusinessHoursPeriod {
+  open: { day: number; hours: number; minutes: number };
+  close?: { day?: number; hours: number; minutes: number };
+}
+
+export interface BusinessHours {
+  periods: BusinessHoursPeriod[];
+  weekdayDescriptions?: string[];
+}
 
 export interface Store {
   id: string;
@@ -15,7 +25,7 @@ export interface Store {
   raw_hours?: string;
   inference_note?: string;
   confidence_level?: 'HIGH' | 'MEDIUM' | 'LOW';
-  business_hours?: any;
+  business_hours?: BusinessHours;
   google_place_id?: string;
   verification_source?: string;
   operation_type?: OperationType;

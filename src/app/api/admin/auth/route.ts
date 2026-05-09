@@ -14,45 +14,42 @@ function makeToken(password: string): string {
   return `${Buffer.from(payload).toString('base64url')}.${sig}`;
 }
 
+function getAdminPassword(): string {
+  const password = process.env.ADMIN_PASSWORD?.trim();
+  if (!password) throw new Error('ADMIN_PASSWORD environment variable is not set');
+  return password;
+}
+
 export function validateToken(req: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
-  const newPasswordFallback = 'dmsdud12!@';
-  
-  const raw = req.headers.get('authorization')?.replace('Bearer ', '') ?? '';
-  const [b64, sig] = raw.split('.');
-  if (!b64 || !sig) return false;
+  try {
+    const adminPassword = getAdminPassword();
+    const raw = req.headers.get('authorization')?.replace('Bearer ', '') ?? '';
+    const [b64, sig] = raw.split('.');
+    if (!b64 || !sig) return false;
 
-  const payload = Buffer.from(b64, 'base64url').toString();
-  const expiry = Number(payload);
-  if (isNaN(expiry) || Date.now() > expiry) return false;
+    const payload = Buffer.from(b64, 'base64url').toString();
+    const expiry = Number(payload);
+    if (isNaN(expiry) || Date.now() > expiry) return false;
 
-  // Check against both current env var and fallback
-  const isMatchEnv = adminPassword ? sign(payload, adminPassword) === sig : false;
-  const isMatchFallback = sign(payload, newPasswordFallback) === sig;
-
-  return isMatchEnv || isMatchFallback;
+    return sign(payload, adminPassword) === sig;
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const adminPassword = getAdminPassword();
     const { password } = await req.json();
     const inputPassword = password?.trim();
-    
-    const newPassword = 'dmsdud12!@';
-    const envPassword = process.env.ADMIN_PASSWORD?.trim();
 
-    // 1. Check against the new requested password
-    if (inputPassword === newPassword) {
-      return NextResponse.json({ token: makeToken(newPassword) });
-    }
-
-    // 2. Check against the environment variable (fallback/legacy)
-    if (envPassword && inputPassword === envPassword) {
-      return NextResponse.json({ token: makeToken(envPassword) });
+    if (inputPassword === adminPassword) {
+      return NextResponse.json({ token: makeToken(adminPassword) });
     }
 
     return NextResponse.json({ error: '비밀번호가 올바르지 않습니다.' }, { status: 401 });
   } catch (err) {
-    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });
+    const message = err instanceof Error ? err.message : '서버 오류가 발생했습니다.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

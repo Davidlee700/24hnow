@@ -7,6 +7,16 @@ import { getOpenStatus, getTodayHoursLine } from '@/utils/openHours';
 
 export const revalidate = 86400; // 24시간 캐시
 
+export async function generateStaticParams() {
+  const { data } = await supabase
+    .from('stores')
+    .select('id')
+    .in('operation_type', ['24H', 'EXTENDED'])
+    .order('trust_score', { ascending: false })
+    .limit(5000);
+  return data?.map(s => ({ id: String(s.id) })) ?? [];
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
 
 const CATEGORY_SEO: Record<string, string> = {

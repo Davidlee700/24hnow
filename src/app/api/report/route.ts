@@ -12,6 +12,12 @@ const HOURS_TYPE_MAP: Record<string, { operation_type: string; inference_note: s
 
 const THRESHOLD = 2;
 
+const VALID_REPORT_TYPES = new Set([
+  'OPEN_24H', 'OPEN_UNTIL_MIDNIGHT', 'OPEN_UNTIL_1AM', 'OPEN_UNTIL_2AM', 'OPEN_UNKNOWN',
+  'CLOSED_HOURS_END', 'CLOSED_TODAY_OFF', 'CLOSED_PERMANENTLY',
+  'OPEN', 'CLOSED', 'NOT_24H', 'OTHER',
+]);
+
 export async function POST(req: NextRequest) {
   if (!rateLimit(`report:${getIp(req)}`, 10, 60_000)) {
     return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
@@ -21,6 +27,10 @@ export async function POST(req: NextRequest) {
 
   if (!store_id || !report_type || !session_id) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  if (!VALID_REPORT_TYPES.has(report_type)) {
+    return NextResponse.json({ error: 'Invalid report_type' }, { status: 400 });
   }
 
   const supabase = createClient(
