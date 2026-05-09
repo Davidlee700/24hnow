@@ -577,7 +577,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   <h2 className="title-1" style={{ fontSize: '18px' }}>정보 수정 제보</h2>
                   <div style={{ width: 52 }} />
                 </div>
-
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
                   {[
                     { id: 'NOT_24H', label: '24시간 운영이 아니에요' },
                     { id: 'CLOSED', label: '장소가 존재하지 않아요' },
