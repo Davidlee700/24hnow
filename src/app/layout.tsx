@@ -13,20 +13,30 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
-  title: "24시나우 | 지금 내 주변 24시간 장소 찾기",
-  description: "새벽에도, 휴일에도 — 지금 열려 있는 24시간 카페·편의점·세차장을 지도에서 바로 찾아보세요. 사용자 제보와 실시간 데이터로 가장 신뢰할 수 있는 밤샘 정보를 드립니다.",
+  title: "24시나우 | 내 주변 24시간 카페·편의점 지도 찾기",
+  description: "홍대·강남·광화문·경기도 등 지금 열려 있는 24시간 카페, 편의점, 세차장, PC방을 지도에서 바로 찾아보세요. 새벽에도, 휴일에도 — 내 주변 24시 영업중인 곳을 실시간으로 확인.",
   keywords: [
-    "24시 카페", "24시간 카페", "야간 카페", "새벽 카페",
-    "근처 24시", "24시 편의점", "야간 편의점",
-    "야간 세차장", "24시 셀프세차", "24시간 세차",
-    "밤샘지도", "24시나우", "24now", "약국", "PC방"
+    // 핵심 (검색량 상위)
+    "24시 카페", "24시간 카페", "내주변 24시 카페", "24시간 카페 찾기",
+    // 지역별 롱테일 (블랙키위 데이터 기반)
+    "홍대 24시간 카페", "강남역 24시간 카페", "광화문 24시간 카페",
+    "경기도 24시 카페", "남양주 24시간 카페", "서울 근교 24시간 카페",
+    "강남 24시 카페", "신촌 24시 카페", "이태원 24시 카페",
+    "합정 24시 카페", "건대 24시 카페", "신림 24시 카페",
+    // 야간·새벽
+    "새벽 카페", "심야 카페", "야간 카페", "밤새 카페", "밤늦게 카페",
+    // 편의점·기타
+    "24시 편의점", "24시간 편의점", "근처 24시 편의점",
+    "24시 셀프세차", "24시간 세차장", "24시 PC방", "24시 코인노래방",
+    // 브랜드
+    "밤샘지도", "24시나우", "24now",
   ],
   alternates: {
     canonical: BASE_URL,
   },
   openGraph: {
-    title: "24시나우 | 새벽에도 문 여는 곳, 지도에서 바로",
-    description: "카페, 편의점, 세차장 — 지금 이 순간 열려 있는 곳을 지도 위에서 찾아보세요.",
+    title: "24시나우 | 내 주변 24시간 카페·편의점 지도",
+    description: "홍대·강남·경기도 — 지금 열려 있는 24시간 영업 장소를 지도에서 바로 찾아보세요.",
     type: "website",
     url: BASE_URL,
     siteName: "24시나우",
@@ -35,15 +45,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 1200,
-        alt: "24시나우 — 새벽에도 문 여는 곳 지도",
+        alt: "24시나우 — 내 주변 24시간 카페·편의점 지도",
       },
     ],
     locale: "ko_KR",
   },
   twitter: {
     card: "summary_large_image",
-    title: "24시나우",
-    description: "새벽에도 문 여는 곳, 지도에서 바로 찾기",
+    title: "24시나우 | 내 주변 24시간 카페 지도",
+    description: "홍대·강남·경기도 — 지금 열려 있는 24시 영업 장소 바로 찾기",
     images: ["/og-image.png"],
   },
   robots: {
@@ -54,6 +64,40 @@ export const metadata: Metadata = {
 };
 
 import KakaoScript from "@/components/KakaoScript";
+
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": `${BASE_URL}/#webapp`,
+      "name": "24시나우",
+      "url": BASE_URL,
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "All",
+      "description": "내 주변 24시간 영업 카페·편의점·세차장·PC방을 지도에서 실시간으로 찾아주는 서비스",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+      "inLanguage": "ko-KR",
+      "areaServed": {
+        "@type": "Country",
+        "name": "대한민국"
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${BASE_URL}/#website`,
+      "url": BASE_URL,
+      "name": "24시나우 — 밤샘지도",
+      "description": "새벽에도 열려 있는 24시간 장소를 지도에서 찾아보세요",
+      "inLanguage": "ko-KR",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": { "@type": "EntryPoint", "urlTemplate": `${BASE_URL}/?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
 
 export default function RootLayout({
   children,
@@ -66,6 +110,10 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <KakaoScript />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
         {/* Google AdSense */}
         <Script
           async

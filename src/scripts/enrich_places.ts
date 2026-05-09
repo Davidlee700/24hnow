@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import { crossVerifyHours } from '../utils/hoursVerification';
 
 // Load env vars from .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -23,10 +24,10 @@ if (!googleApiKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Max places to process per run
+// Max places to process per run (기본 50 — 무료 API 크레딧 절약)
 const args = process.argv.slice(2);
 const limitArg = args.find(a => a.startsWith('--limit='));
-const BATCH_LIMIT = limitArg ? parseInt(limitArg.split('=')[1]) : 100; 
+const BATCH_LIMIT = limitArg ? parseInt(limitArg.split('=')[1]) : 50;
 
 async function enrichPlaces() {
   const regionArg = args.find(a => a.startsWith('--region='));
@@ -35,12 +36,14 @@ async function enrichPlaces() {
   console.log(`Starting Data Enrichment... (Limit: ${BATCH_LIMIT} places)`);
   if (region) console.log(`Filtering by region: ${region}`);
 
-  // Find places with MEDIUM confidence or class_type 'B' that don't have a google_place_id yet
+  // 대상: google_place_id 없고, confidence가 HIGH가 아닌 매장
+  // EXTENDED, UNKNOWN operation_type도 포함하여 영업시간 보강
   let queryBuilder = supabase
     .from('stores')
-    .select('id, name, road_address, class_type, confidence_level')
+    .select('id, name, road_address, class_type, confidence_level, operation_type, raw_hours')
     .is('google_place_id', null)
-    .or('confidence_level.eq.MEDIUM,class_type.eq.B');
+    .or('confidence_level.eq.MEDIUM,confidence_level.eq.LOW,confidence_level.is.null,operation_type.eq.EXTENDED,operation_type.eq.UNKNOWN')
+    .order('last_hours_verified_at', { ascending: true, nullsFirst: true });
 
   if (region) {
     queryBuilder = queryBuilder.like('road_address', `%${region}%`);
@@ -111,16 +114,32 @@ async function enrichPlaces() {
         confidence = 'HIGH';
       }
 
+      // 교차 검증: 기존 raw_hours (카카오/네이버) + Google hours
+      const verification = crossVerifyHours({
+        kakaoHours: (place as any).raw_hours ?? null,
+        googleHours: businessHours,
+        category: (place as any).category ?? '',
+      });
+
+      const updatedOperationType = verification.operation_type !== 'UNKNOWN'
+        ? verification.operation_type
+        : undefined;
+
+      const now = new Date().toISOString();
+
       // 3. Update Supabase
       const { error: updateError } = await supabase
         .from('stores')
         .update({
           google_place_id: placeId,
           business_hours: businessHours,
-          confidence_level: confidence,
+          confidence_level: businessHours ? 'HIGH' : confidence,
+          hours_source: verification.hours_source ?? 'GOOGLE',
           verification_source: 'GOOGLE_PLACES',
-          updated_at: new Date().toISOString(),
-          last_verified_at: new Date().toISOString()
+          ...(updatedOperationType ? { operation_type: updatedOperationType } : {}),
+          is_24h: updatedOperationType === '24H',
+          last_hours_verified_at: now,
+          last_verified_at: now,
         })
         .eq('id', place.id);
 

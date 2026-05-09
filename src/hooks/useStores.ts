@@ -3,8 +3,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Store, MapBounds } from '@/types/store';
+import { isOpenNow } from '@/utils/openHours';
 
-export function useStores(bounds: MapBounds | null, categories: string[], tagFilter?: string) {
+export function useStores(
+  bounds: MapBounds | null,
+  categories: string[],
+  tagFilter?: string,
+  openNowOnly?: boolean,
+) {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -28,10 +34,15 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
       query = query.contains('tags', [tagFilter]);
     }
 
+    // "지금 영업중" 필터: DB에서 24H+EXTENDED만 가져온 뒤 클라이언트에서 실시간 판단
+    if (openNowOnly) {
+      query = query.in('operation_type', ['24H', 'EXTENDED']);
+    }
+
     query.then(({ data, error }) => {
       if (ignore) return;
       if (!error && data) {
-        const deduped = (data as Store[]).filter((store, idx) =>
+        let result = (data as Store[]).filter((store, idx) =>
           !data.slice(0, idx).some(
             prev =>
               prev.name === store.name &&
@@ -39,7 +50,13 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
               Math.abs(prev.longitude - store.longitude) < 0.0005
           )
         );
-        setStores(deduped);
+
+        if (openNowOnly) {
+          const now = new Date();
+          result = result.filter(store => isOpenNow(store, now) !== false);
+        }
+
+        setStores(result);
       } else if (error) {
         if (process.env.NODE_ENV === 'development') console.error('[useStores] fetch error:', error.message);
         setStores([]);
@@ -50,7 +67,7 @@ export function useStores(bounds: MapBounds | null, categories: string[], tagFil
     return () => {
       ignore = true;
     };
-  }, [bounds, categories.join(','), tagFilter ?? '']);
+  }, [bounds, categories.join(','), tagFilter ?? '', openNowOnly ?? false]);
 
   return { stores, loading };
 }

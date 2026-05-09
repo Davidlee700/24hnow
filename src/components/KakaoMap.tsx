@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Store, MapBounds } from '@/types/store';
+import { getOpenStatus } from '@/utils/openHours';
 
 interface KakaoMapProps {
   stores?: Store[];
@@ -26,6 +27,8 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
   '셀프세차장': { bg: '#30D158', emoji: '🚗' },
   'PC방':       { bg: '#5856D6', emoji: '🎮' },
   '약국':       { bg: '#FF2D55', emoji: '💊' },
+  '코인노래방': { bg: '#FF6B35', emoji: '🎤' },
+  '셀프빨래방': { bg: '#32ADE6', emoji: '🫧' },
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
@@ -181,6 +184,8 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
 
+    const now = new Date();
+
     stores.forEach(store => {
       if (!store.latitude || !store.longitude) return;
 
@@ -188,24 +193,52 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       const { bg, emoji } = CATEGORY_STYLE[store.category] ?? DEFAULT_STYLE;
       const isConfirmed = store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A');
       const isLowConfidence = store.confidence_level === 'LOW';
+      const operationType = store.operation_type;
+      const openStatus = (operationType === 'EXTENDED') ? getOpenStatus(store, now) : null;
+
+      // 마커 테두리 색상: 24H 확인 → 카테고리 색, EXTENDED 영업중 → amber, 나머지 → white
+      const borderColor = isConfirmed && operationType !== 'EXTENDED'
+        ? bg
+        : openStatus?.isOpen
+          ? '#FF9F0A'  // amber — 심야 영업중
+          : 'white';
+
+      const markerOpacity = (isLowConfidence || openStatus?.isOpen === false) ? '0.4' : '1';
+      const zIdx = isConfirmed || openStatus?.isOpen ? '100' : '10';
 
       const el = document.createElement('div');
       el.style.cssText = `
         width:40px;height:40px;
         background:rgba(255, 255, 255, 0.95);
         border-radius:50%;
-        border:2.5px solid ${isConfirmed ? bg : 'white'};
-        box-shadow:0 0 12px ${isConfirmed ? bg : 'rgba(255,255,255,0.3)'}, 0 4px 12px rgba(0,0,0,0.6);
-        opacity:${isLowConfidence ? '0.4' : '1'};cursor:pointer;
+        border:2.5px solid ${borderColor};
+        box-shadow:0 0 12px ${borderColor === 'white' ? 'rgba(255,255,255,0.3)' : borderColor}, 0 4px 12px rgba(0,0,0,0.6);
+        opacity:${markerOpacity};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:22px;line-height:1;user-select:none;
         filter:invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2);
         transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
-        z-index: ${isConfirmed ? '100' : '10'};
+        z-index: ${zIdx};
         position: relative;
       `;
-      
+
       el.textContent = emoji;
+
+      // "곧 마감" 뱃지
+      if (openStatus?.closingSoon) {
+        const badge = document.createElement('div');
+        badge.style.cssText = `
+          position: absolute; top: -4px; right: -4px;
+          width: 16px; height: 16px;
+          background: #FF9F0A; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 9px; line-height: 1; z-index: 1;
+          filter: invert(1) hue-rotate(180deg);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        `;
+        badge.textContent = '⏰';
+        el.appendChild(badge);
+      }
 
       const label = document.createElement('div');
       label.className = 'marker-label';
@@ -231,9 +264,11 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       `;
       label.textContent = store.name;
       el.appendChild(label);
-      
-      if (isConfirmed) {
+
+      if (isConfirmed && operationType !== 'EXTENDED') {
         el.classList.add('marker-pulse');
+      } else if (openStatus?.isOpen) {
+        el.classList.add('marker-pulse-soft');
       }
 
       const overlay = new kakao.maps.CustomOverlay({ position, content: el, yAnchor: 0.5, xAnchor: 0.5, clickable: true });

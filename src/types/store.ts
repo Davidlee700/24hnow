@@ -1,3 +1,6 @@
+export type OperationType = '24H' | 'EXTENDED' | 'REGULAR' | 'UNKNOWN';
+export type HoursSource = 'KAKAO' | 'NAVER' | 'GOOGLE' | 'KAKAO+NAVER' | 'KAKAO+GOOGLE' | 'NAVER+GOOGLE' | 'ALL';
+
 export interface Store {
   id: string;
   name: string;
@@ -15,6 +18,9 @@ export interface Store {
   business_hours?: any;
   google_place_id?: string;
   verification_source?: string;
+  operation_type?: OperationType;
+  hours_source?: HoursSource;
+  last_hours_verified_at?: string;
   metadata: {
     phone?: string;
     place_url?: string;

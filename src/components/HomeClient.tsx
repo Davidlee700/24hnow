@@ -24,6 +24,7 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState<string>('카페');
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [openNowOnly, setOpenNowOnly] = useState(false);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [requestGps, setRequestGps] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -100,7 +101,7 @@ function HomeContent() {
     }, 180);
   };
 
-  const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined);
+  const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined, openNowOnly);
 
   // Ensure the selectedStore is ALWAYS in the markers list, even if filtered out or outside bounds
   const stores = [...fetchedStores];
@@ -182,19 +183,30 @@ function HomeContent() {
         </div>
 
         {/* 2차 필터 */}
-        {categoryTags.length > 0 && (
-          <div className="sub-filter-container">
-            {categoryTags.map(tag => (
-              <button
-                key={tag}
-                className={`sub-filter-chip ${activeTag === tag ? 'active' : ''}`}
-                onClick={(e) => toggleTag(tag, e)}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="sub-filter-container">
+          {/* 지금 영업중 토글 — 항상 최상단 좌측 */}
+          <button
+            className={`sub-filter-chip open-now-chip ${openNowOnly ? 'active' : ''}`}
+            onClick={(e) => { tapEffect(e); setOpenNowOnly(v => !v); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '5px',
+              borderColor: openNowOnly ? 'var(--accent-neon)' : undefined,
+              color: openNowOnly ? 'var(--accent-neon)' : undefined,
+            }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? 'var(--accent-neon)' : 'currentColor', display: 'inline-block', flexShrink: 0 }} />
+            지금 영업중
+          </button>
+          {categoryTags.map(tag => (
+            <button
+              key={tag}
+              className={`sub-filter-chip ${activeTag === tag ? 'active' : ''}`}
+              onClick={(e) => toggleTag(tag, e)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 줌아웃 안내 */}
@@ -224,8 +236,8 @@ function HomeContent() {
       {/* Empty State */}
       {searchedBounds && stores.length === 0 && !showSearchHere && (
         <div className="empty-state">
-          <p>이 근처엔 24시간 운영 매장이 없어요</p>
-          <span>지도를 이동해 다른 지역을 확인해보세요</span>
+          <p>{openNowOnly ? '지금 이 근처에 영업중인 매장이 없어요' : '이 근처엔 매장 정보가 없어요'}</p>
+          <span>{openNowOnly ? '필터를 해제하거나 지도를 이동해보세요' : '지도를 이동해 다른 지역을 확인해보세요'}</span>
         </div>
       )}
 

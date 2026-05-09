@@ -21,7 +21,11 @@ CREATE TABLE IF NOT EXISTS public.stores (
     confidence_level TEXT, -- 'HIGH', 'MEDIUM', 'LOW'
     business_hours JSONB,
     google_place_id TEXT,
-    verification_source TEXT -- 'GOOGLE', 'HEURISTIC', 'USER'
+    verification_source TEXT, -- 'GOOGLE', 'HEURISTIC', 'USER'
+    -- Hours-aware operation fields
+    operation_type TEXT DEFAULT 'UNKNOWN', -- '24H', 'EXTENDED', 'REGULAR', 'UNKNOWN'
+    hours_source TEXT, -- 'KAKAO', 'NAVER', 'GOOGLE', 'KAKAO+NAVER', 'ALL' etc.
+    last_hours_verified_at TIMESTAMPTZ -- 마지막으로 영업시간을 검증한 시각
 );
 
 -- Create spatial index for location-based search
@@ -57,3 +61,18 @@ CREATE TABLE IF NOT EXISTS public.user_reports (
 -- Index for querying reports efficiently
 CREATE INDEX IF NOT EXISTS idx_user_reports_store_id ON public.user_reports(store_id);
 CREATE INDEX IF NOT EXISTS idx_user_reports_session_id ON public.user_reports(session_id);
+
+-- ─────────────────────────────────────────────
+-- Migration: 심야영업점 지원 (operation_type 도입)
+-- 기존 DB에 컬럼이 없는 경우 아래 ALTER TABLE 실행
+-- ─────────────────────────────────────────────
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS operation_type TEXT DEFAULT 'UNKNOWN';
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS hours_source TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS last_hours_verified_at TIMESTAMPTZ;
+
+-- 기존 is_24h=true 매장을 24H로 백필
+UPDATE public.stores SET operation_type = '24H' WHERE is_24h = true AND operation_type = 'UNKNOWN';
+
+-- operation_type 인덱스 (지금 영업중 필터 쿼리 최적화)
+CREATE INDEX IF NOT EXISTS idx_stores_operation_type ON public.stores(operation_type);
+CREATE INDEX IF NOT EXISTS idx_stores_last_hours_verified ON public.stores(last_hours_verified_at NULLS FIRST);

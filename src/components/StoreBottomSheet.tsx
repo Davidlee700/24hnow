@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Store } from '@/types/store';
+import { getOpenStatus, getTodayHoursLine } from '@/utils/openHours';
 import { useTagVotes } from '@/hooks/useTagVotes';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import StoreReviews from './StoreReviews';
@@ -16,7 +17,8 @@ interface Props {
 function formatApiTime(timeStr: string): string {
   if (!timeStr) return '';
   const time = parseInt(timeStr);
-  if (time === 2400 || time === 0) return '자정(00:00)';
+  if (time === 2400) return '24:00';
+  if (time === 0) return '00:00';
   if (time > 2400) {
     const hour = Math.floor((time - 2400) / 100);
     const min = time % 100;
@@ -25,23 +27,6 @@ function formatApiTime(timeStr: string): string {
   return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
 }
 
-function getTodayHours(rawHours: string | undefined, confidence: string | undefined, classType: string | undefined): string {
-  const isConfirmed = confidence === 'HIGH' || (!confidence && classType === 'A');
-  if (!rawHours) return isConfirmed ? '24시간 운영' : '24시간 운영 (추정)';
-  
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  const today = days[new Date().getDay()];
-  const match = rawHours.match(new RegExp(`${today}: (\\d{4})-(\\d{4})`));
-  
-  if (match) {
-    const start = match[1] === '0000' && match[2] === '2400' ? '24시간' : `${formatApiTime(match[1])} - ${formatApiTime(match[2])}`;
-    if (start === '24시간') return isConfirmed ? `오늘(${today}) 24시간 운영` : `오늘(${today}) 24시간 운영 (추정)`;
-    return `오늘(${today}) ${start}`;
-  }
-  
-  if (rawHours.includes('24시간') || rawHours.includes('0000-2400')) return isConfirmed ? `오늘(${today}) 24시간 운영` : `오늘(${today}) 24시간 운영 (추정)`;
-  return '영업시간 확인 필요';
-}
 
 function calcDistance(user: { lat: number; lng: number }, store: { latitude: number; longitude: number }): string {
   const R = 6371;
@@ -102,6 +87,9 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [bookmarkFilling, setBookmarkFilling] = useState(false);
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const [hasVotedHours, setHasVotedHours] = useState(false);
+  const [feedbackStep, setFeedbackStep] = useState<0 | 1 | 2>(0);
+  const [feedbackChoice, setFeedbackChoice] = useState<'OPEN' | 'CLOSED' | null>(null);
+  const [feedbackDetail, setFeedbackDetail] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -116,6 +104,9 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setBookmarkFilling(false);
     setIsExpanded(false);
     setHasVotedHours(!!localStorage.getItem(`voted_hours_${store?.id}`));
+    setFeedbackStep(0);
+    setFeedbackChoice(null);
+    setFeedbackDetail(null);
   }, [store?.id]);
 
   const openDirections = () => {
@@ -171,27 +162,20 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     return sid;
   };
 
-  const handleMicroFeedback = async (e: React.MouseEvent<HTMLElement>, type: string) => {
+  const handleFeedbackSubmit = async (e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
-    if (!store || hasVotedHours) return;
+    if (!store || !feedbackDetail) return;
     setHasVotedHours(true);
     localStorage.setItem(`voted_hours_${store.id}`, '1');
-
+    setFeedbackStep(2);
     try {
-      const res = await fetch('/api/report', {
+      await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ store_id: store.id, report_type: type, session_id: getSessionId() }),
+        body: JSON.stringify({ store_id: store.id, report_type: feedbackDetail, session_id: getSessionId() }),
       });
-      const data = await res.json();
-      if (data.message) {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToastMsg(data.message);
-        toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
-      }
     } catch {
-      setHasVotedHours(false);
-      localStorage.removeItem(`voted_hours_${store.id}`);
+      // silent — step 2 already shown
     }
   };
 
@@ -246,6 +230,20 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const rawScore = store?.trust_score ?? 0;
   const trustPct = Math.min(100, Math.round(rawScore > 1 ? rawScore : rawScore * 100));
   const isConfirmed = store ? (store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A')) : false;
+  const openStatus = store ? getOpenStatus(store) : null;
+  const todayHoursLine = store ? getTodayHoursLine(store) : null;
+
+  function openStatusIcon(): string {
+    if (!openStatus || openStatus.isOpen === null) return '⚪';
+    if (openStatus.closingSoon) return '⏰';
+    return openStatus.isOpen ? '🟢' : '🔴';
+  }
+
+  function openStatusColor(): string {
+    if (!openStatus || openStatus.isOpen === null) return 'var(--text-secondary)';
+    if (openStatus.closingSoon) return '#FF9F0A';
+    return openStatus.isOpen ? 'var(--accent-neon)' : '#FF453A';
+  }
 
   return (
     <AnimatePresence>
@@ -335,57 +333,182 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   
                   <div className="info-row-compact" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: 'pointer' }} onClick={() => setShowFullHours(!showFullHours)}>
-                        <div className="info-icon">
-                          {isConfirmed ? '🟢' : '🕒'}
-                        </div>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: (store.raw_hours || store.business_hours) ? 'pointer' : 'default' }}
+                        onClick={() => (store.raw_hours || store.business_hours) && setShowFullHours(!showFullHours)}
+                      >
+                        <div className="info-icon">{openStatusIcon()}</div>
                         <div className="info-content">
-                          <span className="info-text" style={{ fontWeight: isConfirmed ? 600 : 400, color: isConfirmed ? 'var(--accent-neon)' : 'inherit' }}>
-                            {getTodayHours(store.raw_hours, store.confidence_level, store.class_type)}
+                          {/* 1줄: 상태 라벨 */}
+                          <span className="info-text" style={{ fontWeight: openStatus?.isOpen ? 600 : 400, color: openStatusColor() }}>
+                            {openStatus?.label ?? '영업시간 미확인'}
                           </span>
-                          {store.raw_hours && (
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              상세시간 {showFullHours ? '▴' : '▾'}
+                          {/* 2줄: 오늘 구체 시간 (금 10:00 - 24:00) */}
+                          {todayHoursLine && (
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                              {todayHoursLine}
+                            </span>
+                          )}
+                          {openStatus?.isOpen === false && openStatus.opensAt && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                              {openStatus.opensAt}에 오픈
+                            </span>
+                          )}
+                          {/* 상세시간 토글 */}
+                          {(store.raw_hours || store.business_hours) && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                              전체 요일 {showFullHours ? '▴' : '▾'}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Micro Feedback Inline */}
-                      {!isConfirmed && !hasVotedHours && (
-                        <div className="micro-feedback-group">
-                          <button className="micro-feedback-btn yes" onClick={(e) => handleMicroFeedback(e, 'OPEN')}>영업중</button>
-                          <button className="micro-feedback-btn no" onClick={(e) => handleMicroFeedback(e, 'CLOSED')}>문닫음</button>
-                        </div>
-                      )}
                     </div>
-                    
+
                     {/* Accordion for Full Week Hours */}
                     <AnimatePresence>
-                      {showFullHours && store.raw_hours && (
-                        <motion.div 
+                      {showFullHours && (store.raw_hours || store.business_hours) && (
+                        <motion.div
                           className="hours-accordion"
                           initial={{ height: 0, opacity: 0, marginTop: 0 }}
                           animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
                           exit={{ height: 0, opacity: 0, marginTop: 0 }}
                           style={{ overflow: 'hidden' }}
                         >
-                          {store.raw_hours.split(' ').map((h, i) => {
-                            const parts = h.match(/(.*): (\d{4})-(\d{4})/);
-                            if (parts) return <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{parts[1]}</span><span>{formatApiTime(parts[2])} - {formatApiTime(parts[3])}</span></div>;
-                            return <div key={i}>{h}</div>;
-                          })}
+                          {store.raw_hours
+                            ? (() => {
+                                const todayDayName = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
+                                return store.raw_hours.split(' ').map((h, i) => {
+                                  const parts = h.match(/(.*): (\d{4})-(\d{4})/);
+                                  if (!parts) return <div key={i}>{h}</div>;
+                                  const isToday = parts[1] === todayDayName;
+                                  return (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontWeight: isToday ? 600 : 400, color: isToday ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                                      <span>{parts[1]}{isToday && <span style={{ fontSize: '10px', marginLeft: '4px', color: openStatusColor() }}>오늘</span>}</span>
+                                      <span>{formatApiTime(parts[2])} - {formatApiTime(parts[3])}</span>
+                                    </div>
+                                  );
+                                });
+                              })()
+                            : store.business_hours?.weekdayDescriptions?.map((line: string, i: number) => (
+                                <div key={i} style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{line}</div>
+                              ))
+                          }
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
                 </div>
 
+                {/* ── Layer 3.5: Hours Feedback Card ── */}
+                {!hasVotedHours && (!isConfirmed || openStatus?.isOpen === null) && (
+                  <div className="info-card" style={{ padding: '16px', marginBottom: '12px' }}>
+                    <AnimatePresence mode="wait">
+                      {feedbackStep === 0 && (
+                        <motion.div key="step0" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+                          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 500 }}>
+                            지금 이 매장 어때요?
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => { setFeedbackChoice('OPEN'); setFeedbackStep(1); }}
+                              style={{ flex: 1, padding: '12px 8px', borderRadius: '12px', background: 'rgba(52,199,89,0.12)', border: '1.5px solid rgba(52,199,89,0.3)', color: '#34C759', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+                            >
+                              🟢 열려 있어요
+                            </button>
+                            <button
+                              onClick={() => { setFeedbackChoice('CLOSED'); setFeedbackStep(1); }}
+                              style={{ flex: 1, padding: '12px 8px', borderRadius: '12px', background: 'rgba(255,69,58,0.12)', border: '1.5px solid rgba(255,69,58,0.3)', color: '#FF453A', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+                            >
+                              🔴 닫혀 있어요
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {feedbackStep === 1 && feedbackChoice === 'OPEN' && (
+                        <motion.div key="step1-open" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <button onClick={() => { setFeedbackStep(0); setFeedbackChoice(null); setFeedbackDetail(null); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '18px', cursor: 'pointer', padding: 0, lineHeight: 1 }}>‹</button>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, margin: 0 }}>몇 시까지 영업하나요?</p>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                            {[
+                              { label: '자정 (00:00까지)', value: 'OPEN_UNTIL_MIDNIGHT' },
+                              { label: '새벽 1시까지', value: 'OPEN_UNTIL_1AM' },
+                              { label: '새벽 2시까지', value: 'OPEN_UNTIL_2AM' },
+                              { label: '24시간 영업해요', value: 'OPEN_24H' },
+                              { label: '잘 모르겠어요', value: 'OPEN_UNKNOWN' },
+                            ].map((opt) => (
+                              <div
+                                key={opt.value}
+                                onClick={() => setFeedbackDetail(opt.value)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderRadius: '10px', background: feedbackDetail === opt.value ? 'rgba(10,132,255,0.15)' : 'rgba(255,255,255,0.05)', border: feedbackDetail === opt.value ? '1.5px solid rgba(10,132,255,0.5)' : '1.5px solid transparent', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                              >
+                                <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: feedbackDetail === opt.value ? '5px solid #0A84FF' : '2px solid rgba(255,255,255,0.3)', flexShrink: 0, transition: 'all 0.15s ease' }} />
+                                <span style={{ fontSize: '14px', color: feedbackDetail === opt.value ? 'white' : 'var(--text-secondary)' }}>{opt.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            onClick={handleFeedbackSubmit}
+                            disabled={!feedbackDetail}
+                            style={{ width: '100%', padding: '13px', borderRadius: '12px', background: feedbackDetail ? '#0A84FF' : 'rgba(255,255,255,0.08)', border: 'none', color: feedbackDetail ? 'white' : 'var(--text-tertiary)', fontSize: '15px', fontWeight: 600, cursor: feedbackDetail ? 'pointer' : 'default', transition: 'all 0.2s ease' }}
+                          >
+                            완료
+                          </button>
+                        </motion.div>
+                      )}
+
+                      {feedbackStep === 1 && feedbackChoice === 'CLOSED' && (
+                        <motion.div key="step1-closed" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <button onClick={() => { setFeedbackStep(0); setFeedbackChoice(null); setFeedbackDetail(null); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '18px', cursor: 'pointer', padding: 0, lineHeight: 1 }}>‹</button>
+                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, margin: 0 }}>왜 닫혀있나요?</p>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                            {[
+                              { label: '영업시간이 끝났어요', value: 'CLOSED_HOURS_END' },
+                              { label: '오늘 쉬는 날이에요', value: 'CLOSED_TODAY_OFF' },
+                              { label: '폐업한 것 같아요', value: 'CLOSED_PERMANENTLY' },
+                            ].map((opt) => (
+                              <div
+                                key={opt.value}
+                                onClick={() => setFeedbackDetail(opt.value)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderRadius: '10px', background: feedbackDetail === opt.value ? 'rgba(10,132,255,0.15)' : 'rgba(255,255,255,0.05)', border: feedbackDetail === opt.value ? '1.5px solid rgba(10,132,255,0.5)' : '1.5px solid transparent', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                              >
+                                <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: feedbackDetail === opt.value ? '5px solid #0A84FF' : '2px solid rgba(255,255,255,0.3)', flexShrink: 0, transition: 'all 0.15s ease' }} />
+                                <span style={{ fontSize: '14px', color: feedbackDetail === opt.value ? 'white' : 'var(--text-secondary)' }}>{opt.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <button
+                            onClick={handleFeedbackSubmit}
+                            disabled={!feedbackDetail}
+                            style={{ width: '100%', padding: '13px', borderRadius: '12px', background: feedbackDetail ? '#0A84FF' : 'rgba(255,255,255,0.08)', border: 'none', color: feedbackDetail ? 'white' : 'var(--text-tertiary)', fontSize: '15px', fontWeight: 600, cursor: feedbackDetail ? 'pointer' : 'default', transition: 'all 0.2s ease' }}
+                          >
+                            완료
+                          </button>
+                        </motion.div>
+                      )}
+
+                      {feedbackStep === 2 && (
+                        <motion.div key="step2" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '20px' }}>✅</span>
+                          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>제보해 주셔서 감사해요. 데이터 개선에 도움이 됩니다.</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
                 {!isConfirmed && (
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', padding: '0 8px', marginBottom: '16px' }}>
                     <span style={{ fontSize: '14px', color: '#FF9F0A' }}>⚠️</span>
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                      상호명 기반으로 24시간 영업이 추정되는 곳입니다. 늦은 시간 방문 전 전화 확인을 권장합니다.
+                      {store.operation_type === 'UNKNOWN' || !openStatus || openStatus.isOpen === null
+                        ? '영업시간 정보가 아직 확인되지 않았어요. 방문 전 전화로 확인을 권장합니다.'
+                        : '영업시간은 추정 정보입니다. 늦은 시간 방문 전 전화 확인을 권장합니다.'}
                     </span>
                   </div>
                 )}
@@ -464,7 +587,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'toast-in-out 2s infinite' }}>
                       <polyline points="18 15 12 9 6 15"></polyline>
                     </svg>
-                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>위로 당겨서 사진 및 리뷰 보기</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>영업시간 전체 보기</span>
                   </div>
                   
                   <div style={{ marginTop: '32px' }}>
