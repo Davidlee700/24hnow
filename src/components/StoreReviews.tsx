@@ -15,9 +15,12 @@ interface Props {
   storeId: string;
   availableTags: string[];
   onLoad?: (count: number) => void;
+  onVote?: (tag: string) => void;
+  hasVoted?: boolean;
+  votedTag?: string | null;
 }
 
-export default function StoreReviews({ storeId, availableTags, onLoad }: Props) {
+export default function StoreReviews({ storeId, availableTags, onLoad, onVote, hasVoted, votedTag }: Props) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
@@ -59,9 +62,13 @@ export default function StoreReviews({ storeId, availableTags, onLoad }: Props) 
   }, [storeId]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+    setSelectedTags(prev => {
+      const isSelecting = !prev.includes(tag);
+      if (isSelecting && onVote && !hasVoted) {
+        onVote(tag);
+      }
+      return isSelecting ? [...prev, tag] : prev.filter(t => t !== tag);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,7 +146,7 @@ export default function StoreReviews({ storeId, availableTags, onLoad }: Props) 
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
-            placeholder={user ? "다녀오신 후기를 들려주세요 (선택)" : "비로그인으로도 후기를 남길 수 있어요 (선택)"}
+            placeholder={user ? "다녀오신 후기를 들려주세요 (선택)" : "로그인 없이도 가볍게 한마디 남겨보세요! (선택)"}
             rows={2}
             style={{
               width: '100%',
@@ -154,25 +161,25 @@ export default function StoreReviews({ storeId, availableTags, onLoad }: Props) 
               boxSizing: 'border-box',
             }}
           />
-          <button
-            type="submit"
-            disabled={isSubmitting || (!text.trim() && selectedTags.length === 0)}
-            style={{
-              position: 'absolute',
-              right: '8px',
-              bottom: '8px',
-              padding: '6px 16px',
-              borderRadius: '8px',
-              background: (text.trim() || selectedTags.length > 0) ? 'var(--accent-neon)' : 'rgba(255,255,255,0.1)',
-              color: (text.trim() || selectedTags.length > 0) ? '#000' : 'var(--text-tertiary)',
-              border: 'none',
-              fontSize: '13px',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
-            등록
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+            <button
+              type="submit"
+              disabled={isSubmitting || (!text.trim() && selectedTags.length === 0)}
+              style={{
+                padding: '10px 24px',
+                borderRadius: '12px',
+                background: (text.trim() || selectedTags.length > 0) ? 'var(--accent-neon)' : 'rgba(255,255,255,0.08)',
+                color: (text.trim() || selectedTags.length > 0) ? '#000' : 'var(--text-tertiary)',
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {isSubmitting ? '등록 중...' : '리뷰 등록'}
+            </button>
+          </div>
         </div>
       </form>
 

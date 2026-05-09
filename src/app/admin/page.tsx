@@ -42,9 +42,16 @@ interface StoreItem {
   name: string;
   road_address: string;
   category: string;
-  business_hours: string;
+  operation_type: string;
+  confidence_level: string;
+  hours_source: string;
+  raw_hours: string;
   trust_score: number;
-  created_at: string;
+  last_hours_verified_at: string;
+  last_verified_at: string;
+  google_place_id: string;
+  inference_note: string;
+  class_type: string;
 }
 
 interface ReportItem {
@@ -60,6 +67,15 @@ interface ReportItem {
 type SelectedView = 'stores' | 'reports' | 'notice' | 'terms' | 'privacy' | 'messages' | 'users';
 
 const DEFAULT_PAGES: Partial<Record<SelectedView, PageContent>> = {
+  notice: {
+    slug: 'notice',
+    title: '공지사항',
+    subtitle: '24시나우의 새로운 소식을 전해드립니다.',
+    updated_at: new Date().toISOString(),
+    body_json: [
+      { id: 1, title: '서비스 오픈 안내', date: '2026.05.01', content: '24시나우가 정식 오픈했습니다. 서울·경기·인천의 24시간 운영 매장을 지도에서 찾아보세요.' },
+    ],
+  },
   privacy: {
     slug: 'privacy',
     title: '개인정보처리방침',
@@ -117,13 +133,15 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [storesData, setStoresData] = useState<StoreItem[]>([]);
+  const [storesTotal, setStoresTotal] = useState(0);
+  const [storesPage, setStoresPage] = useState(1);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedOpType, setSelectedOpType] = useState('');
   const [reports, setReports] = useState<ReportItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('전체');
 
-  const CATEGORIES = ['전체', '카페', '편의점', '세차장', '약국', 'PC방'];
-  const filteredStores = selectedCategory === '전체' 
-    ? storesData 
-    : storesData.filter(s => s.category === selectedCategory);
+  const CATEGORIES = ['', '카페', '편의점', '셀프세차장', '약국', 'PC방', '코인노래방', '셀프빨래방'];
+  const OP_TYPES = ['', '24H', 'EXTENDED', 'UNKNOWN', 'REGULAR'];
 
   useEffect(() => {
     const stored = sessionStorage.getItem('admin_token');
@@ -154,11 +172,17 @@ export default function AdminPage() {
     }
   }, []);
 
-  const fetchStoresData = useCallback(async (t: string) => {
-    const res = await fetch('/api/admin/stores', { headers: { Authorization: `Bearer ${t}` } });
+  const fetchStoresData = useCallback(async (t: string, page = 1, search = '', category = '', opType = '') => {
+    const params = new URLSearchParams({ page: String(page) });
+    if (search)   params.set('search', search);
+    if (category) params.set('category', category);
+    if (opType)   params.set('operation_type', opType);
+    const res = await fetch(`/api/admin/stores?${params}`, { headers: { Authorization: `Bearer ${t}` } });
     if (res.ok) {
       const data = await res.json();
       setStoresData(data.stores ?? []);
+      setStoresTotal(data.total ?? 0);
+      setStoresPage(page);
     }
   }, []);
 
@@ -484,49 +508,127 @@ export default function AdminPage() {
             {selectedView === 'stores' && (
               <div className="admin-db-panel">
                 <div className="admin-panel-header">
-                  <h2 className="admin-panel-title">전체 매장 DB <span>{filteredStores.length}개</span></h2>
-                  <div className="admin-panel-actions">
-                    <button className="admin-refresh-btn" onClick={() => token && fetchStoresData(token)}>새로고침</button>
+                  <h2 className="admin-panel-title">
+                    전체 매장 DB <span>{storesTotal.toLocaleString()}개</span>
+                  </h2>
+                  <button className="admin-refresh-btn" onClick={() => token && fetchStoresData(token, 1, storeSearch, selectedCategory, selectedOpType)}>
+                    새로고침
+                  </button>
+                </div>
+
+                {/* 검색 + 필터 */}
+                <div className="admin-filter-bar" style={{ flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+                  <input
+                    className="admin-gate-input"
+                    style={{ width: '100%', maxWidth: '320px', margin: 0, padding: '8px 12px', fontSize: '13px' }}
+                    placeholder="매장명 검색..."
+                    value={storeSearch}
+                    onChange={e => setStoreSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && token && fetchStoresData(token, 1, storeSearch, selectedCategory, selectedOpType)}
+                  />
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {CATEGORIES.map(cat => (
+                      <button key={cat} className={`admin-filter-btn${selectedCategory === cat ? ' active' : ''}`}
+                        onClick={() => { setSelectedCategory(cat); token && fetchStoresData(token, 1, storeSearch, cat, selectedOpType); }}>
+                        {cat || '전체 카테고리'}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {OP_TYPES.map(op => (
+                      <button key={op} className={`admin-filter-btn${selectedOpType === op ? ' active' : ''}`}
+                        style={op === 'EXTENDED' ? { borderColor: '#FF9F0A', color: selectedOpType === op ? '#000' : '#FF9F0A' }
+                          : op === 'UNKNOWN' ? { borderColor: '#636366', color: selectedOpType === op ? '#000' : '#636366' } : {}}
+                        onClick={() => { setSelectedOpType(op); token && fetchStoresData(token, 1, storeSearch, selectedCategory, op); }}>
+                        {op || '전체 운영타입'}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                
-                <div className="admin-filter-bar">
-                  {CATEGORIES.map(cat => (
-                    <button
-                      key={cat}
-                      className={`admin-filter-btn${selectedCategory === cat ? ' active' : ''}`}
-                      onClick={() => setSelectedCategory(cat)}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                
+
                 <div className="admin-table-wrap">
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>이름</th>
+                        <th>매장명</th>
                         <th>카테고리</th>
-                        <th>주소</th>
-                        <th>영업시간</th>
+                        <th>운영타입</th>
                         <th>신뢰도</th>
-                        <th>등록일</th>
+                        <th>시간소스</th>
+                        <th>영업시간 (raw)</th>
+                        <th>Google</th>
+                        <th>주소</th>
+                        <th>최근검증</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredStores.map(store => (
-                        <tr key={store.id}>
-                          <td className="td-name">{store.name}</td>
-                          <td><span className="badge-cat">{store.category}</span></td>
-                          <td className="td-addr">{store.road_address}</td>
-                          <td className="td-hours">{store.business_hours}</td>
-                          <td><span className="score-tag">{store.trust_score}</span></td>
-                          <td className="td-date">{new Date(store.created_at).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
+                      {storesData.length === 0 && (
+                        <tr><td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: 'rgba(255,255,255,0.3)' }}>
+                          검색 결과가 없어요
+                        </td></tr>
+                      )}
+                      {storesData.map(store => {
+                        const opColor = store.operation_type === '24H' ? '#32D74B'
+                          : store.operation_type === 'EXTENDED' ? '#FF9F0A'
+                          : store.operation_type === 'UNKNOWN' ? '#636366' : '#fff';
+                        const confColor = store.confidence_level === 'HIGH' ? '#32D74B'
+                          : store.confidence_level === 'MEDIUM' ? '#FF9F0A' : '#636366';
+                        return (
+                          <tr key={store.id}>
+                            <td className="td-name">
+                              <a href={`/stores/${store.id}`} target="_blank" rel="noopener noreferrer"
+                                style={{ color: '#ADFF2F', textDecoration: 'none' }}>
+                                {store.name}
+                              </a>
+                            </td>
+                            <td><span className="badge-cat">{store.category}</span></td>
+                            <td>
+                              <span style={{ color: opColor, fontWeight: 600, fontSize: '12px' }}>
+                                {store.operation_type ?? '-'}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ color: confColor, fontSize: '12px' }}>
+                                {store.confidence_level ?? '-'}
+                              </span>
+                            </td>
+                            <td style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                              {store.hours_source ?? '-'}
+                            </td>
+                            <td className="td-hours" style={{ fontSize: '11px', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {store.raw_hours ?? '-'}
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              {store.google_place_id
+                                ? <span style={{ color: '#32D74B', fontSize: '13px' }}>✓</span>
+                                : <span style={{ color: '#636366', fontSize: '13px' }}>✗</span>}
+                            </td>
+                            <td className="td-addr">{store.road_address}</td>
+                            <td className="td-date" style={{ fontSize: '11px' }}>
+                              {store.last_hours_verified_at
+                                ? new Date(store.last_hours_verified_at).toLocaleDateString('ko-KR')
+                                : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* 페이지네이션 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 0', justifyContent: 'center' }}>
+                  <button className="admin-filter-btn" disabled={storesPage <= 1}
+                    onClick={() => token && fetchStoresData(token, storesPage - 1, storeSearch, selectedCategory, selectedOpType)}>
+                    ← 이전
+                  </button>
+                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
+                    {storesPage} / {Math.ceil(storesTotal / 50)}페이지
+                  </span>
+                  <button className="admin-filter-btn" disabled={storesPage >= Math.ceil(storesTotal / 50)}
+                    onClick={() => token && fetchStoresData(token, storesPage + 1, storeSearch, selectedCategory, selectedOpType)}>
+                    다음 →
+                  </button>
                 </div>
               </div>
             )}

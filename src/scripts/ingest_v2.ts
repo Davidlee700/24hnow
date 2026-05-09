@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { ALL_REGIONS_DONG, SEOUL_DONG, GYEONGGI_DONG, INCHEON_DONG } from './regions_dong';
 import { crossVerifyHours } from '../utils/hoursVerification';
+import { parseKoreanHours } from '../utils/parseKoreanHours';
 
 dotenv.config({ path: '.env.local' });
 
@@ -52,20 +53,6 @@ const LATE_NIGHT_EXTRA_QUERIES: Record<string, string[]> = {
   '약국':       [],   // 약국은 공공데이터(fetch_pharmacy.ts)가 주 소스
 };
 
-// 설명 텍스트에서 raw_hours 형식 문자열 추출 시도
-// 예: "영업시간: 10:00 ~ 24:00" → "월: 1000-2400 화: 1000-2400 ..."
-function parseHoursFromDescription(desc: string): string | null {
-  if (!desc) return null;
-
-  // "HH:MM~HH:MM" 또는 "HH:MM - HH:MM" 패턴
-  const match = desc.match(/(\d{1,2}):(\d{2})\s*[~\-~]\s*(\d{1,2}):(\d{2})/);
-  if (!match) return null;
-
-  const open = `${match[1].padStart(2, '0')}${match[2]}`;
-  const close = `${match[3].padStart(2, '0')}${match[4]}`;
-  const days = ['월', '화', '수', '목', '금', '토', '일'];
-  return days.map(d => `${d}: ${open}-${close}`).join(' ');
-}
 
 /**
  * 🛠️ Heuristic Classification Engine
@@ -99,9 +86,9 @@ function classifyStore(name: string, category: string, description: string = '')
     return { class_type: 'B', inference_note: '세차장/워시 관련 업종 특성상 24시 추정 (Class B)' };
   }
 
-  // 노래방: 자정~새벽까지 영업 일반적 → EXTENDED 후보
+  // 노래방: 새벽까지 영업이 업종 기본값 → EXTENDED 기본 분류, Google enrich로 추후 보정
   if (category.includes('노래방')) {
-    return { class_type: 'C', inference_note: '노래방 업종 — 심야 영업 가능성 높음, 확인 필요 (Class C)' };
+    return { class_type: 'C_EXTENDED', inference_note: '노래방 업종 — 심야 영업 기본값 EXTENDED, 시간 미확인' };
   }
 
   // 셀프빨래방: 24시간 무인 운영 많음
@@ -194,7 +181,7 @@ async function fetchNaverByQuery(query: string, category: string) {
     const items = data.items || [];
     return items.map((i: any) => {
       const description = i.description ?? '';
-      const raw_hours = parseHoursFromDescription(description);
+      const raw_hours = parseKoreanHours(description);
       return {
         name: i.title.replace(/<[^>]*>?/gm, ''),
         address: i.roadAddress || i.address,
@@ -287,9 +274,10 @@ async function run() {
         // 단, 심야 키워드로 발굴된 건(class_type C) 또는 hours 있는 건은 저장
         if (class_type === 'UNKNOWN' && verification.operation_type === 'UNKNOWN') continue;
 
-        const operation_type = class_type === 'A' || class_type === 'B'
-          ? '24H'
-          : verification.operation_type;
+        const operation_type =
+          class_type === 'A' || class_type === 'B' ? '24H' :
+          class_type === 'C_EXTENDED' ? 'EXTENDED' :
+          verification.operation_type;
 
         const is_24h = operation_type === '24H';
         const trust_score = class_type === 'A' ? 90 : is_24h ? 70 : 55;

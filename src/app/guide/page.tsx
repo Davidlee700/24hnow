@@ -28,8 +28,15 @@ export default async function GuidePage({ searchParams }: Props) {
   const { category, city } = await searchParams;
   const all = getAllPosts();
 
-  const cities = Array.from(new Set(all.filter(p => p.city).map(p => p.city!)));
-  const showCityFilter = cities.length >= 2;
+  const regions = [
+    { label: '전체', cities: [] },
+    { label: '인천', cities: ['인천'] },
+    { label: '경기 북부', cities: ['파주', '고양', '의정부', '양주', '동두천', '포천'] },
+    { label: '경기 남부', cities: ['수원', '성남', '용인', '부천'] },
+  ];
+
+  // 현재 선택된 도시가 속한 리전 찾기
+  const activeRegion = regions.find(r => r.cities.includes(city || '')) || regions[0];
 
   const posts = all.filter(p => {
     const catMatch = !category || category === 'all' || p.category === category;
@@ -68,22 +75,36 @@ export default async function GuidePage({ searchParams }: Props) {
         ))}
       </div>
 
-      {/* 지역(시) 필터 */}
-      {showCityFilter && (
-        <div className="guide-filter-bar" style={{ paddingTop: 8 }}>
-          <Link
-            href={city && city !== 'all'
-              ? `/guide${category && category !== 'all' ? `?category=${category}` : ''}`
-              : '/guide'}
-            className={`guide-filter-chip ${!city || city === 'all' ? 'active' : ''}`}
-          >
-            전체
-          </Link>
-          {cities.map(c => (
+      {/* 지역(대분류) 필터 */}
+      <div className="guide-filter-bar" style={{ paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 8 }}>
+        {regions.map(r => {
+          const isActive = r.label === '전체' 
+            ? (!city || city === 'all') 
+            : r.cities.includes(city || '');
+          
+          // 리전 선택 시 해당 리전의 첫 번째 도시로 이동하거나 전체로 이동
+          const targetCity = r.label === '전체' ? 'all' : r.cities[0];
+          
+          return (
+            <Link
+              key={r.label}
+              href={`/guide?city=${targetCity}${category && category !== 'all' ? `&category=${category}` : ''}`}
+              className={`guide-filter-chip region-chip ${isActive ? 'active' : ''}`}
+            >
+              {r.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* 도시(중분류) 필터 - 선택된 리전에 속한 도시들만 표시 */}
+      {activeRegion.label !== '전체' && activeRegion.cities.length > 1 && (
+        <div className="guide-filter-bar" style={{ paddingTop: 4 }}>
+          {activeRegion.cities.map(c => (
             <Link
               key={c}
               href={`/guide?city=${c}${category && category !== 'all' ? `&category=${category}` : ''}`}
-              className={`guide-filter-chip ${city === c ? 'active' : ''}`}
+              className={`guide-filter-chip city-chip ${city === c ? 'active' : ''}`}
             >
               {c}
             </Link>

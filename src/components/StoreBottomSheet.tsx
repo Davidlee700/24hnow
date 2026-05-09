@@ -518,73 +518,26 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   </div>
                 )}
 
-                {/* ── Layer 4: Community Card (Tags) ── */}
-                {tags.length > 0 && (
-                  <div className="info-card" style={{ padding: '16px' }}>
-                    <p className="community-label" style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                      {hasVoted ? '밤샘 정보 반영 완료 ✓' : (
-                        tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0) === 0 
-                          ? '아직 이곳의 밤샘 정보가 없어요. 분위기를 골라주세요 💡' 
-                          : '이곳의 분위기는 어떤가요?'
-                      )}
-                    </p>
-                    {(() => {
-                      const totalVotes = tags.reduce((sum, tag) => sum + (votes[tag] ?? 0), 0);
-                      const isEmptyState = totalVotes === 0 && !hasVoted;
-                      const defaultTags = getDefaultTags(store.name, tags);
-                      
-                      // Sort tags by votes descending
-                      const sortedTags = [...tags].sort((a, b) => (votes[b] || 0) - (votes[a] || 0));
-                      const displayTags = showAllTags ? sortedTags : sortedTags.slice(0, 3);
-                      const hasMoreTags = tags.length > 3;
-
-                      return (
-                        <div className="tag-vote-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                          {displayTags.map(tag => {
-                            const isDefault = isEmptyState && defaultTags.has(tag);
-                            return (
-                              <button
-                                key={tag}
-                                className={`tag-vote-btn${hasVoted && votedTag === tag ? ' voted' : ''}`}
-                                disabled={hasVoted}
-                                onClick={(e) => handleVote(e, tag)}
-                                style={{
-                                  display: 'flex', alignItems: 'center', gap: '6px',
-                                  padding: '8px 12px', borderRadius: '16px',
-                                  background: hasVoted && votedTag === tag ? 'var(--accent-blue)' : 'rgba(255,255,255,0.08)',
-                                  border: '1px solid rgba(255,255,255,0.1)',
-                                  color: 'white', fontSize: '13px', cursor: hasVoted ? 'default' : 'pointer',
-                                  transition: 'all 0.2s ease',
-                                }}
-                              >
-                                <span>#{tag}</span>
-                                {isDefault && <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>예상</span>}
-                                {(votes[tag] ?? 0) > 0 && (
-                                  <span style={{ opacity: 0.8, fontSize: '11px', background: 'rgba(0,0,0,0.2)', padding: '2px 6px', borderRadius: '10px' }}>{votes[tag]}</span>
-                                )}
-                              </button>
-                            );
-                          })}
-                          {!showAllTags && hasMoreTags && (
-                            <button
-                              onClick={() => setShowAllTags(true)}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                padding: '8px 12px', borderRadius: '16px',
-                                background: 'rgba(255,255,255,0.04)',
-                                border: '1px dashed rgba(255,255,255,0.2)',
-                                color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                              }}
-                            >
-                              <span>더 보기 ➕</span>
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
+                {/* ── Layer 4: Community Card (Vibe Prompt) ── */}
+                <div 
+                  className="info-card" 
+                  style={{ padding: '16px', cursor: 'pointer', textAlign: 'center' }}
+                  onClick={() => {
+                    if (!isExpanded) setIsExpanded(true);
+                    setTimeout(() => {
+                      document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                >
+                  <p className="community-label" style={{ fontSize: '13px', margin: 0, color: 'var(--text-secondary)', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    {hasVoted ? '이미 밤샘 정보를 제보하셨네요! ✓' : (
+                      <>
+                        아직 이곳의 밤샘 정보가 없어요. 분위기를 골라주세요 💡
+                        <span style={{ fontSize: '11px', color: 'var(--accent-blue)', textDecoration: 'underline' }}>분위기 남기기</span>
+                      </>
+                    )}
+                  </p>
+                </div>
 
                 {/* ── Layer 5: Review Trigger & Footer ── */}
                 <div style={{ textAlign: 'center', marginTop: '16px', paddingBottom: '24px' }}>
@@ -597,24 +550,34 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     </span>
                   </div>
                   
-                  <div style={{ marginTop: '32px' }}>
-                    <button onClick={() => setIsReporting(true)} style={{ background: 'none', border: 'none', fontSize: '12px', color: 'var(--text-tertiary)', textDecoration: 'underline', cursor: 'pointer' }}>
+                  <div style={{ marginTop: '20px' }}>
+                    <button onClick={() => setIsReporting(true)} style={{ background: 'none', border: 'none', fontSize: '11px', color: 'var(--text-tertiary)', textDecoration: 'underline', cursor: 'pointer', opacity: 0.7 }}>
                       잘못된 정보 제보하기
                     </button>
                   </div>
                 </div>
 
-                {isExpanded && <StoreReviews storeId={store.id} availableTags={tags} onLoad={setReviewCount} />}
+                {isExpanded && (
+                  <div id="reviews-section">
+                    <StoreReviews 
+                      storeId={store.id} 
+                      availableTags={tags} 
+                      onLoad={setReviewCount} 
+                      onVote={(tag) => vote(tag)}
+                      hasVoted={hasVoted}
+                      votedTag={votedTag}
+                    />
+                  </div>
+                )}
               </>
             ) : (
-              <div className="reporting-form" style={{ animation: 'fade-in 0.3s ease-out' }}>
-                <div className="report-nav-header">
+              <div className="reporting-form" style={{ animation: 'fade-in 0.3s ease-out', padding: '0 4px' }}>
+                <div className="report-nav-header" style={{ marginBottom: '16px' }}>
                   <button className="report-back-btn" onClick={() => setIsReporting(false)}>‹ 뒤로</button>
-                  <h2 className="title-1" style={{ margin: 0 }}>정보 수정 제보</h2>
+                  <h2 className="title-1" style={{ fontSize: '18px' }}>정보 수정 제보</h2>
                   <div style={{ width: 52 }} />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                   {[
                     { id: 'NOT_24H', label: '24시간 운영이 아니에요' },
                     { id: 'CLOSED', label: '장소가 존재하지 않아요' },
@@ -624,32 +587,33 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       key={opt.id}
                       onClick={() => setReportType(opt.id)}
                       style={{
-                        padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
-                        border: reportType === opt.id ? '1.5px solid var(--accent-blue)' : '1.5px solid transparent',
+                        padding: '14px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
+                        border: reportType === opt.id ? '1.5px solid var(--accent-blue)' : '1px solid rgba(255,255,255,0.1)',
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                        transition: 'all 0.2s',
                       }}
                     >
-                      <span style={{ fontSize: '15px' }}>{opt.label}</span>
-                      {reportType === opt.id && <span style={{ color: 'var(--accent-blue)' }}>✓</span>}
+                      <span style={{ fontSize: '14px', color: reportType === opt.id ? 'white' : 'var(--text-secondary)' }}>{opt.label}</span>
+                      {reportType === opt.id && <span style={{ color: 'var(--accent-blue)', fontSize: '14px' }}>✓</span>}
                     </div>
                   ))}
                 </div>
 
-                <div style={{ marginBottom: '24px' }}>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>상세 내용 (선택, 최대 20자)</p>
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', paddingLeft: '4px' }}>상세 내용 (선택, 최대 20자)</p>
                   <input
                     type="text"
                     placeholder="예: 일요일은 밤 12시까지만 해요"
                     maxLength={20}
                     value={reportComment}
                     onChange={(e) => setReportComment(e.target.value)}
-                    style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
 
                 <button
                   className={`ios-button primary${!reportType || isSubmitting ? ' disabled' : ''}`}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', fontSize: '15px' }}
                   disabled={!reportType || isSubmitting}
                   onClick={handleReport}
                 >
