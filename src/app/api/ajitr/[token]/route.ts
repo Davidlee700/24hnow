@@ -8,8 +8,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-export async function GET(_req: Request, { params }: { params: { token: string } }) {
-  const { token } = params;
+export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
 
   const { data: folder, error } = await supabase
     .from('ajitr_folders')
