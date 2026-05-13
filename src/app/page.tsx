@@ -28,11 +28,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!storeId) {
     return {
       title: '24시나우 | 내 주변 24시간 카페, 세차장, 약국 찾기',
-      description: '서울, 경기, 인천 전 지역의 24시 운영 장소를 한눈에. 밤샘러를 위한 가장 정확한 지도, 24시나우.',
+      description: '지금 내 주변에서 열려 있는 24시 카페·편의점·세차장·약국을 지도에서 바로 찾아보세요. 새벽에도, 휴일에도 — 24시나우.',
       alternates: { canonical: BASE_URL },
       openGraph: {
         title: '24시나우 | 내 주변 24시간 카페, 세차장, 약국 찾기',
-        description: '서울, 경기, 인천 전 지역의 24시 운영 장소를 한눈에. 밤샘러를 위한 가장 정확한 지도, 24시나우.',
+        description: '지금 내 주변에서 열려 있는 24시 카페·편의점·세차장·약국을 지도에서 바로 찾아보세요. 새벽에도, 휴일에도 — 24시나우.',
         images: ['/og-image.png'],
       },
     };
