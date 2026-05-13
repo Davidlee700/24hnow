@@ -85,7 +85,8 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [bookmarkFilling, setBookmarkFilling] = useState(false);
-  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const { isBookmarked, toggleBookmark, folders, addToFolder } = useBookmarks();
   const [hasVotedHours, setHasVotedHours] = useState(false);
   const [feedbackStep, setFeedbackStep] = useState<0 | 1 | 2>(0);
   const [feedbackChoice, setFeedbackChoice] = useState<'OPEN' | 'CLOSED' | null>(null);
@@ -93,6 +94,12 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const [reviewCount, setReviewCount] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
+  const [showHoursEditor, setShowHoursEditor] = useState(false);
+  const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+  const [hoursInput, setHoursInput] = useState(() =>
+    DAYS.map(d => ({ day: d, open: '09:00', close: '22:00', closed: false }))
+  );
+  const [hoursSubmitting, setHoursSubmitting] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { votes, vote, hasVoted, votedTag, tags } = useTagVotes(store?.id ?? null, store?.category ?? '');
 
@@ -103,6 +110,10 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     setReportType(null);
     setReportComment('');
     setBookmarkFilling(false);
+    setShowFolderPicker(false);
+    setShowHoursEditor(false);
+    setHoursInput(DAYS.map(d => ({ day: d, open: '09:00', close: '22:00', closed: false })));
+    setHoursSubmitting(false);
     setIsExpanded(false);
     setHasVotedHours(!!localStorage.getItem(`voted_hours_${store?.id}`));
     setFeedbackStep(0);
@@ -120,29 +131,87 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     window.open(url, '_blank');
   };
 
+  const showToast = (msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMsg(msg);
+    toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+  };
+
   const handleBookmark = async (e: React.MouseEvent<HTMLElement>) => {
     if (!store) return;
     tapEffect(e);
+
+    // If already bookmarked, remove directly without picker
+    if (isBookmarked(store.id)) {
+      setBookmarkFilling(true);
+      setTimeout(() => setBookmarkFilling(false), 400);
+      const result = await toggleBookmark({
+        id: store.id, name: store.name, category: store.category,
+        road_address: store.road_address, latitude: store.latitude, longitude: store.longitude,
+      });
+      showToast(result.needsLogin ? '로그인 후 저장 기능을 이용할 수 있어요' : result.success ? '저장이 취소됐어요' : '저장에 실패했어요. 다시 시도해 주세요.');
+      return;
+    }
+
+    // If 2+ folders exist, show folder picker
+    if (folders.length >= 2) {
+      setShowFolderPicker(true);
+      return;
+    }
+
+    // Single folder — save directly
     setBookmarkFilling(true);
     setTimeout(() => setBookmarkFilling(false), 400);
-
     const result = await toggleBookmark({
-      id: store.id,
-      name: store.name,
-      category: store.category,
-      road_address: store.road_address,
-      latitude: store.latitude,
-      longitude: store.longitude,
+      id: store.id, name: store.name, category: store.category,
+      road_address: store.road_address, latitude: store.latitude, longitude: store.longitude,
     });
+    showToast(result.needsLogin ? '로그인 후 저장 기능을 이용할 수 있어요' : result.success ? '아지트에 저장됐어요 🧡' : '저장에 실패했어요. 다시 시도해 주세요.');
+  };
 
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    const msg = result.needsLogin
-      ? '로그인 후 저장 기능을 이용할 수 있어요'
-      : result.success
-        ? result.added ? '아지트에 저장됐어요 🧡' : '저장이 취소됐어요'
-        : '저장에 실패했어요. 다시 시도해 주세요.';
-    setToastMsg(msg);
-    toastTimer.current = setTimeout(() => setToastMsg(null), 3000);
+  const handleHoursSubmit = async () => {
+    if (!store) return;
+    setHoursSubmitting(true);
+    const rawHours = hoursInput
+      .filter(r => !r.closed)
+      .map(r => {
+        const open = r.open.replace(':', '').padStart(4, '0');
+        const close = r.close.replace(':', '').padStart(4, '0');
+        return `${r.day}: ${open}-${close}`;
+      })
+      .join(' ');
+
+    try {
+      await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store_id: store.id,
+          report_type: 'HOURS_SUBMIT',
+          comment: rawHours.slice(0, 200),
+          session_id: getSessionId(),
+          hours_data: rawHours,
+        }),
+      });
+      setShowHoursEditor(false);
+      showToast('영업시간 제보 감사해요! 바로 반영됐어요 ✅');
+    } catch {
+      showToast('제보 전송에 실패했어요. 다시 시도해 주세요.');
+    } finally {
+      setHoursSubmitting(false);
+    }
+  };
+
+  const handleSaveToFolder = async (folderId: string) => {
+    if (!store) return;
+    setShowFolderPicker(false);
+    setBookmarkFilling(true);
+    setTimeout(() => setBookmarkFilling(false), 400);
+    const result = await addToFolder({
+      id: store.id, name: store.name, category: store.category,
+      road_address: store.road_address, latitude: store.latitude, longitude: store.longitude,
+    }, folderId);
+    showToast(result.needsLogin ? '로그인 후 저장 기능을 이용할 수 있어요' : result.limitReached ? '이 폴더는 가득 찼어요 (최대 100개)' : result.success ? '아지트에 저장됐어요 🧡' : '저장에 실패했어요. 다시 시도해 주세요.');
   };
 
   const handleVote = async (e: React.MouseEvent<HTMLElement>, tag: string) => {
@@ -268,6 +337,52 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
           }}
           layout
         >
+          {/* ── Folder Picker Sheet ── */}
+          <AnimatePresence>
+            {showFolderPicker && (
+              <motion.div
+                key="folder-picker"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'rgba(0,0,0,0.6)', borderRadius: 'inherit', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
+                onClick={() => setShowFolderPicker(false)}
+              >
+                <motion.div
+                  initial={{ y: 60, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 60, opacity: 0 }}
+                  transition={{ type: 'spring', damping: 30, stiffness: 260 }}
+                  style={{ background: 'var(--bg-secondary, #1C1C1E)', borderRadius: '20px 20px 0 0', padding: '20px 16px 32px' }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '16px', textAlign: 'center' }}>
+                    어느 폴더에 저장할까요?
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {folders.map(folder => (
+                      <button
+                        key={folder.id}
+                        onClick={() => handleSaveToFolder(folder.id)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+                      >
+                        <span style={{ fontSize: '22px' }}>{folder.emoji}</span>
+                        <span style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 500 }}>{folder.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setShowFolderPicker(false)}
+                    style={{ marginTop: '12px', width: '100%', padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.06)', border: 'none', color: 'var(--text-secondary)', fontSize: '15px', fontWeight: 500, cursor: 'pointer' }}
+                  >
+                    취소
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {toastMsg && <div className="vote-toast">{toastMsg}</div>}
           <div
             className="drag-handle"
@@ -402,11 +517,85 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
+                  {/* 영업시간 수정 제보 트리거 */}
+                  {!showHoursEditor && (
+                    <button
+                      onClick={() => setShowHoursEditor(true)}
+                      style={{ background: 'none', border: 'none', padding: '6px 0 0 44px', fontSize: '12px', color: 'var(--text-tertiary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px', display: 'block' }}
+                    >
+                      ✏️ 영업시간 수정 제보
+                    </button>
+                  )}
+
+                  {/* 요일별 영업시간 에디터 */}
+                  <AnimatePresence>
+                    {showHoursEditor && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '14px' }}>
+                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600 }}>
+                            요일별 영업시간을 알려주세요
+                          </p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {hoursInput.map((row, i) => (
+                              <div key={row.day} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ width: '20px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', flexShrink: 0 }}>{row.day}</span>
+                                {row.closed ? (
+                                  <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', flex: 1 }}>휴무</span>
+                                ) : (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                                    <input
+                                      type="time"
+                                      value={row.open}
+                                      onChange={e => setHoursInput(prev => prev.map((r, j) => j === i ? { ...r, open: e.target.value } : r))}
+                                      style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '13px', padding: '6px 8px', colorScheme: 'dark' }}
+                                    />
+                                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>~</span>
+                                    <input
+                                      type="time"
+                                      value={row.close}
+                                      onChange={e => setHoursInput(prev => prev.map((r, j) => j === i ? { ...r, close: e.target.value } : r))}
+                                      style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '13px', padding: '6px 8px', colorScheme: 'dark' }}
+                                    />
+                                  </div>
+                                )}
+                                <button
+                                  onClick={() => setHoursInput(prev => prev.map((r, j) => j === i ? { ...r, closed: !r.closed } : r))}
+                                  style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '8px', border: 'none', background: row.closed ? 'rgba(255,69,58,0.2)' : 'rgba(255,255,255,0.08)', color: row.closed ? '#FF453A' : 'var(--text-tertiary)', cursor: 'pointer', flexShrink: 0 }}
+                                >
+                                  {row.closed ? '취소' : '휴무'}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                            <button
+                              onClick={() => setShowHoursEditor(false)}
+                              style={{ flex: 1, padding: '11px', borderRadius: '12px', background: 'rgba(255,255,255,0.06)', border: 'none', color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer' }}
+                            >
+                              취소
+                            </button>
+                            <button
+                              onClick={handleHoursSubmit}
+                              disabled={hoursSubmitting}
+                              style={{ flex: 2, padding: '11px', borderRadius: '12px', background: '#0A84FF', border: 'none', color: 'white', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+                            >
+                              {hoursSubmitting ? '제보 중...' : '제보하기'}
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 </div>
 
                 {/* ── Layer 3.5: Hours Feedback Card — UNKNOWN/EXTENDED 또는 영업상태 불명 매장만 표시 ── */}
-                {!hasVotedHours && (store.operation_type === 'UNKNOWN' || store.operation_type === 'EXTENDED' || openStatus?.isOpen === null) && (
+                {!hasVotedHours && (store.operation_type === 'UNKNOWN' || store.operation_type === 'EXTENDED' || (store.operation_type === 'REGULAR' && !store.raw_hours) || openStatus?.isOpen === null) && (
                   <div className="info-card" style={{ padding: '16px', marginBottom: '12px' }}>
                     <AnimatePresence mode="wait">
                       {feedbackStep === 0 && (

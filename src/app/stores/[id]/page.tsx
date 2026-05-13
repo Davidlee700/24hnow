@@ -11,7 +11,7 @@ export async function generateStaticParams() {
   const { data } = await supabase
     .from('stores')
     .select('id')
-    .in('operation_type', ['24H', 'EXTENDED'])
+    .in('operation_type', ['24H', 'EXTENDED', 'REGULAR'])
     .order('trust_score', { ascending: false })
     .limit(5000);
   return data?.map(s => ({ id: String(s.id) })) ?? [];

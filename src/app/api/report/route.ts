@@ -15,7 +15,7 @@ const THRESHOLD = 2;
 const VALID_REPORT_TYPES = new Set([
   'OPEN_24H', 'OPEN_UNTIL_MIDNIGHT', 'OPEN_UNTIL_1AM', 'OPEN_UNTIL_2AM', 'OPEN_UNKNOWN',
   'CLOSED_HOURS_END', 'CLOSED_TODAY_OFF', 'CLOSED_PERMANENTLY',
-  'OPEN', 'CLOSED', 'NOT_24H', 'OTHER',
+  'OPEN', 'CLOSED', 'NOT_24H', 'OTHER', 'HOURS_SUBMIT',
 ]);
 
 export async function POST(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
   }
 
-  const { store_id, report_type, comment, session_id } = await req.json();
+  const { store_id, report_type, comment, session_id, hours_data } = await req.json();
 
   if (!store_id || !report_type || !session_id) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -71,7 +71,34 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 3. 영업시간 제보 — 2회 일치 시 자동 반영
+  // 3. 요일별 영업시간 직접 제보 — 즉시 반영
+  if (report_type === 'HOURS_SUBMIT' && hours_data) {
+    const raw = String(hours_data).slice(0, 300);
+    // 24시간 여부 추론 (0000-2400 또는 0000-0000 패턴)
+    const is24h = /0000-2400|0000-0000/.test(raw);
+    // 새벽 영업 여부 (0100-0600 범위 닫힘 시간)
+    const isExtended = !is24h && /-(0[0-3]\d\d)/.test(raw);
+    const opType = is24h ? '24H' : isExtended ? 'EXTENDED' : 'REGULAR';
+
+    await supabase
+      .from('stores')
+      .update({
+        raw_hours: raw,
+        operation_type: opType,
+        hours_source: 'CROWD',
+        confidence_level: 'MEDIUM',
+        inference_note: '유저 직접 제보 — 요일별 시간',
+        last_hours_verified_at: new Date().toISOString(),
+      })
+      .eq('id', store_id);
+
+    return NextResponse.json({
+      success: true,
+      message: '영업시간 제보 감사해요! 바로 반영됐어요.',
+    });
+  }
+
+  // 4. 영업시간 제보 — 2회 일치 시 자동 반영
   const hoursUpdate = HOURS_TYPE_MAP[report_type];
   if (hoursUpdate) {
     const { count } = await supabase

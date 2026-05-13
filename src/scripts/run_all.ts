@@ -24,7 +24,7 @@ function run(script: string) {
 
 (async () => {
   const start = Date.now();
-  console.log(`\n🌙 24시 나우 - 밤샘지도 전체 데이터 수집 (v2) 시작`);
+  console.log(`\n🌙 24시나우 - 밤샘지도 전체 데이터 수집 (v2) 시작`);
   console.log(`   ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`);
 
   // 1. 카페, 편의점, 세차장, PC방 (v2 로직)

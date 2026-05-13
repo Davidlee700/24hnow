@@ -24,9 +24,10 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState<string>('카페');
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [openNowOnly, setOpenNowOnly] = useState(false);
+  const [openNowOnly, setOpenNowOnly] = useState(true);
+  const [medicineOnly, setMedicineOnly] = useState(false);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const [requestGps, setRequestGps] = useState(true);
+  const [requestGps, setRequestGps] = useState(() => !searchParams.get('store'));
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -74,6 +75,7 @@ function HomeContent() {
 
   // "이 지역에서 검색" logic
   const pendingBoundsRef = useRef<MapBounds | null>(null);
+  const autoSearchOnNextBounds = useRef(false);
   const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
   const [showSearchHere, setShowSearchHere] = useState(false);
   const [searchHideAnim, setSearchHideAnim] = useState(false);
@@ -87,6 +89,15 @@ function HomeContent() {
     }
     setShowZoomHint(false);
     pendingBoundsRef.current = bounds;
+
+    // GPS 완료 후 첫 bounds 업데이트는 자동 검색
+    if (autoSearchOnNextBounds.current) {
+      autoSearchOnNextBounds.current = false;
+      setSearchedBounds(bounds);
+      setShowSearchHere(false);
+      return;
+    }
+
     setShowSearchHere(true);
     setSearchHideAnim(false);
   }, []);
@@ -101,7 +112,7 @@ function HomeContent() {
     }, 180);
   };
 
-  const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined, openNowOnly);
+  const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined, openNowOnly, medicineOnly);
 
   // Ensure the selectedStore is ALWAYS in the markers list, even if filtered out or outside bounds
   const stores = [...fetchedStores];
@@ -113,6 +124,7 @@ function HomeContent() {
     tapEffect(e);
     setActiveFilter(filter);
     setActiveTag(null);
+    setMedicineOnly(false);
     setSelectedStore(null);
     if (pendingBoundsRef.current) {
       setSearchedBounds(pendingBoundsRef.current);
@@ -141,7 +153,10 @@ function HomeContent() {
         onMarkerClick={setSelectedStore}
         onMapClick={() => setSelectedStore(null)}
         requestGps={requestGps}
-        onGpsComplete={() => setRequestGps(false)}
+        onGpsComplete={() => {
+          setRequestGps(false);
+          autoSearchOnNextBounds.current = true;
+        }}
         onGpsError={showToast}
         onLocationUpdate={(lat, lng) => setUserLocation({ lat, lng })}
         dimmed={isMenuOpen}
@@ -197,6 +212,15 @@ function HomeContent() {
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? 'var(--accent-neon)' : 'currentColor', display: 'inline-block', flexShrink: 0 }} />
             지금 영업중
           </button>
+          {activeFilter === '편의점' && (
+            <button
+              className={`sub-filter-chip ${medicineOnly ? 'active' : ''}`}
+              onClick={(e) => { tapEffect(e); setMedicineOnly(v => !v); }}
+              style={medicineOnly ? { borderColor: '#30D158', color: '#30D158' } : undefined}
+            >
+              💊 약 판매
+            </button>
+          )}
           {categoryTags.map(tag => (
             <button
               key={tag}
@@ -236,8 +260,8 @@ function HomeContent() {
       {/* Empty State */}
       {searchedBounds && stores.length === 0 && !showSearchHere && (
         <div className="empty-state">
-          <p>{openNowOnly ? '지금 이 근처에 영업중인 매장이 없어요' : '이 근처엔 매장 정보가 없어요'}</p>
-          <span>{openNowOnly ? '필터를 해제하거나 지도를 이동해보세요' : '지도를 이동해 다른 지역을 확인해보세요'}</span>
+          <p>{openNowOnly ? `지금 이 근처에 영업 중인 ${activeFilter}이(가) 없어요` : `이 근처엔 ${activeFilter} 정보가 없어요`}</p>
+          <span>{openNowOnly ? '지도를 이동하거나 "지금 영업중" 필터를 해제해보세요' : '지도를 이동해 다른 지역을 확인해보세요'}</span>
         </div>
       )}
 

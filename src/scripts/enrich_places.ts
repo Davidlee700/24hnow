@@ -32,21 +32,25 @@ const BATCH_LIMIT = limitArg ? parseInt(limitArg.split('=')[1]) : 50;
 async function enrichPlaces() {
   const regionArg = args.find(a => a.startsWith('--region='));
   const region = regionArg ? regionArg.split('=')[1] : null;
+  const categoryArg = args.find(a => a.startsWith('--category='));
+  const category = categoryArg ? categoryArg.split('=')[1] : null;
 
   console.log(`Starting Data Enrichment... (Limit: ${BATCH_LIMIT} places)`);
   if (region) console.log(`Filtering by region: ${region}`);
+  if (category) console.log(`Filtering by category: ${category}`);
 
-  // 대상: google_place_id 없고, confidence가 HIGH가 아닌 매장
-  // EXTENDED, UNKNOWN operation_type도 포함하여 영업시간 보강
   let queryBuilder = supabase
     .from('stores')
     .select('id, name, road_address, class_type, confidence_level, operation_type, raw_hours')
     .is('google_place_id', null)
-    .or('confidence_level.eq.MEDIUM,confidence_level.eq.LOW,confidence_level.is.null,operation_type.eq.EXTENDED,operation_type.eq.UNKNOWN')
+    .or('confidence_level.eq.MEDIUM,confidence_level.eq.LOW,confidence_level.is.null,operation_type.eq.EXTENDED,operation_type.eq.UNKNOWN,operation_type.eq.REGULAR')
     .order('last_hours_verified_at', { ascending: true, nullsFirst: true });
 
   if (region) {
     queryBuilder = queryBuilder.like('road_address', `%${region}%`);
+  }
+  if (category) {
+    queryBuilder = queryBuilder.eq('category', category);
   }
 
   const { data: places, error } = await queryBuilder.limit(BATCH_LIMIT);

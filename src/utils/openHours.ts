@@ -26,6 +26,8 @@ function parseRawHours(rawHours: string, dayOfWeek: number): [number, number] | 
   let closeMin = hhmm2min(match[2]);
   // 2400 → 1440 (자정)
   if (closeMin === 0 && match[2] === '2400') closeMin = 1440;
+  // 자정을 넘기는 영업 (예: 21:00-02:00 → closeMin += 1440)
+  if (closeMin < openMin) closeMin += 1440;
   return [openMin, closeMin];
 }
 
@@ -109,8 +111,9 @@ export function getOpenStatus(store: Store, at: Date = new Date()): OpenStatus {
   }
 
   if (!isOpen) {
-    // 다음 오픈 시각 계산
-    const opensAtLabel = minToTimeLabel(openMin);
+    // 이미 닫혔고(regular 영업) 오늘 오픈 시간을 지남 → 내일 오픈
+    const nextOpenIsTomorrow = !isOvernight && currentMin >= closeMin;
+    const opensAtLabel = (nextOpenIsTomorrow ? '내일 ' : '') + minToTimeLabel(openMin);
     return {
       isOpen: false,
       label: '영업 종료',

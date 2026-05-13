@@ -12,7 +12,8 @@
     "ingest:pharmacy": "tsx src/scripts/fetch_pharmacy.ts",
     "ingest:all": "tsx src/scripts/ingest_v2.ts && tsx src/scripts/fetch_pharmacy.ts",
     "enrich": "tsx src/scripts/enrich_places.ts",
-    "enrich:naver": "tsx src/scripts/enrich_naver.ts"
+    "enrich:naver": "tsx src/scripts/enrich_naver.ts",
+    "enrich:starbucks": "tsx src/scripts/fetch_starbucks.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

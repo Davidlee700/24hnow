@@ -174,7 +174,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
     const kakao = window.kakao;
     const moveLatLng = new kakao.maps.LatLng(center.lat, center.lng);
     mapRef.current.panTo(moveLatLng);
-  }, [center]);
+  }, [center, mapLoaded]);
 
   // 4. Render markers
   useEffect(() => {
@@ -194,17 +194,15 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       const isConfirmed = store.confidence_level === 'HIGH' || (!store.confidence_level && store.class_type === 'A');
       const isLowConfidence = store.confidence_level === 'LOW';
       const operationType = store.operation_type;
-      const openStatus = (operationType === 'EXTENDED') ? getOpenStatus(store, now) : null;
+      // 24H는 항상 열려있으므로 계산 생략, 나머지는 실시간 판단
+      const openStatus = operationType === '24H' ? null : getOpenStatus(store, now);
+      const isOpen = operationType === '24H' || openStatus?.isOpen === true;
 
-      // 마커 테두리 색상: 24H 확인 → 카테고리 색, EXTENDED 영업중 → amber, 나머지 → white
-      const borderColor = isConfirmed && operationType !== 'EXTENDED'
-        ? bg
-        : openStatus?.isOpen
-          ? '#FF9F0A'  // amber — 심야 영업중
-          : 'white';
+      // 열려있으면 카테고리 색 테두리, 닫혔으면 흰색
+      const borderColor = isOpen ? bg : 'white';
 
-      const markerOpacity = (isLowConfidence || openStatus?.isOpen === false) ? '0.4' : '1';
-      const zIdx = isConfirmed || openStatus?.isOpen ? '100' : '10';
+      const markerOpacity = (!isOpen || isLowConfidence) ? '0.4' : '1';
+      const zIdx = isOpen ? '100' : '10';
 
       const el = document.createElement('div');
       el.style.cssText = `

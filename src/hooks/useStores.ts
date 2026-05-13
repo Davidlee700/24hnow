@@ -10,6 +10,7 @@ export function useStores(
   categories: string[],
   tagFilter?: string,
   openNowOnly?: boolean,
+  medicineOnly?: boolean,
 ) {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,7 @@ export function useStores(
       .gte('longitude', bounds.sw.lng)
       .lte('longitude', bounds.ne.lng)
       .in('category', categories)
+      .not('operation_type', 'eq', 'UNKNOWN')  // 영업시간 미확인 매장은 표시 안 함
       .order('trust_score', { ascending: false })
       .limit(100);
 
@@ -34,9 +36,13 @@ export function useStores(
       query = query.contains('tags', [tagFilter]);
     }
 
-    // "지금 영업중" 필터: DB에서 24H+EXTENDED만 가져온 뒤 클라이언트에서 실시간 판단
+    if (medicineOnly) {
+      query = query.eq('has_medicine', true);
+    }
+
+    // "지금 영업중" 필터: DB에서 24H+EXTENDED+REGULAR 가져온 뒤 클라이언트에서 실시간 판단
     if (openNowOnly) {
-      query = query.in('operation_type', ['24H', 'EXTENDED']);
+      query = query.in('operation_type', ['24H', 'EXTENDED', 'REGULAR']);
     }
 
     query.then(({ data, error }) => {

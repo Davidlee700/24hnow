@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 interface Comment {
@@ -26,7 +27,7 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
   const [text, setText] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

@@ -139,6 +139,7 @@ export default function AdminPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedOpType, setSelectedOpType] = useState('');
   const [reports, setReports] = useState<ReportItem[]>([]);
+  const [reportsFilter, setReportsFilter] = useState<'all' | 'hours'>('all');
 
   const CATEGORIES = ['', '카페', '편의점', '셀프세차장', '약국', 'PC방', '코인노래방', '셀프빨래방'];
   const OP_TYPES = ['', '24H', 'EXTENDED', 'UNKNOWN', 'REGULAR'];
@@ -570,6 +571,7 @@ export default function AdminPage() {
                       {storesData.map(store => {
                         const opColor = store.operation_type === '24H' ? '#32D74B'
                           : store.operation_type === 'EXTENDED' ? '#FF9F0A'
+                          : store.operation_type === 'REGULAR' ? '#A2A2A7'
                           : store.operation_type === 'UNKNOWN' ? '#636366' : '#fff';
                         const confColor = store.confidence_level === 'HIGH' ? '#32D74B'
                           : store.confidence_level === 'MEDIUM' ? '#FF9F0A' : '#636366';
@@ -638,7 +640,17 @@ export default function AdminPage() {
               <div className="admin-db-panel">
                 <div className="admin-panel-header">
                   <h2 className="admin-panel-title">정보 수정 제보 <span>{reports.length}건</span></h2>
-                  <div className="admin-panel-actions">
+                  <div className="admin-panel-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)' }}>
+                      <button
+                        onClick={() => setReportsFilter('all')}
+                        style={{ padding: '6px 12px', fontSize: '12px', border: 'none', cursor: 'pointer', background: reportsFilter === 'all' ? 'rgba(10,132,255,0.3)' : 'transparent', color: reportsFilter === 'all' ? '#0A84FF' : 'var(--text-secondary)' }}
+                      >전체</button>
+                      <button
+                        onClick={() => setReportsFilter('hours')}
+                        style={{ padding: '6px 12px', fontSize: '12px', border: 'none', cursor: 'pointer', background: reportsFilter === 'hours' ? 'rgba(52,199,89,0.3)' : 'transparent', color: reportsFilter === 'hours' ? '#34C759' : 'var(--text-secondary)' }}
+                      >⏱ 시간 제보</button>
+                    </div>
                     <button className="admin-refresh-btn" onClick={() => token && fetchReports(token)}>새로고침</button>
                   </div>
                 </div>
@@ -654,11 +666,13 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {reports.map(report => (
-                        <tr key={report.id}>
+                      {reports
+                        .filter(r => reportsFilter === 'hours' ? r.report_type === 'HOURS_SUBMIT' : true)
+                        .map(report => (
+                        <tr key={report.id} style={report.report_type === 'HOURS_SUBMIT' ? { background: 'rgba(52,199,89,0.06)' } : undefined}>
                           <td className="td-name">{report.stores?.name || 'ID: ' + report.store_id.slice(0,8)}</td>
-                          <td><span className="badge-type">{report.report_type}</span></td>
-                          <td className="td-comment">{report.comment}</td>
+                          <td><span className="badge-type" style={report.report_type === 'HOURS_SUBMIT' ? { background: 'rgba(52,199,89,0.2)', color: '#34C759' } : undefined}>{report.report_type === 'HOURS_SUBMIT' ? '⏱ 시간제보' : report.report_type}</span></td>
+                          <td className="td-comment" style={{ fontSize: '11px', maxWidth: '240px', wordBreak: 'break-all' }}>{report.comment}</td>
                           <td><span className={`badge-status ${report.status}`}>{report.status === 'pending' ? '대기중' : '처리완료'}</span></td>
                           <td className="td-date">{new Date(report.created_at).toLocaleDateString()}</td>
                         </tr>

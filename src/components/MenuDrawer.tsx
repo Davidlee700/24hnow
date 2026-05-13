@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
 
@@ -8,7 +9,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onShowToast: (msg: string) => void;
-  user: any;
+  user: User | null;
 }
 
 export default function MenuDrawer({ isOpen, onClose, onShowToast, user }: Props) {

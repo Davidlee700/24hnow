@@ -270,9 +270,8 @@ async function run() {
           category: item.category,
         });
 
-        // class_type이 UNKNOWN이고 영업시간 데이터도 없으면 스킵 (노이즈 방지)
-        // 단, 심야 키워드로 발굴된 건(class_type C) 또는 hours 있는 건은 저장
-        if (class_type === 'UNKNOWN' && verification.operation_type === 'UNKNOWN') continue;
+        // 이름·주소 없는 완전 노이즈만 스킵 (REGULAR/UNKNOWN도 저장 → enrich 대상)
+        if (!item.name || !item.address) continue;
 
         const operation_type =
           class_type === 'A' || class_type === 'B' ? '24H' :
@@ -280,7 +279,7 @@ async function run() {
           verification.operation_type;
 
         const is_24h = operation_type === '24H';
-        const trust_score = class_type === 'A' ? 90 : is_24h ? 70 : 55;
+        const trust_score = class_type === 'A' ? 90 : is_24h ? 70 : operation_type === 'UNKNOWN' ? 30 : 55;
 
         // 중복 확인
         const { data: existing } = await supabase

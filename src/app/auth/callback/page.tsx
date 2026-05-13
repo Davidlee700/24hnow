@@ -2,12 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
 
-  const syncProfile = async (user: any) => {
+  const syncProfile = async (user: User) => {
     await supabase.from('user_profiles').upsert({
       id: user.id,
       email: user.email,

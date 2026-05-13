@@ -31,6 +31,7 @@ export interface Store {
   operation_type?: OperationType;
   hours_source?: HoursSource;
   last_hours_verified_at?: string;
+  has_medicine?: boolean | null;
   metadata: {
     phone?: string;
     place_url?: string;
@@ -44,4 +45,15 @@ export interface Store {
 export interface MapBounds {
   sw: { lat: number; lng: number };
   ne: { lat: number; lng: number };
+}
+
+export interface AjitrFolder {
+  id: string;
+  user_id: string;
+  name: string;
+  emoji: string;
+  is_public: boolean;
+  share_token: string | null;
+  sort_order: number;
+  created_at: string;
 }
