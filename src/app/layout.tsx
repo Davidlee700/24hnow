@@ -13,6 +13,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
+  verification: {
+    other: { 'naver-site-verification': 'c5dc754217a37217eaae29667c74a995b8890eeb' },
+  },
   title: "24시나우 | 내 주변 24시간 카페·편의점 지도 찾기",
   description: "홍대·강남·광화문·경기도 등 지금 열려 있는 24시간 카페, 편의점, 세차장, PC방을 지도에서 바로 찾아보세요. 새벽에도, 휴일에도 — 내 주변 24시 영업중인 곳을 실시간으로 확인.",
   keywords: [
