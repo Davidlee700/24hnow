@@ -5,6 +5,7 @@ import { getAllPosts, CATEGORY_GRADIENTS, GuideCategory } from '@/lib/guide-data
 export const metadata: Metadata = {
   title: '심야 가이드 | 24시나우',
   description: '동별 심야 카페·편의점·세차장 TOP 10 큐레이션. 밤샘 공간을 찾는 당신을 위한 가이드.',
+  alternates: { canonical: 'https://24now.kr/guide' },
   openGraph: {
     title: '심야 가이드 | 24시나우',
     description: '동별 심야 카페·편의점·세차장 TOP 10 큐레이션.',

@@ -29,6 +29,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return {
       title: '24시나우 | 내 주변 24시간 카페, 세차장, 약국 찾기',
       description: '서울, 경기, 인천 전 지역의 24시 운영 장소를 한눈에. 밤샘러를 위한 가장 정확한 지도, 24시나우.',
+      alternates: { canonical: BASE_URL },
       openGraph: {
         title: '24시나우 | 내 주변 24시간 카페, 세차장, 약국 찾기',
         description: '서울, 경기, 인천 전 지역의 24시 운영 장소를 한눈에. 밤샘러를 위한 가장 정확한 지도, 24시나우.',

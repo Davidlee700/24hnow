@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 export const metadata: Metadata = {
   title: '개인정보처리방침 | 24시나우',
+  alternates: { canonical: 'https://24now.kr/privacy' },
   description: '24시나우의 개인정보 수집·이용·보호 방침을 안내합니다.',
 };
 

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 export const metadata: Metadata = {
   title: '서비스 이용약관 | 24시나우',
+  alternates: { canonical: 'https://24now.kr/terms' },
   description: '24시나우 서비스 이용약관을 안내합니다.',
 };
 

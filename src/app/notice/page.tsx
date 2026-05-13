@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: '공지사항 | 24시나우',
+  alternates: { canonical: 'https://24now.kr/notice' },
   description: '24시나우의 새로운 소식과 업데이트를 확인하세요.',
 };
 

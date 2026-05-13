@@ -31,9 +31,6 @@ export const metadata: Metadata = {
     // 브랜드
     "밤샘지도", "24시나우", "24now",
   ],
-  alternates: {
-    canonical: BASE_URL,
-  },
   openGraph: {
     title: "24시나우 | 내 주변 24시간 카페·편의점 지도",
     description: "홍대·강남·경기도 — 지금 열려 있는 24시간 영업 장소를 지도에서 바로 찾아보세요.",
