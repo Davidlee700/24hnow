@@ -40,7 +40,7 @@ if (startRegion) {
   }
 }
 
-const TARGET_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방', '코인노래방', '셀프빨래방', '약국'];
+const TARGET_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방', '코인노래방', '셀프빨래방', '약국', '찜질방'];
 
 // 카테고리별 심야 추가 쿼리 — 24시간은 아니지만 늦게까지 영업하는 업종 발굴
 const LATE_NIGHT_EXTRA_QUERIES: Record<string, string[]> = {
@@ -51,6 +51,7 @@ const LATE_NIGHT_EXTRA_QUERIES: Record<string, string[]> = {
   '코인노래방': ['심야 노래방', '24시 노래방', '새벽 노래방'],
   '셀프빨래방': ['24시 빨래방', '코인빨래방', '24시간 빨래방'],
   '약국':       [],   // 약국은 공공데이터(fetch_pharmacy.ts)가 주 소스
+  '찜질방':     ['24시 찜질방', '24시간 찜질방', '24시 사우나', '24시간 사우나'],
 };
 
 
@@ -94,6 +95,14 @@ function classifyStore(name: string, category: string, description: string = '')
   // 셀프빨래방: 24시간 무인 운영 많음
   if (category.includes('빨래방') || name.includes('셀프빨래') || name.includes('코인빨래')) {
     return { class_type: 'B', inference_note: '무인 셀프빨래방 업종 특성상 24시 추정 (Class B)' };
+  }
+
+  // 찜질방/사우나: 업종 특성상 24시간 여부가 불분명 → 이름에 "24시" 명시된 것만 수집
+  if (category.includes('찜질방') || name.includes('찜질방') || name.includes('사우나')) {
+    if (/(24시|24시간|24h)/.test(text)) {
+      return { class_type: 'B', inference_note: '찜질방/사우나 상호명에 24시 명시 (Class B)' };
+    }
+    return { class_type: 'UNKNOWN', inference_note: '찜질방 — 24시간 여부 불분명, 지도 미노출' };
   }
 
   // 약국: 기본 수집 대상 (심야약국은 Class C)

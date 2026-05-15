@@ -29,6 +29,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
   '약국':       { bg: '#FF2D55', emoji: '💊' },
   '코인노래방': { bg: '#FF6B35', emoji: '🎤' },
   '셀프빨래방': { bg: '#32ADE6', emoji: '🫧' },
+  '찜질방':     { bg: '#FF9F0A', emoji: '🛁' },
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 

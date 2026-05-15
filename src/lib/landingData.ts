@@ -1,4 +1,4 @@
-export const LANDING_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방', '코인노래방', '셀프빨래방', '약국'] as const;
+export const LANDING_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방', '코인노래방', '셀프빨래방', '약국', '찜질방'] as const;
 export type LandingCategory = (typeof LANDING_CATEGORIES)[number];
 
 export const CATEGORY_META: Record<LandingCategory, { emoji: string; keyword: string; color: string }> = {
@@ -9,6 +9,7 @@ export const CATEGORY_META: Record<LandingCategory, { emoji: string; keyword: st
   코인노래방: { emoji: '🎤', keyword: '24시 코인노래방', color: '#FF6B35' },
   셀프빨래방: { emoji: '🫧', keyword: '24시간 빨래방',  color: '#32ADE6' },
   약국:       { emoji: '💊', keyword: '심야 약국',      color: '#FF2D55' },
+  찜질방:     { emoji: '🛁', keyword: '24시간 찜질방',  color: '#FF9F0A' },
 };
 
 /** road_address에서 주 지역명(구 또는 시) 추출 */

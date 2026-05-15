@@ -13,7 +13,7 @@ import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
 import { supabase } from '@/lib/supabase';
 
-const FILTERS = ['카페', '편의점', 'PC방', '셀프세차장', '코인노래방', '셀프빨래방', '약국'];
+const FILTERS = ['카페', '편의점', 'PC방', '셀프세차장', '코인노래방', '셀프빨래방', '약국', '찜질방'];
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
   const el = e.currentTarget;
