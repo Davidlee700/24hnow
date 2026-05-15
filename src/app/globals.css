@@ -767,6 +767,68 @@ body, html {
   color: var(--text-secondary);
 }
 
+/* ─── 최근 방문 기록 스트립 ───────────────────────────────── */
+.recent-stores-wrap {
+  position: absolute;
+  bottom: calc(84px + var(--safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: auto;
+  padding: 0 16px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recent-stores-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding-left: 4px;
+}
+
+.recent-stores-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.recent-stores-scroll::-webkit-scrollbar { display: none; }
+
+.recent-store-card {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  background: var(--material-thick);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--border-light);
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.1s, opacity 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.recent-store-card:active { transform: scale(0.95); opacity: 0.8; }
+
+.recent-store-emoji { font-size: 15px; line-height: 1; }
+
+.recent-store-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .vote-toast {
   position: absolute;
   bottom: calc(100% + 12px);

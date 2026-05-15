@@ -283,18 +283,42 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
       catch { setToastMsg('카카오 초기화에 실패했습니다.'); return; }
     }
     if (!kakao.Share) { setToastMsg('공유 기능을 사용할 수 없는 환경이에요.'); return; }
+
+    const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
+    const storeUrl = `${BASE}/?store=${store.id}`;
+    const hour = new Date().getHours();
+    const isNight = hour >= 22 || hour < 6;
+    const isOpen = store.operation_type === '24H' || openStatus?.isOpen === true;
+
+    const CATEGORY_EMOJI: Record<string, string> = {
+      카페: '☕', 편의점: '🏪', 셀프세차장: '🚗', PC방: '🎮',
+      약국: '💊', 코인노래방: '🎤', 셀프빨래방: '🫧', 찜질방: '🛁',
+    };
+    const emoji = CATEGORY_EMOJI[store.category] ?? '📍';
+
+    const title = isOpen
+      ? `${store.name} 지금 열려 있어요 ${emoji}`
+      : `${store.name} ${emoji}`;
+
+    const timeCtx = isNight ? '새벽에도' : '지금도';
+    const description = `${store.category} · ${timeCtx} 문 열어요.\n24시나우에서 내 주변 24시간 장소를 찾아보세요.`;
+
+    const ogParams = new URLSearchParams({
+      name: store.name,
+      category: store.category,
+      status: isOpen ? 'open' : '',
+    });
+    const imageUrl = `${BASE}/api/og?${ogParams.toString()}`;
+
     kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
-        title: `${store.name} — 새벽에도 문 열어요`,
-        description: `${store.category} · 24시나우에서 발견했어요. 지도에서 바로 확인하세요.`,
-        imageUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/og-image.png`,
-        link: {
-          mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
-          webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`,
-        },
+        title,
+        description,
+        imageUrl,
+        link: { mobileWebUrl: storeUrl, webUrl: storeUrl },
       },
-      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}`, webUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr'}/?store=${store.id}` } }],
+      buttons: [{ title: '지도에서 보기', link: { mobileWebUrl: storeUrl, webUrl: storeUrl } }],
     });
   };
 

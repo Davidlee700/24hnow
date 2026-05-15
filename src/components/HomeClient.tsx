@@ -6,7 +6,9 @@ import KakaoMap from '@/components/KakaoMap';
 import StoreBottomSheet from '@/components/StoreBottomSheet';
 import MenuDrawer from '@/components/MenuDrawer';
 import NightBanner from '@/components/NightBanner';
+import RecentStores from '@/components/RecentStores';
 import { useStores } from '@/hooks/useStores';
+import { useHistory } from '@/hooks/useHistory';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
 import { supabase } from '@/lib/supabase';
@@ -34,6 +36,7 @@ function HomeContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const { history: recentHistory, addToHistory } = useHistory();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -65,7 +68,7 @@ function HomeContent() {
           .eq('id', storeId)
           .single();
         if (data) {
-          setSelectedStore(data as Store);
+          handleSelectStore(data as Store);
           setMapCenter({ lat: data.latitude, lng: data.longitude });
         }
       } catch {
@@ -115,6 +118,12 @@ function HomeContent() {
 
   const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined, openNowOnly, medicineOnly);
 
+  // 매장 선택 시 최근 방문 기록에 추가
+  const handleSelectStore = (store: Store | null) => {
+    setSelectedStore(store);
+    if (store) addToHistory({ id: store.id, name: store.name, category: store.category });
+  };
+
   // Ensure the selectedStore is ALWAYS in the markers list, even if filtered out or outside bounds
   const stores = [...fetchedStores];
   if (selectedStore && !stores.some(s => s.id === selectedStore.id)) {
@@ -151,7 +160,7 @@ function HomeContent() {
         stores={stores}
         center={mapCenter}
         onBoundsChange={handleBoundsChange}
-        onMarkerClick={setSelectedStore}
+        onMarkerClick={handleSelectStore}
         onMapClick={() => setSelectedStore(null)}
         requestGps={requestGps}
         onGpsComplete={() => {
@@ -266,6 +275,11 @@ function HomeContent() {
           <p>{openNowOnly ? `지금 이 근처에 영업 중인 ${activeFilter}이(가) 없어요` : `이 근처엔 ${activeFilter} 정보가 없어요`}</p>
           <span>{openNowOnly ? '지도를 이동하거나 "지금 영업중" 필터를 해제해보세요' : '지도를 이동해 다른 지역을 확인해보세요'}</span>
         </div>
+      )}
+
+      {/* 최근 방문 기록 — 선택된 매장 없고, 이동 버튼도 없을 때만 노출 */}
+      {!selectedStore && !showSearchHere && (
+        <RecentStores items={recentHistory} />
       )}
 
       {/* GPS button */}
