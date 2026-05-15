@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import KakaoMap from '@/components/KakaoMap';
 import StoreBottomSheet from '@/components/StoreBottomSheet';
 import MenuDrawer from '@/components/MenuDrawer';
+import NightBanner from '@/components/NightBanner';
 import { useStores } from '@/hooks/useStores';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 import type { Store, MapBounds } from '@/types/store';
@@ -162,6 +163,8 @@ function HomeContent() {
         dimmed={isMenuOpen}
       />
 
+      <NightBanner />
+
       <h1 style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
         24시간 카페·편의점·세차장 찾기 — 새벽에도 문 여는 곳, 24시나우
       </h1>
@@ -210,7 +213,7 @@ function HomeContent() {
             }}
           >
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? 'var(--accent-neon)' : 'currentColor', display: 'inline-block', flexShrink: 0 }} />
-            지금 영업중
+            영업중{openNowOnly && fetchedStores.length > 0 ? ` ${fetchedStores.length}` : ''}
           </button>
           {activeFilter === '편의점' && (
             <button

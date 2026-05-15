@@ -56,6 +56,15 @@ export async function generateMetadata(
   const title = `${store.name} | ${region} ${categoryLabel} | 24시나우`;
   const description = `${store.road_address}에 위치한 ${categoryLabel}. 영업시간과 위치 정보를 24시나우에서 확인하세요.`;
 
+  const isOpen = store.operation_type === '24H' ? 'open' : '';
+  const ogImageParams = new URLSearchParams({
+    name: store.name,
+    category: store.category,
+    region,
+    status: isOpen,
+  });
+  const ogImageUrl = `${BASE_URL}/api/og?${ogImageParams.toString()}`;
+
   return {
     title,
     description,
@@ -67,6 +76,13 @@ export async function generateMetadata(
       siteName: '24시나우',
       locale: 'ko_KR',
       type: 'website',
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
     },
   };
 }

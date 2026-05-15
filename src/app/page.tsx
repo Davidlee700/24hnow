@@ -48,11 +48,15 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     if (store) {
       const region = extractRegion(store.road_address);
       const title = `${store.name} | ${region} 24시 ${store.category} - 24시나우`;
-      
+
       const tags = CATEGORY_TAGS[store.category] || [];
       const tag1 = tags[0] || '심야 운영';
       const tag2 = tags[1] || '24시간 운영';
       const description = `${tag1}, ${tag2}. 지금 바로 이용 가능한 ${region} 24시간 ${store.category} 정보를 확인하세요.`;
+
+      const isOpen = store.operation_type === '24H' ? 'open' : '';
+      const ogParams = new URLSearchParams({ name: store.name, category: store.category, region, status: isOpen });
+      const ogImageUrl = `${BASE_URL}/api/og?${ogParams.toString()}`;
 
       return {
         title,
@@ -60,7 +64,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         openGraph: {
           title,
           description,
-          images: ['/og-image.png'],
+          images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title,
+          description,
+          images: [ogImageUrl],
         },
       };
     }
