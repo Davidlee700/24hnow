@@ -21,6 +21,8 @@ const args = process.argv.slice(2);
 const isRemainingOnly = args.includes('--remaining');
 const startArg = args.find(a => a.startsWith('--start='));
 const startRegion = startArg ? startArg.split('=')[1] : null;
+const categoryArg = args.find(a => a.startsWith('--category='));
+const onlyCategory = categoryArg ? categoryArg.split('=')[1] : null;
 
 let TARGET_REGIONS = ALL_REGIONS_DONG;
 
@@ -40,7 +42,18 @@ if (startRegion) {
   }
 }
 
-const TARGET_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방', '코인노래방', '셀프빨래방', '약국', '찜질방'];
+const ALL_CATEGORIES = ['카페', '편의점', '셀프세차장', 'PC방', '코인노래방', '셀프빨래방', '약국', '찜질방'];
+const TARGET_CATEGORIES = onlyCategory
+  ? ALL_CATEGORIES.filter(c => c === onlyCategory)
+  : ALL_CATEGORIES;
+
+if (onlyCategory) {
+  if (TARGET_CATEGORIES.length === 0) {
+    console.error(`❌ 알 수 없는 카테고리: ${onlyCategory}`);
+    process.exit(1);
+  }
+  console.log(`ℹ️ 카테고리 필터: ${onlyCategory} 만 수집`);
+}
 
 // 카테고리별 심야 추가 쿼리 — 24시간은 아니지만 늦게까지 영업하는 업종 발굴
 const LATE_NIGHT_EXTRA_QUERIES: Record<string, string[]> = {
@@ -97,12 +110,12 @@ function classifyStore(name: string, category: string, description: string = '')
     return { class_type: 'B', inference_note: '무인 셀프빨래방 업종 특성상 24시 추정 (Class B)' };
   }
 
-  // 찜질방/사우나: 업종 특성상 24시간 여부가 불분명 → 이름에 "24시" 명시된 것만 수집
+  // 찜질방/사우나: 이름에 "24시" 명시 시 Class B, 그 외엔 EXTENDED 기본값으로 지도 노출 후 제보 수렴
   if (category.includes('찜질방') || name.includes('찜질방') || name.includes('사우나')) {
     if (/(24시|24시간|24h)/.test(text)) {
       return { class_type: 'B', inference_note: '찜질방/사우나 상호명에 24시 명시 (Class B)' };
     }
-    return { class_type: 'UNKNOWN', inference_note: '찜질방 — 24시간 여부 불분명, 지도 미노출' };
+    return { class_type: 'C_EXTENDED', inference_note: '찜질방 업종 — 영업시간 미확인, 제보 환영 (EXTENDED 기본값)' };
   }
 
   // 약국: 기본 수집 대상 (심야약국은 Class C)
