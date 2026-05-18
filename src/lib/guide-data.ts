@@ -1,4 +1,4 @@
-export type GuideCategory = '카페' | '편의점' | '세차장' | 'PC방' | '전체';
+export type GuideCategory = '카페' | '편의점' | '세차장' | '셀프세차장' | 'PC방' | '약국' | '찜질방' | '셀프빨래방' | '코인노래방' | '전체';
 
 export interface StoreEntry {
   rank: number;
@@ -30,11 +30,16 @@ export interface GuidePost {
 
 // 카테고리별 기본 그라디언트
 export const CATEGORY_GRADIENTS: Record<GuideCategory, string> = {
-  '카페':    'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-  '편의점':  'linear-gradient(135deg, #0d1b2a 0%, #1b4332 50%, #2d6a4f 100%)',
-  '세차장':  'linear-gradient(135deg, #0d1b2a 0%, #023e8a 50%, #0077b6 100%)',
-  'PC방':    'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #111 100%)',
-  '전체':    'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #111 100%)',
+  '카페':       'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+  '편의점':     'linear-gradient(135deg, #0d1b2a 0%, #1b4332 50%, #2d6a4f 100%)',
+  '세차장':     'linear-gradient(135deg, #0d1b2a 0%, #023e8a 50%, #0077b6 100%)',
+  '셀프세차장': 'linear-gradient(135deg, #0d1b2a 0%, #023e8a 50%, #0077b6 100%)',
+  'PC방':       'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #111 100%)',
+  '약국':       'linear-gradient(135deg, #1a0020 0%, #3d0030 50%, #6b0050 100%)',
+  '찜질방':     'linear-gradient(135deg, #1a0e00 0%, #3d2000 50%, #6b3800 100%)',
+  '셀프빨래방': 'linear-gradient(135deg, #001a2e 0%, #00304d 50%, #005a8e 100%)',
+  '코인노래방': 'linear-gradient(135deg, #1a0a00 0%, #3d1a00 50%, #7a3800 100%)',
+  '전체':       'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #111 100%)',
 };
 
 import { allGuidePosts } from './data/guides';

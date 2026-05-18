@@ -173,7 +173,17 @@ export default async function ArticlePage({ params }: Props) {
                     className="guide-related-thumb"
                     style={{ background: rp.gradient || CATEGORY_GRADIENTS[rp.category] }}
                   >
-                    <span>{rp.category === '카페' ? '☕' : rp.category === '편의점' ? '🏪' : rp.category === '세차장' ? '🚿' : '🎮'}</span>
+                    <span>
+                      {rp.category === '카페' ? '☕'
+                        : rp.category === '편의점' ? '🏪'
+                        : rp.category === '세차장' || rp.category === '셀프세차장' ? '🚗'
+                        : rp.category === 'PC방' ? '🎮'
+                        : rp.category === '약국' ? '💊'
+                        : rp.category === '찜질방' ? '🛁'
+                        : rp.category === '셀프빨래방' ? '🫧'
+                        : rp.category === '코인노래방' ? '🎤'
+                        : '📍'}
+                    </span>
                   </div>
                   <div className="guide-related-info">
                     <p className="guide-related-name">{rp.title}</p>
