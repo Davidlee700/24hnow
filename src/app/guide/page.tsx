@@ -23,6 +23,20 @@ const CATEGORY_FILTERS: { label: string; value: GuideCategory | 'all' }[] = [
   { label: '셀프세차장', value: '셀프세차장' },
 ];
 
+// region label을 city 파라미터로 사용 (e.g. city=서울, city=부산)
+// 특정 도시는 city=마포구 처럼 직접 지정
+const REGIONS: { label: string; cities: string[] }[] = [
+  { label: '전체',    cities: [] },
+  { label: '서울',    cities: ['강남구', '마포구', '종로구', '영등포구', '노원구', '강동구', '강북구', '서대문구', '광진구', '성북구'] },
+  { label: '경기·인천', cities: ['파주', '고양', '의정부', '양주', '동두천', '포천', '수원', '성남', '용인', '부천', '인천'] },
+  { label: '부산',    cities: ['부산'] },
+  { label: '대구',    cities: ['대구'] },
+  { label: '대전',    cities: ['대전'] },
+  { label: '광주',    cities: ['광주'] },
+  { label: '강원',    cities: ['강릉', '춘천', '원주'] },
+  { label: '경남·경북', cities: ['창원', '포항', '경주', '구미'] },
+];
+
 interface Props {
   searchParams: Promise<{ category?: string; city?: string }>;
 }
@@ -31,27 +45,27 @@ export default async function GuidePage({ searchParams }: Props) {
   const { category, city } = await searchParams;
   const all = getAllPosts();
 
-  const regions = [
-    { label: '전체', cities: [] },
-    { label: '서울', cities: ['강남구', '마포구', '종로구', '영등포구', '노원구', '강동구', '강북구', '서대문구'] },
-    { label: '경기·인천', cities: ['파주', '고양', '의정부', '양주', '동두천', '포천', '수원', '성남', '용인', '부천', '인천'] },
-    { label: '부산', cities: ['부산'] },
-    { label: '대구', cities: ['대구'] },
-    { label: '대전', cities: ['대전'] },
-    { label: '광주', cities: ['광주'] },
-    { label: '강원', cities: ['강릉', '춘천', '원주'] },
-    { label: '경남·경북', cities: ['창원', '포항', '경주', '구미'] },
-  ];
-
-  const activeRegion = regions.find(r => r.cities.includes(city || '')) || regions[0];
-
-  const activeRegionCities = regions.find(r => r.cities.includes(city || ''))?.cities ?? [];
+  // city 파라미터가 region label이면 해당 region 전체, 아니면 특정 도시
+  const matchedRegion = REGIONS.find(r => r.label === city);
+  const matchedCityRegion = REGIONS.find(r => r.cities.includes(city ?? ''));
+  const activeRegion = matchedRegion ?? matchedCityRegion ?? REGIONS[0];
 
   const posts = all.filter(p => {
     const catMatch = !category || category === 'all' || p.category === category;
-    const cityMatch = !city || city === 'all' || p.city === city || (p.city != null && activeRegionCities.includes(p.city));
+    let cityMatch: boolean;
+    if (!city || city === 'all') {
+      cityMatch = true;
+    } else if (matchedRegion) {
+      // region label로 필터 (e.g. city=서울 → 서울 전체)
+      cityMatch = matchedRegion.cities.includes(p.city ?? '');
+    } else {
+      // 특정 도시로 필터 (e.g. city=마포구)
+      cityMatch = p.city === city;
+    }
     return catMatch && cityMatch;
   });
+
+  const catParam = category && category !== 'all' ? `&category=${category}` : '';
 
   return (
     <div className="guide-page">
@@ -69,35 +83,36 @@ export default async function GuidePage({ searchParams }: Props) {
 
       {/* 카테고리 필터 */}
       <div className="guide-filter-bar">
-        {CATEGORY_FILTERS.map(f => (
-          <Link
-            key={f.value}
-            href={
-              f.value === 'all'
-                ? city && city !== 'all' ? `/guide?city=${city}` : '/guide'
-                : `/guide?category=${f.value}${city && city !== 'all' ? `&city=${city}` : ''}`
-            }
-            className={`guide-filter-chip ${(!category && f.value === 'all') || category === f.value ? 'active' : ''}`}
-          >
-            {f.label}
-          </Link>
-        ))}
+        {CATEGORY_FILTERS.map(f => {
+          const regionParam = city && city !== 'all' ? `&city=${city}` : '';
+          const href = f.value === 'all'
+            ? city && city !== 'all' ? `/guide?city=${city}` : '/guide'
+            : `/guide?category=${f.value}${regionParam}`;
+          return (
+            <Link
+              key={f.value}
+              href={href}
+              className={`guide-filter-chip ${(!category && f.value === 'all') || category === f.value ? 'active' : ''}`}
+            >
+              {f.label}
+            </Link>
+          );
+        })}
       </div>
 
-      {/* 지역(대분류) 필터 */}
+      {/* 지역 필터 */}
       <div className="guide-filter-bar" style={{ paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 8 }}>
-        {regions.map(r => {
-          const isActive = r.label === '전체' 
-            ? (!city || city === 'all') 
-            : r.cities.includes(city || '');
-          
-          // 리전 선택 시 해당 리전의 첫 번째 도시로 이동하거나 전체로 이동
-          const targetCity = r.label === '전체' ? 'all' : r.cities[0];
-          
+        {REGIONS.map(r => {
+          const isActive = r.label === '전체'
+            ? (!city || city === 'all')
+            : activeRegion.label === r.label;
+          const href = r.label === '전체'
+            ? `/guide${catParam ? `?${catParam.slice(1)}` : ''}`
+            : `/guide?city=${r.label}${catParam}`;
           return (
             <Link
               key={r.label}
-              href={`/guide?city=${targetCity}${category && category !== 'all' ? `&category=${category}` : ''}`}
+              href={href}
               className={`guide-filter-chip region-chip ${isActive ? 'active' : ''}`}
             >
               {r.label}
@@ -106,18 +121,23 @@ export default async function GuidePage({ searchParams }: Props) {
         })}
       </div>
 
-      {/* 도시(중분류) 필터 - 선택된 리전에 속한 도시들만 표시 */}
+      {/* 도시(중분류) 필터 — 2개 이상 도시를 가진 지역에서만, 각 도시로 드릴다운 */}
       {activeRegion.label !== '전체' && activeRegion.cities.length > 1 && (
         <div className="guide-filter-bar" style={{ paddingTop: 4 }}>
-          {activeRegion.cities.map(c => (
-            <Link
-              key={c}
-              href={`/guide?city=${c}${category && category !== 'all' ? `&category=${category}` : ''}`}
-              className={`guide-filter-chip city-chip ${city === c ? 'active' : ''}`}
-            >
-              {c}
-            </Link>
-          ))}
+          {activeRegion.cities.map(c => {
+            // 해당 도시에 실제 게시글이 있는 경우만 표시
+            const hasPosts = all.some(p => p.city === c && (!category || category === 'all' || p.category === category));
+            if (!hasPosts) return null;
+            return (
+              <Link
+                key={c}
+                href={`/guide?city=${c}${catParam}`}
+                className={`guide-filter-chip city-chip ${city === c ? 'active' : ''}`}
+              >
+                {c}
+              </Link>
+            );
+          })}
         </div>
       )}
 

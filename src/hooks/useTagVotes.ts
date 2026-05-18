@@ -11,6 +11,7 @@ export const CATEGORY_TAGS: Record<string, string[]> = {
   '코인노래방': ['카드결제가능', '넓은방', '음향좋음', '쾌적한시설', '주차가능'],
   '셀프빨래방': ['대형세탁기', '운동화세탁', '카드결제가능', '무인카페운영', '건조기완비'],
   '약국':       ['심야처방', '동물약취급', '상비약', '친절한상담', '주차가능'],
+  '찜질방':     ['황토방', '소금방', '수면실', '때밀이서비스', '주차가능'],
 };
 
 export function useTagVotes(storeId: string | null, category: string) {
