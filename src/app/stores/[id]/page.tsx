@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Store } from '@/types/store';
 import { getOpenStatus, getTodayHoursLine } from '@/utils/openHours';
@@ -27,7 +28,47 @@ const CATEGORY_SEO: Record<string, string> = {
   '코인노래방': '24시 코인노래방',
   '셀프빨래방': '24시간 빨래방',
   '약국':       '심야 약국',
+  '찜질방':     '24시간 찜질방',
 };
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  '카페': '☕', '편의점': '🏪', '셀프세차장': '🚗',
+  'PC방': '🎮', '코인노래방': '🎤', '셀프빨래방': '🫧',
+  '약국': '💊', '찜질방': '🛁',
+};
+
+const CATEGORY_DESC: Record<string, string> = {
+  '카페':
+    '새벽 공부나 야근 후 여유로운 커피 한 잔이 필요할 때. 24시간 카페는 밤이 길어도 혼자가 아닌 공간을 만들어 줍니다. 노트북 작업, 시험 준비, 혹은 그냥 따뜻한 음료 한 잔 — 언제든 문이 열려 있어요.',
+  '편의점':
+    '새벽에도 언제든 필요한 것을 바로 살 수 있는 동네 거점. 간식, 생필품, 의약외품부터 ATM까지 — 갑자기 필요한 순간을 든든하게 채워 줍니다.',
+  '셀프세차장':
+    '한낮의 줄서기 없이 내 페이스대로. 새벽 시간대 셀프세차장은 조용하고 효율적입니다. 고압 세척기와 진공청소기를 자유롭게 사용할 수 있어요.',
+  'PC방':
+    '고사양 PC와 쾌적한 환경에서 밤새 게임이나 작업을. 대부분 24시간 운영하며 음식 주문도 가능한 곳이 많습니다.',
+  '코인노래방':
+    '부르고 싶을 때 언제든 혼자, 또는 친구와. 코인 단위로 자유롭게 이용할 수 있어 부담 없이 들를 수 있어요.',
+  '셀프빨래방':
+    '밀린 세탁을 밤 시간에 여유롭게. 대용량 세탁기와 건조기를 편하게 사용할 수 있고, 기다리는 동안 근처 카페에서 시간을 보낼 수도 있어요.',
+  '약국':
+    '심야에 갑작스럽게 필요한 약을 구할 수 있는 곳. 응급 상황을 위해 근처 심야 약국 위치를 미리 알아두면 든든합니다.',
+  '찜질방':
+    '하루의 피로를 제대로 풀 수 있는 찜질방. 온돌방, 황토방, 사우나, 수면실을 갖춘 곳이 많아 새벽에도 편하게 쉬거나 잠을 청할 수 있어요.',
+};
+
+const LANDING_CATS = ['카페','편의점','셀프세차장','PC방','코인노래방','셀프빨래방','약국','찜질방'];
+
+async function getNearbyStores(storeId: string, region: string): Promise<Store[]> {
+  if (!region) return [];
+  const { data } = await supabase
+    .from('stores')
+    .select('id, name, category, road_address, operation_type')
+    .ilike('road_address', `%${region}%`)
+    .neq('id', storeId)
+    .in('operation_type', ['24H', 'EXTENDED'])
+    .limit(6);
+  return (data as Store[]) ?? [];
+}
 
 // "서울 강남구 논현동 …" → "강남구"
 function extractRegion(address: string): string {
@@ -35,14 +76,14 @@ function extractRegion(address: string): string {
   return matches?.[0] ?? '';
 }
 
-async function getStore(id: string): Promise<Store | null> {
+const getStore = cache(async (id: string): Promise<Store | null> => {
   const { data } = await supabase
     .from('stores')
     .select('*')
     .eq('id', id)
     .maybeSingle();
   return data as Store | null;
-}
+});
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
@@ -137,6 +178,9 @@ export default async function StorePage(
   const todayKrIndex = todayDayIndex === 0 ? 6 : todayDayIndex - 1; // 월=0
   const region = extractRegion(store.road_address);
   const categoryLabel = CATEGORY_SEO[store.category] ?? store.category;
+  const nearbyStores = await getNearbyStores(String(store.id), region);
+  const categoryDesc = CATEGORY_DESC[store.category];
+  const hasLandingPage = region && LANDING_CATS.includes(store.category);
 
   const naverMapUrl = `https://map.naver.com/v5/search/${encodeURIComponent(store.name + ' ' + store.road_address)}`;
   const kakaoMapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(store.name)}`;
@@ -330,6 +374,97 @@ export default async function StorePage(
               카카오 지도
             </a>
           </section>
+
+          {/* 카테고리 소개 */}
+          {categoryDesc && (
+            <section style={{ marginBottom: '32px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '10px' }}>
+                {CATEGORY_EMOJI[store.category]} {categoryLabel}이란?
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                lineHeight: '1.7',
+                color: 'rgba(255,255,255,0.6)',
+                margin: 0,
+              }}>
+                {categoryDesc}
+              </p>
+            </section>
+          )}
+
+          {/* 이 근처 다른 24시간 장소 */}
+          {nearbyStores.length > 0 && (
+            <section style={{ marginBottom: '32px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>
+                {region} 근처 다른 24시간 장소
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {nearbyStores.map(s => (
+                  <Link key={s.id} href={`/stores/${s.id}`} style={{ textDecoration: 'none' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '12px',
+                      transition: 'background 0.15s',
+                    }}>
+                      <span style={{ fontSize: '20px', flexShrink: 0 }}>
+                        {CATEGORY_EMOJI[s.category] ?? '📍'}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '14px', fontWeight: 600, margin: '0 0 2px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.name}
+                        </p>
+                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                          {s.category}
+                        </p>
+                      </div>
+                      {s.operation_type === '24H' && (
+                        <span style={{
+                          fontSize: '11px', fontWeight: 700,
+                          color: '#ADFF2F', background: 'rgba(173,255,47,0.12)',
+                          border: '1px solid rgba(173,255,47,0.3)',
+                          borderRadius: '6px', padding: '2px 8px', flexShrink: 0,
+                        }}>24H</span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 지역 랜딩 페이지 링크 */}
+          {hasLandingPage && (
+            <section style={{ marginBottom: '32px' }}>
+              <Link
+                href={`/${encodeURIComponent(region)}/${encodeURIComponent(store.category)}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px 20px',
+                  background: 'rgba(173,255,47,0.07)',
+                  border: '1px solid rgba(173,255,47,0.2)',
+                  borderRadius: '14px',
+                  textDecoration: 'none',
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#ADFF2F', margin: '0 0 2px' }}>
+                    {region} {categoryLabel} 전체 보기
+                  </p>
+                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+                    이 지역의 24시간 {store.category} 목록
+                  </p>
+                </div>
+                <span style={{ color: '#ADFF2F', fontSize: '18px' }}>→</span>
+              </Link>
+            </section>
+          )}
 
           {/* 데이터 출처 */}
           <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: '32px' }}>
