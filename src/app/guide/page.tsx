@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { getAllPosts, CATEGORY_GRADIENTS, GuideCategory } from '@/lib/guide-data';
 
 export const metadata: Metadata = {
-  title: '심야 가이드 | 24시나우',
-  description: '동별 심야 카페·편의점·세차장 TOP 10 큐레이션. 밤샘 공간을 찾는 당신을 위한 가이드.',
+  title: '24시간 심야 가이드 | 카페·약국·찜질방·세차장 — 서울·부산·대구·강릉 | 24시나우',
+  description: '서울·부산·대구·대전·광주·강릉 24시간 카페·약국·찜질방·코인노래방·셀프빨래방·셀프세차장 큐레이션. 새벽에도 문 여는 곳을 지역별로 직접 선별했습니다.',
   alternates: { canonical: 'https://24now.kr/guide' },
   openGraph: {
-    title: '심야 가이드 | 24시나우',
-    description: '동별 심야 카페·편의점·세차장 TOP 10 큐레이션.',
+    title: '24시간 심야 가이드 | 카페·약국·찜질방 — 서울·부산·대구·강릉 | 24시나우',
+    description: '서울·부산·대구·대전·광주·강릉 24시간 카페·약국·찜질방 큐레이션. 새벽에도 문 여는 곳.',
     url: 'https://24now.kr/guide',
   },
 };
@@ -16,9 +16,11 @@ export const metadata: Metadata = {
 const CATEGORY_FILTERS: { label: string; value: GuideCategory | 'all' }[] = [
   { label: '전체', value: 'all' },
   { label: '카페', value: '카페' },
-  { label: '편의점', value: '편의점' },
-  { label: '세차장', value: '세차장' },
-  { label: 'PC방', value: 'PC방' },
+  { label: '약국', value: '약국' },
+  { label: '찜질방', value: '찜질방' },
+  { label: '코인노래방', value: '코인노래방' },
+  { label: '셀프빨래방', value: '셀프빨래방' },
+  { label: '셀프세차장', value: '셀프세차장' },
 ];
 
 interface Props {
@@ -31,17 +33,23 @@ export default async function GuidePage({ searchParams }: Props) {
 
   const regions = [
     { label: '전체', cities: [] },
-    { label: '인천', cities: ['인천'] },
-    { label: '경기 북부', cities: ['파주', '고양', '의정부', '양주', '동두천', '포천'] },
-    { label: '경기 남부', cities: ['수원', '성남', '용인', '부천'] },
+    { label: '서울', cities: ['강남구', '마포구', '종로구', '영등포구', '노원구', '강동구', '강북구', '서대문구'] },
+    { label: '경기·인천', cities: ['파주', '고양', '의정부', '양주', '동두천', '포천', '수원', '성남', '용인', '부천', '인천'] },
+    { label: '부산', cities: ['부산'] },
+    { label: '대구', cities: ['대구'] },
+    { label: '대전', cities: ['대전'] },
+    { label: '광주', cities: ['광주'] },
+    { label: '강원', cities: ['강릉', '춘천', '원주'] },
+    { label: '경남·경북', cities: ['창원', '포항', '경주', '구미'] },
   ];
 
-  // 현재 선택된 도시가 속한 리전 찾기
   const activeRegion = regions.find(r => r.cities.includes(city || '')) || regions[0];
+
+  const activeRegionCities = regions.find(r => r.cities.includes(city || ''))?.cities ?? [];
 
   const posts = all.filter(p => {
     const catMatch = !category || category === 'all' || p.category === category;
-    const cityMatch = !city || city === 'all' || p.city === city;
+    const cityMatch = !city || city === 'all' || p.city === city || (p.city != null && activeRegionCities.includes(p.city));
     return catMatch && cityMatch;
   });
 
@@ -131,7 +139,15 @@ export default async function GuidePage({ searchParams }: Props) {
                 <div className="guide-card-thumbnail-inner">
                   <span className="guide-card-region">{post.region}</span>
                   <span className="guide-card-category-icon">
-                    {post.category === '카페' ? '☕' : post.category === '편의점' ? '🏪' : post.category === '세차장' ? '🚿' : '🎮'}
+                    {post.category === '카페' ? '☕'
+                      : post.category === '편의점' ? '🏪'
+                      : post.category === '세차장' || post.category === '셀프세차장' ? '🚗'
+                      : post.category === 'PC방' ? '🎮'
+                      : post.category === '약국' ? '💊'
+                      : post.category === '찜질방' ? '🛁'
+                      : post.category === '셀프빨래방' ? '🫧'
+                      : post.category === '코인노래방' ? '🎤'
+                      : '📍'}
                   </span>
                 </div>
               </div>

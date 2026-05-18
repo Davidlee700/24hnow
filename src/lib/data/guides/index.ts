@@ -9,6 +9,12 @@ import { seoulJjimjilbangGuides } from './seoul-jjimjilbang';
 import { seoulKaraokeGuides } from './seoul-karaoke';
 import { seoulLaundryGuides } from './seoul-laundry';
 import { seoulCarwashGuides } from './seoul-carwash';
+import { busanGuides } from './busan';
+import { daeguGuides } from './daegu';
+import { daejeonGuides } from './daejeon';
+import { gwangjuGuides } from './gwangju';
+import { gangwonGuides } from './gangwon';
+import { gyeongnamBukGuides } from './gyeongnam-buk';
 import { GuidePost } from '../../guide-data';
 
 export const allGuidePosts: GuidePost[] = [
@@ -23,4 +29,10 @@ export const allGuidePosts: GuidePost[] = [
   ...gyeonggiNorthGuides,
   ...gyeonggiSouthGuides,
   ...incheonGuides,
+  ...busanGuides,
+  ...daeguGuides,
+  ...daejeonGuides,
+  ...gwangjuGuides,
+  ...gangwonGuides,
+  ...gyeongnamBukGuides,
 ];
