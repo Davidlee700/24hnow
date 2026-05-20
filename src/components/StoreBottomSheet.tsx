@@ -7,6 +7,7 @@ import { getOpenStatus, getTodayHoursLine } from '@/utils/openHours';
 import { useTagVotes } from '@/hooks/useTagVotes';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import StoreReviews from './StoreReviews';
+import { FRANCHISE_DEFAULTS } from '@/lib/franchise-constants';
 
 interface Props {
   store: Store | null;
@@ -58,17 +59,6 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
   el.addEventListener('animationend', () => el.classList.remove('tap-bounce'), { once: true });
 }
 
-const FRANCHISE_DEFAULTS: Record<string, string[]> = {
-  '스타벅스': ['여유로운 충전 환경', '몰입을 돕는 분위기'],
-  '투썸': ['여유로운 충전 환경'],
-  '이디야': ['몰입을 돕는 분위기'],
-  '메가커피': ['몰입을 돕는 분위기'],
-  'CU': ['상비약 완비'],
-  'GS25': ['상비약 완비'],
-  '세븐일레븐': ['상비약 완비'],
-  '이마트24': ['상비약 완비'],
-  '미니스톱': ['상비약 완비'],
-};
 
 function getDefaultTags(name: string, tags: string[]): Set<string> {
   for (const [franchise, defaults] of Object.entries(FRANCHISE_DEFAULTS)) {
@@ -124,11 +114,38 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
   const openDirections = () => {
     if (!store) return;
+
+    // Google Analytics Event Tracking for Outbound Clicks
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'click_directions', {
+        event_category: 'outbound_link',
+        event_label: store.name,
+        store_id: store.id,
+        store_category: store.category,
+      });
+    }
+
     const dest = `${encodeURIComponent(store.name)},${store.latitude},${store.longitude}`;
     const url = userLocation
       ? `https://map.kakao.com/link/from/현재위치,${userLocation.lat},${userLocation.lng}/to/${dest}`
       : `https://map.kakao.com/link/to/${dest}`;
     window.open(url, '_blank');
+  };
+
+  const handlePhoneCall = (e: React.MouseEvent<HTMLElement>) => {
+    if (!store || !store.metadata?.phone) return;
+    tapEffect(e);
+
+    // Google Analytics Event Tracking for Outbound Call
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'click_phone', {
+        event_category: 'outbound_link',
+        event_label: store.name,
+        store_id: store.id,
+      });
+    }
+
+    window.location.href = `tel:${store.metadata?.phone}`;
   };
 
   const showToast = (msg: string) => {
@@ -276,6 +293,16 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const shareToKakao = (e: React.MouseEvent<HTMLElement>) => {
     tapEffect(e);
     if (!store) return;
+
+    // Google Analytics Event Tracking for Social Sharing
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'click_share_kakao', {
+        event_category: 'social_share',
+        event_label: store.name,
+        store_id: store.id,
+      });
+    }
+
     const kakao = (window as any).Kakao;
     if (!kakao) { setToastMsg('카카오 SDK를 불러오는 중이에요. 1~2초 후 다시 시도해 주세요.'); return; }
     if (!kakao.isInitialized()) {
@@ -285,7 +312,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     if (!kakao.Share) { setToastMsg('공유 기능을 사용할 수 없는 환경이에요.'); return; }
 
     const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
-    const storeUrl = `${BASE}/?store=${store.id}`;
+    const storeUrl = `${BASE}/stores/${store.id}`;
     const hour = new Date().getHours();
     const isNight = hour >= 22 || hour < 6;
     const isOpen = store.operation_type === '24H' || openStatus?.isOpen === true;
@@ -389,7 +416,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       <button
                         key={folder.id}
                         onClick={() => handleSaveToFolder(folder.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderRadius: '14px', background: 'var(--material-thin)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '0.5px solid var(--border-light)', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'background 0.2s' }}
                       >
                         <span style={{ fontSize: '22px' }}>{folder.emoji}</span>
                         <span style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 500 }}>{folder.name}</span>
@@ -451,7 +478,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     <span className="action-label">공유</span>
                   </button>
                   
-                  <button className="action-btn" disabled={!store.metadata?.phone} onClick={() => { if (store.metadata?.phone) window.location.href = `tel:${store.metadata?.phone}` }}>
+                  <button className="action-btn" disabled={!store.metadata?.phone} onClick={handlePhoneCall}>
                     <div className="action-icon-wrapper">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                     </div>
@@ -560,7 +587,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                         exit={{ height: 0, opacity: 0, marginTop: 0 }}
                         style={{ overflow: 'hidden' }}
                       >
-                        <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '14px' }}>
+                        <div style={{ background: 'var(--material-thin)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '0.5px solid var(--border-light)', borderRadius: '14px', padding: '14px' }}>
                           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600 }}>
                             요일별 영업시간을 알려주세요
                           </p>

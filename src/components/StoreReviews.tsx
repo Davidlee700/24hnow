@@ -115,8 +115,8 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
       </p>
 
       {/* 댓글 작성 폼 */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '16px', border: '0.5px solid rgba(255,255,255,0.08)' }}>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>태그로 빠른 분위기 남기기</p>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--material-thin)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', padding: '16px', borderRadius: '16px', border: '0.5px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>태그로 빠른 분위기 남기기</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {availableTags.map(tag => {
             const isSelected = selectedTags.includes(tag);
@@ -151,16 +151,19 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
             rows={2}
             style={{
               width: '100%',
-              padding: '12px',
+              padding: '12px 14px',
               borderRadius: '12px',
-              background: 'rgba(255,255,255,0.08)',
-              border: 'none',
-              color: 'white',
+              background: 'rgba(255,255,255,0.06)',
+              border: '0.5px solid var(--border-extra-light)',
+              color: 'var(--text-primary)',
               fontSize: '14px',
               outline: 'none',
               resize: 'none',
               boxSizing: 'border-box',
+              transition: 'background 0.2s',
             }}
+            onFocus={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+            onBlur={(e) => e.target.style.background = 'rgba(255,255,255,0.06)'}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
             <button
@@ -192,7 +195,7 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
           <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>아직 리뷰가 없어요. 첫 리뷰를 남겨보세요!</p>
         ) : (
           comments.map(comment => (
-            <div key={comment.id} style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.05)' }}>
+            <div key={comment.id} style={{ padding: '14px', borderRadius: '14px', background: 'var(--material-thin)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '0.5px solid var(--border-light)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{comment.author_name}</span>
                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
