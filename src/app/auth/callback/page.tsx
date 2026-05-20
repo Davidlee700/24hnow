@@ -9,12 +9,17 @@ export default function AuthCallbackPage() {
   const router = useRouter();
 
   const syncProfile = async (user: User) => {
-    await supabase.from('user_profiles').upsert({
+    const { error } = await supabase.from('user_profiles').upsert({
       id: user.id,
       email: user.email,
       full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || '이용자',
       avatar_url: user.user_metadata?.avatar_url || '',
     });
+    
+    if (error) {
+      console.error('프로필 저장 실패 (user_profiles 테이블을 확인하세요):', error);
+      alert('사용자 프로필 저장에 실패했습니다. 관리자에게 문의해주세요.');
+    }
   };
 
   useEffect(() => {

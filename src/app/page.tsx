@@ -1,9 +1,35 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import HomeClient from '@/components/HomeClient';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
+import { getAllPosts } from '@/lib/guide-data';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
+
+const SEO_REGIONS = [
+  { slug: '강남구', name: '서울 강남구' },
+  { slug: '마포구', name: '서울 마포구' },
+  { slug: '송파구', name: '서울 송파구' },
+  { slug: '서초구', name: '서울 서초구' },
+  { slug: '영등포구', name: '서울 영등포구' },
+  { slug: '종로구', name: '서울 종로구' },
+  { slug: '용산구', name: '서울 용산구' },
+  { slug: '관악구', name: '서울 관악구' },
+  { slug: '성남시', name: '경기 성남시 분당구' },
+  { slug: '고양시', name: '경기 고양시 일산' },
+  { slug: '수원시', name: '경기 수원시' },
+  { slug: '부평구', name: '인천 부평구' },
+  { slug: '남동구', name: '인천 남동구' },
+];
+
+const SEO_CATEGORIES = [
+  { name: '카페', keyword: '24시간 카페' },
+  { name: '편의점', keyword: '24시간 편의점' },
+  { name: '셀프세차장', keyword: '24시 셀프세차장' },
+  { name: 'PC방', keyword: '24시 PC방' },
+  { name: '약국', keyword: '심야 약국' },
+];
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -94,9 +120,12 @@ export default async function Page(props: Props) {
     storeData = data;
   }
 
+  const guides = getAllPosts();
+
   return (
     <>
       <HomeClient />
+      
       {storeData && (
         <script
           type="application/ld+json"
@@ -120,6 +149,74 @@ export default async function Page(props: Props) {
           }}
         />
       )}
+
+      {/* SEO를 위한 크롤러용 footer 영역 (지도의 레이아웃을 깨뜨리지 않고 크롤러가 읽어갈 수 있도록 마크업 배치) */}
+      <footer style={{
+        position: 'relative',
+        zIndex: 10,
+        backgroundColor: '#121212',
+        color: '#8e8e93',
+        padding: '60px 20px',
+        fontSize: '13px',
+        lineHeight: '1.6',
+        borderTop: '1px solid #2c2c2e',
+        marginTop: '100vh',
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h3 style={{ color: '#ffffff', fontSize: '15px', marginBottom: '15px', fontWeight: '600' }}>
+            24시나우 - 내 주변 24시간 매장 지도 및 가이드
+          </h3>
+          <p style={{ marginBottom: '30px' }}>
+            지금 내 주변에서 열려 있는 24시 카페, 24시간 편의점, 24시 셀프세차장, 심야 약국, 24시간 찜질방, 코인노래방 등을 위치 기반 지도로 바로 확인할 수 있는 서비스입니다.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px', marginBottom: '40px' }}>
+            {/* 1. 지역별 24시 장소 링크 */}
+            <div>
+              <h4 style={{ color: '#e5e5ea', fontSize: '14px', marginBottom: '15px', fontWeight: '600' }}>인기 지역별 24시 바로가기</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {SEO_REGIONS.flatMap(region =>
+                  SEO_CATEGORIES.map(cat => (
+                    <Link 
+                      key={`${region.slug}-${cat.name}`} 
+                      href={`/${encodeURIComponent(region.slug)}/${encodeURIComponent(cat.name)}`}
+                      style={{ color: '#8e8e93', textDecoration: 'none', backgroundColor: '#1c1c1e', padding: '5px 9px', borderRadius: '4px', fontSize: '11px', display: 'inline-block' }}
+                    >
+                      {region.name} {cat.name}
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* 2. 심야 가이드 리스트 */}
+            <div>
+              <h4 style={{ color: '#e5e5ea', fontSize: '14px', marginBottom: '15px', fontWeight: '600' }}>밤샘족을 위한 심야 가이드</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {guides.map(guide => (
+                  <li key={guide.slug}>
+                    <Link 
+                      href={`/guide/${guide.slug}`}
+                      style={{ color: '#8e8e93', textDecoration: 'none', fontSize: '12px', display: 'block' }}
+                    >
+                      📍 {guide.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid #2c2c2e', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
+            <div>
+              <Link href="/notice" style={{ color: '#8e8e93', marginRight: '15px', textDecoration: 'none' }}>공지사항</Link>
+              <Link href="/terms" style={{ color: '#8e8e93', marginRight: '15px', textDecoration: 'none' }}>이용약관</Link>
+              <Link href="/privacy" style={{ color: '#8e8e93', textDecoration: 'none' }}>개인정보처리방침</Link>
+            </div>
+            <p style={{ margin: 0, fontSize: '11px', color: '#636366' }}>© {new Date().getFullYear()} 24시나우. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
