@@ -14,7 +14,8 @@
     "ingest:jjimjilbang": "tsx src/scripts/ingestion/ingest_v2.ts --category=찜질방",
     "enrich": "tsx src/scripts/enrichment/enrich_places.ts",
     "enrich:naver": "tsx src/scripts/enrichment/enrich_naver.ts",
-    "enrich:starbucks": "tsx src/scripts/ingestion/fetch_starbucks.ts"
+    "enrich:starbucks": "tsx src/scripts/ingestion/fetch_starbucks.ts",
+    "seed:tags": "tsx src/scripts/enrichment/seed_tags.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

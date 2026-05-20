@@ -63,6 +63,30 @@ CREATE INDEX IF NOT EXISTS idx_user_reports_store_id ON public.user_reports(stor
 CREATE INDEX IF NOT EXISTS idx_user_reports_session_id ON public.user_reports(session_id);
 
 -- ─────────────────────────────────────────────
+-- Migration: tags, class_type, has_medicine, store_votes 추가
+-- Supabase 대시보드 SQL Editor에서 실행
+-- ─────────────────────────────────────────────
+
+-- stores 테이블 누락 컬럼 추가
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS tags        TEXT[]   DEFAULT '{}';
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS class_type  TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS raw_hours   TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS has_medicine BOOLEAN  DEFAULT false;
+
+-- GIN 인덱스 (tags array contains 쿼리 성능)
+CREATE INDEX IF NOT EXISTS idx_stores_tags ON public.stores USING GIN(tags);
+
+-- 태그 투표 테이블
+CREATE TABLE IF NOT EXISTS public.store_votes (
+  id         UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id   UUID      REFERENCES public.stores(id) ON DELETE CASCADE,
+  tag        TEXT      NOT NULL,
+  session_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_store_votes_store_id ON public.store_votes(store_id);
+
+-- ─────────────────────────────────────────────
 -- Migration: 심야영업점 지원 (operation_type 도입)
 -- 기존 DB에 컬럼이 없는 경우 아래 ALTER TABLE 실행
 -- ─────────────────────────────────────────────

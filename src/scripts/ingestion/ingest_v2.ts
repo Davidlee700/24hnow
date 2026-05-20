@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 import { ALL_REGIONS_DONG, SEOUL_DONG, GYEONGGI_DONG, INCHEON_DONG } from './regions_dong';
 import { crossVerifyHours } from '../../utils/hoursVerification';
 import { parseKoreanHours } from '../../utils/parseKoreanHours';
@@ -55,16 +57,25 @@ if (onlyCategory) {
   console.log(`ℹ️ 카테고리 필터: ${onlyCategory} 만 수집`);
 }
 
-// 카테고리별 심야 추가 쿼리 — 24시간은 아니지만 늦게까지 영업하는 업종 발굴
+// Kakao category_group_code — 카페(CE7)·편의점(CS2)만 코드 존재, 나머지는 키워드 전용
+const KAKAO_CATEGORY_CODES: Record<string, string> = {
+  '카페': 'CE7',
+  '편의점': 'CS2',
+};
+
+const OVERFLOW_LOG_PATH = path.resolve(process.cwd(), 'OVERFLOW_LOG.txt');
+const overflowEntries: string[] = [];
+
+// 카테고리별 추가 쿼리 — 동의어/변형 키워드(누락 방지) + 심야 특화 키워드
 const LATE_NIGHT_EXTRA_QUERIES: Record<string, string[]> = {
-  '카페':       ['심야카페', '새벽카페', '심야영업 카페', '늦게까지 카페'],
+  '카페':       ['디저트카페', '베이커리', '심야카페', '새벽카페', '심야영업 카페', '늦게까지 카페'],
   '편의점':     [],
-  '셀프세차장': [],
-  'PC방':       ['심야PC방', '심야 PC방'],
-  '코인노래방': ['심야 노래방', '24시 노래방', '새벽 노래방'],
-  '셀프빨래방': ['24시 빨래방', '코인빨래방', '24시간 빨래방'],
+  '셀프세차장': ['셀프세차', '24시 세차장'],
+  'PC방':       ['피시방', '심야PC방', '심야 PC방'],
+  '코인노래방': ['코노', '무인노래방', '심야 노래방', '24시 노래방', '새벽 노래방'],
+  '셀프빨래방': ['코인빨래방', '무인빨래방', '24시 빨래방', '24시간 빨래방'],
   '약국':       [],   // 약국은 공공데이터(fetch_pharmacy.ts)가 주 소스
-  '찜질방':     ['24시 찜질방', '24시간 찜질방', '24시 사우나', '24시간 사우나'],
+  '찜질방':     ['사우나', '스파', '목욕탕', '24시 찜질방', '24시간 찜질방', '24시 사우나', '24시간 사우나'],
 };
 
 
@@ -149,23 +160,8 @@ async function getLatLng(address: string) {
   return null;
 }
 
-async function fetchKakaoByQuery(query: string, category: string) {
-  const all: any[] = [];
-  for (let page = 1; page <= 3; page++) {
-    const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=15&page=${page}`;
-    try {
-      const res = await fetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
-      const data = await res.json();
-      const docs = data.documents || [];
-      all.push(...docs);
-      if (data.meta?.is_end || docs.length < 15) break;
-      await new Promise(r => setTimeout(r, 100));
-    } catch (e) {
-      console.error(`카카오 API 오류 (${query}):`, e);
-      break;
-    }
-  }
-  return all.map(d => ({
+function mapKakaoDoc(d: any, category: string) {
+  return {
     name: d.place_name,
     address: d.road_address_name || d.address_name,
     lat: parseFloat(d.y),
@@ -174,16 +170,76 @@ async function fetchKakaoByQuery(query: string, category: string) {
     category,
     raw_hours: null as string | null,
     metadata: { kakao_id: d.id, phone: d.phone, place_url: d.place_url }
-  }));
+  };
+}
+
+async function fetchKakaoByQuery(query: string, category: string, region?: string) {
+  const all: any[] = [];
+  let totalCount = 0;
+  let isEnd = true;
+  for (let page = 1; page <= 3; page++) {
+    const url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=15&page=${page}`;
+    try {
+      const res = await fetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+      const data = await res.json();
+      const docs = data.documents || [];
+      all.push(...docs);
+      totalCount = data.meta?.pageable_count ?? totalCount;
+      isEnd = data.meta?.is_end ?? true;
+      if (isEnd || docs.length < 15) break;
+      await new Promise(r => setTimeout(r, 100));
+    } catch (e) {
+      console.error(`카카오 API 오류 (${query}):`, e);
+      break;
+    }
+  }
+
+  // overflow 감지: 3페이지 꽉 찼고 API에 더 있음
+  if (!isEnd && all.length >= 45 && totalCount > 45 && region) {
+    const entry = `${region},${category}`;
+    overflowEntries.push(entry);
+    console.warn(`  ⚠️ overflow: [${entry}] — API 추정 ${totalCount}건 중 45건만 수집`);
+  }
+
+  return all.map(d => mapKakaoDoc(d, category));
+}
+
+// category_group_code로 검색 (CE7=카페, CS2=편의점) — 상호명에 카테고리명 없는 가게 보완
+async function fetchKakaoByCategoryCode(region: string, category: string, code: string) {
+  const all: any[] = [];
+  for (let page = 1; page <= 3; page++) {
+    const url = `https://dapi.kakao.com/v2/local/search/keyword.json` +
+      `?query=${encodeURIComponent(region)}&category_group_code=${code}&size=15&page=${page}`;
+    try {
+      const res = await fetch(url, { headers: { Authorization: `KakaoAK ${KAKAO_KEY}` } });
+      const data = await res.json();
+      const docs = data.documents || [];
+      all.push(...docs);
+      if (data.meta?.is_end || docs.length < 15) break;
+      await new Promise(r => setTimeout(r, 100));
+    } catch (e) {
+      console.error(`카카오 카테고리코드 API 오류 (${region} ${code}):`, e);
+      break;
+    }
+  }
+  return all.map(d => mapKakaoDoc(d, category));
 }
 
 async function fetchKakao(region: string, category: string) {
   const baseQuery = `${region} ${category}`;
   const extraQueries = LATE_NIGHT_EXTRA_QUERIES[category] ?? [];
+  const categoryCode = KAKAO_CATEGORY_CODES[category];
 
-  const results = await fetchKakaoByQuery(baseQuery, category);
+  const results = await fetchKakaoByQuery(baseQuery, category, region);
 
-  // 심야 키워드 추가 쿼리 (지역 prefix 포함)
+  // 카테고리 코드 병렬 쿼리 (카페·편의점만) — 상호명에 카테고리명 없는 가게 보완
+  if (categoryCode) {
+    const codeResult = await fetchKakaoByCategoryCode(region, category, categoryCode);
+    results.push(...codeResult);
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  // 동의어/심야 추가 쿼리
   for (const extra of extraQueries) {
     const extraResult = await fetchKakaoByQuery(`${region} ${extra}`, category);
     results.push(...extraResult);
@@ -365,6 +421,12 @@ async function run() {
   }
 
   console.log('\n✨ v2 수집 완료!');
+
+  if (overflowEntries.length > 0) {
+    fs.appendFileSync(OVERFLOW_LOG_PATH, overflowEntries.join('\n') + '\n', 'utf8');
+    console.log(`\n⚠️  overflow 감지 ${overflowEntries.length}건 → ${OVERFLOW_LOG_PATH}`);
+    console.log('   해당 지역은 더 세밀한 동 단위 쿼리 추가를 권장합니다.');
+  }
 }
 
 run();
