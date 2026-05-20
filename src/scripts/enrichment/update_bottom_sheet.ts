@@ -8,6 +8,7 @@ import type { Store } from '@/types/store';
 import { useTagVotes } from '@/hooks/useTagVotes';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import StoreReviews from './StoreReviews';
+import { FRANCHISE_DEFAULTS } from '@/lib/franchise-constants';
 
 interface Props {
   store: Store | null;
@@ -74,18 +75,6 @@ function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLEleme
   el.classList.add('tap-bounce');
   el.addEventListener('animationend', () => el.classList.remove('tap-bounce'), { once: true });
 }
-
-const FRANCHISE_DEFAULTS: Record<string, string[]> = {
-  '스타벅스': ['여유로운 충전 환경', '몰입을 돕는 분위기'],
-  '투썸': ['여유로운 충전 환경'],
-  '이디야': ['몰입을 돕는 분위기'],
-  '메가커피': ['몰입을 돕는 분위기'],
-  'CU': ['상비약 완비'],
-  'GS25': ['상비약 완비'],
-  '세븐일레븐': ['상비약 완비'],
-  '이마트24': ['상비약 완비'],
-  '미니스톱': ['상비약 완비'],
-};
 
 function getDefaultTags(name: string, tags: string[]): Set<string> {
   for (const [franchise, defaults] of Object.entries(FRANCHISE_DEFAULTS)) {

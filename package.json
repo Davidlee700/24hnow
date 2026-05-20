@@ -7,14 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "ingest": "tsx src/scripts/run_all.ts",
-    "ingest:v2": "tsx src/scripts/ingest_v2.ts",
-    "ingest:pharmacy": "tsx src/scripts/fetch_pharmacy.ts",
-    "ingest:all": "tsx src/scripts/ingest_v2.ts && tsx src/scripts/fetch_pharmacy.ts",
-    "ingest:jjimjilbang": "tsx src/scripts/ingest_v2.ts --category=찜질방",
-    "enrich": "tsx src/scripts/enrich_places.ts",
-    "enrich:naver": "tsx src/scripts/enrich_naver.ts",
-    "enrich:starbucks": "tsx src/scripts/fetch_starbucks.ts"
+    "ingest": "tsx src/scripts/ingestion/run_all.ts",
+    "ingest:v2": "tsx src/scripts/ingestion/ingest_v2.ts",
+    "ingest:pharmacy": "tsx src/scripts/ingestion/fetch_pharmacy.ts",
+    "ingest:all": "tsx src/scripts/ingestion/ingest_v2.ts && tsx src/scripts/ingestion/fetch_pharmacy.ts",
+    "ingest:jjimjilbang": "tsx src/scripts/ingestion/ingest_v2.ts --category=찜질방",
+    "enrich": "tsx src/scripts/enrichment/enrich_places.ts",
+    "enrich:naver": "tsx src/scripts/enrichment/enrich_naver.ts",
+    "enrich:starbucks": "tsx src/scripts/ingestion/fetch_starbucks.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

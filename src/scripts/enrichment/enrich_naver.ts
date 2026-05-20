@@ -7,8 +7,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import { parseKoreanHours } from '../utils/parseKoreanHours';
-import { crossVerifyHours } from '../utils/hoursVerification';
+import { parseKoreanHours } from '../../utils/parseKoreanHours';
+import { crossVerifyHours } from '../../utils/hoursVerification';
 
 dotenv.config({ path: '.env.local' });
 

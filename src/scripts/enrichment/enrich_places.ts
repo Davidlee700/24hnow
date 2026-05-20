@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import { crossVerifyHours } from '../utils/hoursVerification';
+import { crossVerifyHours } from '../../utils/hoursVerification';
 
 // Load env vars from .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });

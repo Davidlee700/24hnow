@@ -13,44 +13,43 @@
 ```
 src/
   app/
-    layout.tsx          — Root layout, SEO 메타데이터, Kakao SDK 로드
-    page.tsx            — 메인 페이지 (UI 조합만, 로직은 hook으로 위임)
-    globals.css         — 디자인 토큰 (iOS dark, #ADFF2F 네온, glassmorphism)
+    layout.tsx, page.tsx, globals.css
+    auth/callback/page.tsx
+    guide/[slug]/page.tsx
+    stores/[id]/page.tsx
+    api/admin/{messages,pages,reports,stores,users}/route.ts
   components/
-    KakaoMap.tsx        — 지도 렌더링, GPS, 마커 (카테고리별 이모지 스타일)
-    StoreBottomSheet.tsx — 매장 디테일 바텀시트 (전화, 길찾기, 신고)
+    KakaoMap.tsx            — 지도 렌더링, GPS, 마커 (CustomOverlay DOM)
+    StoreBottomSheet.tsx    — 매장 디테일 바텀시트 (전화, 길찾기, GA 트래킹)
+    StoreReviews.tsx        — 리뷰/태그 컴포넌트
+    AdBanner.tsx            — Google AdSense 래퍼 (lazy)
   hooks/
-    useStores.ts        — Supabase bounds 쿼리 + 클라이언트 dedup + 신고 처리
-  types/
-    store.ts            — Store, MapBounds 인터페이스 (단일 소스)
+    useStores.ts            — Supabase bounds 쿼리 + dedup + 신고 처리
+    useTagVotes.ts, useBookmarks.ts
   lib/
-    supabase.ts         — Supabase 클라이언트 (브라우저용)
-  utils/
-    trustScore.ts       — 신뢰도 점수 계산 로직
+    supabase.ts             — 브라우저 클라이언트
+    supabase-admin.ts       — 서버 서비스롤 클라이언트 (서버 컴포넌트/API 전용)
+    guide-data.ts
+    franchise-constants.ts  — FRANCHISE_DEFAULTS 단일 소스
+  types/store.ts            — Store, MapBounds 인터페이스 (단일 소스)
+  utils/trustScore.ts, openHours.ts
   scripts/
-    fetch_kakao.ts      — Kakao API 데이터 수집 (66개 지역, 최대 45건/쿼리)
-    fetch_naver.ts      — Naver API 데이터 수집 (66개 지역, 최대 25건/쿼리)
-    run_all.ts          — 전체 수집 마스터 스크립트
+    ingestion/   — fetch_*.ts, run_all.ts, ingest_v2.ts, regions*.ts
+    enrichment/  — enrich_*.ts, update_*.ts, refresh_*.ts, match_medicine.ts
+    validation/  — check_*.ts, diag_*.ts, *.js
 ```
 
 ---
 
-## 핵심 규칙
+## 핵심 원칙
+> 상세 지침은 `RULES.md` 참조.
 
-- **Store 타입은 `src/types/store.ts` 단일 소스** — 절대 각 파일에서 재정의하지 않는다.
-- **데이터 패칭 로직은 `useStores` hook** — page.tsx는 UI 조합만 담당한다.
-- **마커는 CustomOverlay (DOM 요소)** — Kakao Maps API 호출 없음, 추가 과금 없음.
-- **인증 구현은 Supabase Auth** — 로그인/커뮤니티 추가 시 `supabase-server.ts` 별도 생성.
-
----
-
-## 🚫 절대 규칙 (Absolute Rules)
-
-1. **배포의 절대권한**: Production Push는 반드시 사용자의 명시적인 승인 시에만 실행한다.
-2. **Apple Soul**: Apple HIG 최우선. 유리(Glass), 계층(Layer), 4배수 여백, 정중하고 간결한 한국어 페르소나.
-3. **무결한 모듈화**: Atomic Design 준수, 기능별 컴포넌트 분리, 중복 코드 금지.
-4. **물리적 interaction**: 0.1초 단위의 탄성(Elasticity) 있는 애니메이션 (Scale, Opacity, Blur).
-5. **데이터 보수성**: 불확실한 정보는 "정보 확인 중" 표기. 허위 데이터(Hallucination) 절대 금지.
+- **Apple 관점 우선**: 디자인·개발·운영·마케팅·UX 모든 의사결정에 Apple HIG 적용.
+  사용자와의 접점(UI 문구, 에러 메시지, SEO 카피, 광고 배치, 데이터 표시)은 전부 Apple식 정중함·간결함·명료함 기준으로 판단한다.
+- **Store 타입은 `src/types/store.ts` 단일 소스** — 각 파일 재정의 금지.
+- **데이터 패칭은 `useStores` hook** — page.tsx는 UI 조합만.
+- **마커는 CustomOverlay (DOM)** — Kakao Maps API 호출 없음, 과금 없음.
+- **배포는 명시적 승인 시에만** — "배포해줘" / "Push" 워딩 필요.
 
 ---
 
@@ -82,20 +81,24 @@ npm run ingest:naver     # Naver만 수집
 
 ## 개발 로드맵
 
+### 완료
 - [x] 지도 기반 24시 매장 검색 (카페/편의점/셀프세차장)
 - [x] 카테고리별 마커, GPS, 길찾기, 신뢰도 신고
-- [x] 서울/경기/인천 데이터 수집 + 페이지네이션
-- [ ] 로그인 (Supabase Auth + Google OAuth)
+- [x] 서울/경기/인천 + 전국 심야가이드 데이터 수집
+- [x] Google AdSense 컴포넌트 연동 (가이드·매장 상세 페이지)
+- [x] 어드민 API 라우트 5종 (messages, pages, reports, stores, users)
+- [x] GA 이벤트 트래킹 + glassmorphism 디자인 토큰 통일
+
+### 진행 중
+- [ ] 로그인 — Supabase Auth + Kakao OAuth (콘솔 설정 완료, 코드 미완)
+
+### 예정
 - [ ] 커뮤니티 (매장별 리뷰/제보 게시판)
-- [ ] 매장 유형 확대 (노래방, 피씨방, 약국, 병원 등)
+- [ ] 매장 유형 확대 (노래방, PC방, 약국, 병원 등)
 - [ ] GitHub Actions 주간 자동 수집 cron
 
 ---
 
-## 스프린트별 업데이트 기록
-
-| 날짜 | 변경 내용 |
-|------|---------|
-| 2026-04-27 | 초기 세팅 — 지도, 마커, Supabase 연동 |
-| 2026-04-27 | SEO 개선, 디테일창, 길찾기 버그 수정, 카테고리 마커 |
-| 2026-04-27 | 소스 구조 정리, 서울/경기/인천 확대, API 페이지네이션 |
+| 마지막 업데이트 | 2026-05-21 |
+|---|---|
+| 주요 변경 | AdSense 연동, 어드민 API, 심야가이드 전국 확대, glassmorphism 디자인 토큰 통일 |

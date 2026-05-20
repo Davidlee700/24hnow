@@ -13,7 +13,7 @@ function run(script: string) {
   console.log(`▶ Running: ${script}`);
   console.log('='.repeat(50));
   try {
-    execSync(`npx tsx "${path.join(root, 'src/scripts', script)}"`, {
+    execSync(`npx tsx "${path.join(root, 'src/scripts/ingestion', script)}"`, {
       stdio: 'inherit',
       cwd: root,
     });

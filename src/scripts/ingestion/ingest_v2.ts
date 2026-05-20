@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { ALL_REGIONS_DONG, SEOUL_DONG, GYEONGGI_DONG, INCHEON_DONG } from './regions_dong';
-import { crossVerifyHours } from '../utils/hoursVerification';
-import { parseKoreanHours } from '../utils/parseKoreanHours';
+import { crossVerifyHours } from '../../utils/hoursVerification';
+import { parseKoreanHours } from '../../utils/parseKoreanHours';
 
 dotenv.config({ path: '.env.local' });
 

@@ -7,10 +7,11 @@
 - **지침**: 배포(Production Push)는 반드시 사용자의 명시적인 승인(**"배포해줘"**, **"Push"**)이 있을 때만 실행한다.
 
 ## 2. 애플의 영혼 투사 (The Apple Soul)
-- **규칙**: 디자인, 문구(Writing), 인터랙션의 모든 단계에서 **Apple HIG(Human Interface Guidelines)**를 최우선으로 한다.
+- **규칙**: 디자인, 개발, 운영, 마케팅, UX 모든 영역에서 **Apple HIG(Human Interface Guidelines)**를 최우선으로 한다.
 - **세부 지침**:
-  - **Writing**: 기계적인 메시지를 금지하고, 사용자에게 정중하며(Respectful), 간결하고(Concise), 도움이 되는(Helpful) 애플식 한국어 페르소나를 유지한다.
+  - **Writing**: UI 문구·에러 메시지·SEO 카피·광고 문구·데이터 레이블 모두 정중(Respectful)·간결(Concise)·도움(Helpful)한 애플식 한국어로.
   - **Visual**: 모든 요소는 '유리(Glassmorphism)'와 '계층(Layering)'의 논리를 따르며, 여백(Margin/Padding)은 4의 배수를 사용하여 엄격한 질서를 유지한다.
+  - **운영·마케팅**: 사용자에게 보이는 모든 것(광고 배치, SEO 메타, 공지, 에러 페이지)도 Apple 관점에서 판단한다.
 
 ## 3. 무결한 로직과 모듈화 (Modular Excellence)
 - **규칙**: 한 파일에 코드를 쏟아붓지 마라. 기능별로 엄격히 컴포넌트를 분리(Atomic Design)하고, 중복 코드를 극도로 경계한다.
