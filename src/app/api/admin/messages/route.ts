@@ -1,18 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { validateToken } from '../auth/route';
-
-function supabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
 
 export async function GET(req: NextRequest) {
   if (!validateToken(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data, error } = await supabaseAdmin()
+  const { data, error } = await supabaseAdmin
     .from('contact_messages')
     .select('*')
     .order('created_at', { ascending: false });
@@ -27,7 +20,7 @@ export async function PATCH(req: NextRequest) {
   const { id, is_read } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const { error } = await supabaseAdmin()
+  const { error } = await supabaseAdmin
     .from('contact_messages')
     .update({ is_read })
     .eq('id', id);
