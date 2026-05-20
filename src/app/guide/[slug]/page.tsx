@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllPosts, getPostBySlug, getRelatedPosts, CATEGORY_GRADIENTS } from '@/lib/guide-data';
+import AdBanner from '@/components/AdBanner';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -44,13 +45,29 @@ export default async function ArticlePage({ params }: Props) {
 
   const related = getRelatedPosts(post);
 
+  const isoDate = post.date ? post.date.replace(/\./g, '-') : undefined;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.description,
-    datePublished: post.date,
-    publisher: { '@type': 'Organization', name: '24시나우', url: 'https://24now.kr' },
+    image: ['https://24now.kr/og-image.png'],
+    datePublished: isoDate,
+    dateModified: isoDate,
+    author: {
+      '@type': 'Person',
+      name: '24시나우 에디터',
+    },
+    publisher: { 
+      '@type': 'Organization', 
+      name: '24시나우', 
+      url: 'https://24now.kr',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://24now.kr/icon.png',
+      }
+    },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `https://24now.kr/guide/${post.slug}` },
   };
 
@@ -101,6 +118,8 @@ export default async function ArticlePage({ params }: Props) {
         {/* 인트로 */}
         <p className="guide-article-intro">{post.intro}</p>
 
+        <AdBanner dataAdSlot="3810117607" />
+
         {/* TOP 10 스토어 카드 */}
         <div className="guide-store-list">
           {post.stores.map(store => (
@@ -148,6 +167,8 @@ export default async function ArticlePage({ params }: Props) {
             </div>
           ))}
         </div>
+
+        <AdBanner dataAdSlot="3810117607" />
 
         {/* 아웃트로 */}
         {post.outro && (

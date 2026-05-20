@@ -114,13 +114,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
-        {/* Google AdSense */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9289780368966069"
-          crossOrigin="anonymous"
-          strategy="beforeInteractive"
-        />
+
         {/* Load Kakao Maps SDK with libraries (services, clusterer, drawing) if needed later */}
         <Script
           strategy="beforeInteractive"

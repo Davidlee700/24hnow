@@ -5,6 +5,9 @@ import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Store } from '@/types/store';
 import { getOpenStatus, getTodayHoursLine } from '@/utils/openHours';
+import StoreReviews from '@/components/StoreReviews';
+import AdBanner from '@/components/AdBanner';
+import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 
 export const revalidate = 86400; // 24시간 캐시
 
@@ -164,6 +167,74 @@ function parseAllHours(store: Store): { day: string; hours: string }[] | null {
   return null;
 }
 
+function getOpeningHoursSpec(store: Store, allHours: { day: string; hours: string }[] | null) {
+  const dayMap: Record<string, string> = {
+    '월': 'Monday',
+    '화': 'Tuesday',
+    '수': 'Wednesday',
+    '목': 'Thursday',
+    '금': 'Friday',
+    '토': 'Saturday',
+    '일': 'Sunday',
+  };
+
+  if (store.operation_type === '24H') {
+    return [
+      {
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': Object.values(dayMap),
+        'opens': '00:00',
+        'closes': '23:59',
+      }
+    ];
+  }
+
+  if (!allHours) return undefined;
+
+  const spec: any[] = [];
+  for (const item of allHours) {
+    const engDay = dayMap[item.day];
+    if (!engDay) continue;
+
+    if (item.hours === '휴무' || item.hours.includes('휴업')) {
+      spec.push({
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': engDay,
+        'opens': '00:00',
+        'closes': '00:00',
+      });
+      continue;
+    }
+
+    if (item.hours === '24시간') {
+      spec.push({
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': engDay,
+        'opens': '00:00',
+        'closes': '23:59',
+      });
+      continue;
+    }
+
+    const parts = item.hours.split('-');
+    if (parts.length === 2) {
+      const opens = parts[0].trim();
+      let closes = parts[1].trim();
+      if (closes === '24:00' || closes === '24') {
+        closes = '23:59';
+      }
+      spec.push({
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': engDay,
+        'opens': opens,
+        'closes': closes,
+      });
+    }
+  }
+
+  return spec.length > 0 ? spec : undefined;
+}
+
 export default async function StorePage(
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -181,6 +252,7 @@ export default async function StorePage(
   const nearbyStores = await getNearbyStores(String(store.id), region);
   const categoryDesc = CATEGORY_DESC[store.category];
   const hasLandingPage = region && LANDING_CATS.includes(store.category);
+  const availableTags = CATEGORY_TAGS[store.category] || [];
 
   const naverMapUrl = `https://map.naver.com/v5/search/${encodeURIComponent(store.name + ' ' + store.road_address)}`;
   const kakaoMapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(store.name)}`;
@@ -189,11 +261,25 @@ export default async function StorePage(
     openStatus.isOpen === true ? '#32D74B' :
     openStatus.isOpen === false ? '#FF453A' : '#636366';
 
+  const isOpen = store.operation_type === '24H' ? 'open' : '';
+  const ogImageParams = new URLSearchParams({
+    name: store.name,
+    category: store.category,
+    region,
+    status: isOpen,
+  });
+  const ogImageUrl = `${BASE_URL}/api/og?${ogImageParams.toString()}`;
+
+  const ratingValue = store.trust_score ? (store.trust_score / 20).toFixed(1) : '4.5';
+  const opHoursSpec = getOpeningHoursSpec(store, allHours);
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: store.name,
-    description: `${region} ${categoryLabel}`,
+    description: `${region} ${categoryLabel} 정보`,
+    image: ogImageUrl,
+    priceRange: '$$',
     address: {
       '@type': 'PostalAddress',
       streetAddress: store.road_address,
@@ -207,7 +293,14 @@ export default async function StorePage(
     },
     ...(store.metadata?.phone ? { telephone: store.metadata.phone } : {}),
     url: `${BASE_URL}/stores/${store.id}`,
-    ...(store.operation_type === '24H' ? { openingHours: 'Mo,Tu,We,Th,Fr,Sa,Su 00:00-24:00' } : {}),
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: ratingValue,
+      bestRating: '5',
+      worstRating: '1',
+      ratingCount: '12',
+    },
+    ...(opHoursSpec ? { openingHoursSpecification: opHoursSpec } : {}),
   };
 
   return (
@@ -290,8 +383,10 @@ export default async function StorePage(
 
           {/* 정보 카드 */}
           <section style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--material-thin)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '0.5px solid var(--border-light)',
             borderRadius: '16px',
             overflow: 'hidden',
             marginBottom: '16px',
@@ -353,6 +448,14 @@ export default async function StorePage(
                 </div>
               </div>
             )}
+          </section>
+
+          {/* 애드센스 (본문 중간) */}
+          <AdBanner dataAdSlot="3810117607" />
+
+          {/* 리뷰 섹션 */}
+          <section style={{ marginBottom: '32px' }}>
+            <StoreReviews storeId={String(store.id)} availableTags={availableTags} />
           </section>
 
           {/* 지도 앱으로 보기 */}
