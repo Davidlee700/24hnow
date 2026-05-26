@@ -35,11 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  if (!content?.trim()) {
-    return NextResponse.json({ error: '댓글 내용을 입력해 주세요.' }, { status: 400 });
-  }
-
-  if (content.length > 500) {
+  if (content && content.length > 500) {
     return NextResponse.json({ error: '댓글은 500자 이내로 작성해 주세요.' }, { status: 400 });
   }
 

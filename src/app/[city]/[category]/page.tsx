@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import type { Store } from '@/types/store';
 import { LANDING_CATEGORIES, CATEGORY_META, extractCitySlug, type LandingCategory } from '@/lib/landingData';
 
@@ -13,7 +13,8 @@ type Params = Promise<{ city: string; category: string }>;
 
 /** Build time: derive valid city×category combinations from real store data */
 export async function generateStaticParams() {
-  const { data } = await supabase
+  try {
+  const { data } = await supabaseAdmin
     .from('stores')
     .select('road_address, category')
     .in('operation_type', ['24H', 'EXTENDED', 'REGULAR'])
@@ -39,18 +40,25 @@ export async function generateStaticParams() {
       const [city, category] = key.split('|');
       return { city, category };
     });
+  } catch {
+    return [];
+  }
 }
 
 async function getStores(city: string, category: string): Promise<Store[]> {
-  const { data } = await supabase
-    .from('stores')
-    .select('*')
-    .ilike('road_address', `%${city}%`)
-    .eq('category', category)
-    .in('operation_type', ['24H', 'EXTENDED', 'REGULAR'])
-    .order('trust_score', { ascending: false })
-    .limit(20);
-  return (data ?? []) as Store[];
+  try {
+    const { data } = await supabaseAdmin
+      .from('stores')
+      .select('*')
+      .ilike('road_address', `%${city}%`)
+      .eq('category', category)
+      .in('operation_type', ['24H', 'EXTENDED', 'REGULAR'])
+      .order('trust_score', { ascending: false })
+      .limit(20);
+    return (data ?? []) as Store[];
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
