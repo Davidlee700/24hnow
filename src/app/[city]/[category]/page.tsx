@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import type { Store } from '@/types/store';
 import { LANDING_CATEGORIES, CATEGORY_META, extractCitySlug, type LandingCategory } from '@/lib/landingData';
 
-export const revalidate = 86400;
+export const revalidate = 604800; // 7일 캐시
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
 

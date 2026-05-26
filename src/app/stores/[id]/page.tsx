@@ -9,7 +9,7 @@ import StoreReviews from '@/components/StoreReviews';
 import AdBanner from '@/components/AdBanner';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
 
-export const revalidate = 86400; // 24시간 캐시
+export const revalidate = 604800; // 7일 캐시
 
 export async function generateStaticParams() {
   const { data } = await supabase
@@ -17,7 +17,7 @@ export async function generateStaticParams() {
     .select('id')
     .in('operation_type', ['24H', 'EXTENDED', 'REGULAR'])
     .order('trust_score', { ascending: false })
-    .limit(5000);
+    .limit(1000);
   return data?.map(s => ({ id: String(s.id) })) ?? [];
 }
 
