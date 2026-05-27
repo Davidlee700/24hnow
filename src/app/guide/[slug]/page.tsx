@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllPosts, getPostBySlug, getRelatedPosts, CATEGORY_GRADIENTS } from '@/lib/guide-data';
 import AdBanner from '@/components/AdBanner';
+import ShareButtons from '@/components/ShareButtons';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -35,6 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
     },
     alternates: { canonical: `https://24now.kr/guide/${post.slug}` },
+    twitter: {
+      card: 'summary_large_image',
+      title: seoTitle,
+      description: seoDesc,
+    },
   };
 }
 
@@ -59,9 +65,9 @@ export default async function ArticlePage({ params }: Props) {
       '@type': 'Person',
       name: '24시나우 에디터',
     },
-    publisher: { 
-      '@type': 'Organization', 
-      name: '24시나우', 
+    publisher: {
+      '@type': 'Organization',
+      name: '24시나우',
       url: 'https://24now.kr',
       logo: {
         '@type': 'ImageObject',
@@ -71,12 +77,30 @@ export default async function ArticlePage({ params }: Props) {
     mainEntityOfPage: { '@type': 'WebPage', '@id': `https://24now.kr/guide/${post.slug}` },
   };
 
+  const faqJsonLd = post.faq && post.faq.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: post.faq.map(({ q, a }) => ({
+          '@type': 'Question',
+          name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+      }
+    : null;
+
   return (
     <div className="guide-article-page">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
       {/* 고정 상단 네비 */}
       <header className="guide-article-header">
@@ -137,6 +161,16 @@ export default async function ArticlePage({ params }: Props) {
                   </svg>
                   {store.address}
                 </div>
+                {store.transit && (
+                  <div className="guide-store-transit">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="2" width="14" height="20" rx="2" />
+                      <line x1="12" y1="18" x2="12.01" y2="18" />
+                      <path d="M8 6h8M8 10h8" />
+                    </svg>
+                    {store.transit}
+                  </div>
+                )}
                 <div className="guide-store-hours">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -174,6 +208,37 @@ export default async function ArticlePage({ params }: Props) {
         {post.outro && (
           <p className="guide-article-outro">{post.outro}</p>
         )}
+
+        {/* 상황별 추천 */}
+        {post.situationTip && (
+          <div className="guide-situation-tip">
+            <h2 className="guide-situation-title">어떤 상황인가요?</h2>
+            <p className="guide-situation-body">{post.situationTip}</p>
+          </div>
+        )}
+
+        {/* FAQ */}
+        {post.faq && post.faq.length > 0 && (
+          <section className="guide-faq">
+            <h2 className="guide-faq-title">자주 묻는 질문</h2>
+            <dl className="guide-faq-list">
+              {post.faq.map(({ q, a }, i) => (
+                <div key={i} className="guide-faq-item">
+                  <dt className="guide-faq-q">{q}</dt>
+                  <dd className="guide-faq-a">{a}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {/* 공유 버튼 */}
+        <ShareButtons
+          title={post.title}
+          description={post.description}
+          url={`https://24now.kr/guide/${post.slug}`}
+          imageUrl={`https://24now.kr/guide/${post.slug}/opengraph-image`}
+        />
 
         {/* 지도 CTA */}
         <Link href="/" className="guide-map-cta">

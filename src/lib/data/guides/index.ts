@@ -15,6 +15,21 @@ import { daejeonGuides } from './daejeon';
 import { gwangjuGuides } from './gwangju';
 import { gangwonGuides } from './gangwon';
 import { gyeongnamBukGuides } from './gyeongnam-buk';
+// 신규: 카페
+import { pangyoCafeGuides } from './pangyo-cafe';
+import { suwonIncheonCafeGuides } from './suwon-incheon-cafe';
+import { seongsuMagokCafeGuides } from './seongsu-magok-cafe';
+// 신규: 찜질방
+import { nowonYeongdeungpoJjimjilbangGuides } from './nowon-yeongdeungpo-jjimjilbang';
+import { busanIncheonJjimjilbangGuides } from './busan-incheon-jjimjilbang';
+import { bundangJjimjilbangGuides } from './bundang-jjimjilbang';
+// 신규: 셀프빨래방
+import { konkukSeongsuLaundryGuides } from './konkuk-seongsu-laundry';
+import { nowonYeongdeungpoLaundryGuides } from './nowon-yeongdeungpo-laundry';
+import { busanLaundryGuides } from './busan-laundry';
+// 신규: 약국
+import { yeongdeungpoNowonPharmacyGuides } from './yeongdeungpo-nowon-pharmacy';
+import { busanKonkukPharmacyGuides } from './busan-konkuk-pharmacy';
 import { GuidePost } from '../../guide-data';
 
 export const allGuidePosts: GuidePost[] = [
@@ -35,4 +50,19 @@ export const allGuidePosts: GuidePost[] = [
   ...gwangjuGuides,
   ...gangwonGuides,
   ...gyeongnamBukGuides,
+  // 신규 카페
+  ...pangyoCafeGuides,
+  ...suwonIncheonCafeGuides,
+  ...seongsuMagokCafeGuides,
+  // 신규 찜질방
+  ...nowonYeongdeungpoJjimjilbangGuides,
+  ...busanIncheonJjimjilbangGuides,
+  ...bundangJjimjilbangGuides,
+  // 신규 셀프빨래방
+  ...konkukSeongsuLaundryGuides,
+  ...nowonYeongdeungpoLaundryGuides,
+  ...busanLaundryGuides,
+  // 신규 약국
+  ...yeongdeungpoNowonPharmacyGuides,
+  ...busanKonkukPharmacyGuides,
 ];

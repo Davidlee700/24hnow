@@ -10,6 +10,7 @@ export interface StoreEntry {
   insight: string;    // 리뷰 기반 인사이트 한 줄
   tags?: string[];
   mapLink?: string;   // 24시나우 딥링크
+  transit?: string;   // 가장 가까운 출구·버스 정류장
 }
 
 export interface GuidePost {
@@ -26,6 +27,8 @@ export interface GuidePost {
   intro: string;
   stores: StoreEntry[];
   outro?: string;
+  situationTip?: string;  // "이런 상황에" 추천 매핑 텍스트
+  faq?: { q: string; a: string }[];  // FAQ 섹션 (AI 검색·Google Featured Snippet용)
 }
 
 // 카테고리별 기본 그라디언트

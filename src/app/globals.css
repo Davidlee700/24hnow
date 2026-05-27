@@ -2862,6 +2862,132 @@ body:has(.landing-page) { overflow-y: auto; }
   margin: 0;
 }
 
+/* transit */
+.guide-store-transit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* 상황별 추천 */
+.guide-situation-tip {
+  background: var(--secondary-bg);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: 0;
+}
+.guide-situation-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+.guide-situation-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* FAQ */
+.guide-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.guide-faq-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  margin: 0 0 16px;
+}
+.guide-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+.guide-faq-item {
+  background: var(--secondary-bg);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.guide-faq-q {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  display: flex;
+  gap: 8px;
+}
+.guide-faq-q::before {
+  content: 'Q.';
+  color: var(--accent-neon);
+  flex-shrink: 0;
+}
+.guide-faq-a {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+  padding-left: 24px;
+}
+
+/* 공유 버튼 */
+.share-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.share-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.share-btn-group {
+  display: flex;
+  gap: 10px;
+}
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  flex: 1;
+  justify-content: center;
+  letter-spacing: -0.01em;
+}
+.share-btn:active {
+  opacity: 0.8;
+  transform: scale(0.97);
+}
+.share-btn-copy {
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+.share-btn-copied {
+  background: rgba(173, 255, 47, 0.12);
+  border-color: rgba(173, 255, 47, 0.3);
+  color: var(--accent-neon);
+}
+.share-btn-kakao {
+  background: #FEE500;
+  color: #191919;
+}
+
 /* 지도 CTA */
 .guide-map-cta {
   display: flex;
