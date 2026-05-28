@@ -30,6 +30,11 @@ import { busanLaundryGuides } from './busan-laundry';
 // 신규: 약국
 import { yeongdeungpoNowonPharmacyGuides } from './yeongdeungpo-nowon-pharmacy';
 import { busanKonkukPharmacyGuides } from './busan-konkuk-pharmacy';
+// 복권판매점
+import { lotterySeoulSouthGuides } from './lottery-seoul-south';
+import { lotterySeoulNorthGuides } from './lottery-seoul-north';
+import { lotteryGyeonggiGuides } from './lottery-gyeonggi';
+import { lotteryNationwideGuides } from './lottery-nationwide';
 import { GuidePost } from '../../guide-data';
 
 export const allGuidePosts: GuidePost[] = [
@@ -65,4 +70,9 @@ export const allGuidePosts: GuidePost[] = [
   // 신규 약국
   ...yeongdeungpoNowonPharmacyGuides,
   ...busanKonkukPharmacyGuides,
+  // 복권판매점
+  ...lotterySeoulSouthGuides,
+  ...lotterySeoulNorthGuides,
+  ...lotteryGyeonggiGuides,
+  ...lotteryNationwideGuides,
 ];
