@@ -268,6 +268,7 @@ export default async function ArticlePage({ params }: Props) {
                         : rp.category === '찜질방' ? '🛁'
                         : rp.category === '셀프빨래방' ? '🫧'
                         : rp.category === '코인노래방' ? '🎤'
+                        : rp.category === '복권판매점' ? '🎰'
                         : '📍'}
                     </span>
                   </div>

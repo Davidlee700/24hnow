@@ -30,6 +30,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
   '코인노래방': { bg: '#FF6B35', emoji: '🎤' },
   '셀프빨래방': { bg: '#32ADE6', emoji: '🫧' },
   '찜질방':     { bg: '#FF9F0A', emoji: '🛁' },
+  '복권판매점':  { bg: '#34C759', emoji: '🎰' },
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
