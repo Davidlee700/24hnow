@@ -320,6 +320,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
     const CATEGORY_EMOJI: Record<string, string> = {
       카페: '☕', 편의점: '🏪', 셀프세차장: '🚗', PC방: '🎮',
       약국: '💊', 코인노래방: '🎤', 셀프빨래방: '🫧', 찜질방: '🛁',
+      복권판매점: '🎰',
     };
     const emoji = CATEGORY_EMOJI[store.category] ?? '📍';
 

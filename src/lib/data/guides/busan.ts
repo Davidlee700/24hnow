@@ -205,7 +205,7 @@ export const busanGuides: GuidePost[] = [
   },
 
   {
-    slug: 'busan-pharmacy',
+    slug: 'busan-pharmacy-guide',
     title: '부산 심야 약국 BEST 5 — 부산에서 갑자기 아플 때',
     description: '서면·해운대·남포동 부산 주요 지역 심야 약국. 부산 여행 중 또는 거주 중 응급 상황을 위한 안내.',
     region: '부산',
@@ -276,7 +276,7 @@ export const busanGuides: GuidePost[] = [
   },
 
   {
-    slug: 'busan-jjimjilbang',
+    slug: 'busan-jjimjilbang-guide',
     title: '부산 24시간 찜질방 BEST 5 — 스파의 도시 부산에서 몸 녹이기',
     description: '동래 온천부터 해운대 스파까지, 부산의 24시간 찜질방 5곳. 부산 여행의 새벽 피날레.',
     region: '부산',
@@ -406,7 +406,7 @@ export const busanGuides: GuidePost[] = [
   },
 
   {
-    slug: 'busan-laundry',
+    slug: 'busan-laundry-guide',
     title: '부산 24시간 셀프빨래방 BEST 4 — 여행 중 빨래부터 자취 생활까지',
     description: '부산 서면·해운대·대학가 셀프빨래방. 장기 여행 중 빨래 걱정 없이.',
     region: '부산',
