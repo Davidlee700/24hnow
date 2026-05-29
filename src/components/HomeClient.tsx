@@ -7,6 +7,7 @@ import StoreBottomSheet from '@/components/StoreBottomSheet';
 import MenuDrawer from '@/components/MenuDrawer';
 import NightBanner from '@/components/NightBanner';
 import RecentStores from '@/components/RecentStores';
+import PCPanel from '@/components/PCPanel';
 import { useStores } from '@/hooks/useStores';
 import { useHistory } from '@/hooks/useHistory';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
@@ -36,7 +37,16 @@ function HomeContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   const { history: recentHistory, addToHistory } = useHistory();
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -154,98 +164,37 @@ function HomeContent() {
 
   const categoryTags = CATEGORY_TAGS[activeFilter] ?? [];
 
-  return (
+  const kakaoMapProps = {
+    stores,
+    center: mapCenter,
+    onBoundsChange: handleBoundsChange,
+    onMarkerClick: handleSelectStore,
+    onMapClick: () => setSelectedStore(null),
+    requestGps,
+    onGpsComplete: () => { setRequestGps(false); autoSearchOnNextBounds.current = true; },
+    onGpsError: showToast,
+    onLocationUpdate: (lat: number, lng: number) => setUserLocation({ lat, lng }),
+    dimmed: isMenuOpen,
+  };
+
+  const gpsButton = (
+    <div
+      className={`gps-button ${requestGps ? 'active' : ''}`}
+      onClick={(e) => { tapEffect(e); setRequestGps(true); }}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+        <circle cx="12" cy="12" r="4" strokeWidth="2" />
+        <circle cx="12" cy="12" r="8.5" strokeWidth="1.5" />
+        <line x1="12" y1="2" x2="12" y2="4.5" strokeWidth="2" />
+        <line x1="12" y1="19.5" x2="12" y2="22" strokeWidth="2" />
+        <line x1="2" y1="12" x2="4.5" y2="12" strokeWidth="2" />
+        <line x1="19.5" y1="12" x2="22" y2="12" strokeWidth="2" />
+      </svg>
+    </div>
+  );
+
+  const mapOverlays = (
     <>
-      <KakaoMap
-        stores={stores}
-        center={mapCenter}
-        onBoundsChange={handleBoundsChange}
-        onMarkerClick={handleSelectStore}
-        onMapClick={() => setSelectedStore(null)}
-        requestGps={requestGps}
-        onGpsComplete={() => {
-          setRequestGps(false);
-          autoSearchOnNextBounds.current = true;
-        }}
-        onGpsError={showToast}
-        onLocationUpdate={(lat, lng) => setUserLocation({ lat, lng })}
-        dimmed={isMenuOpen}
-      />
-
-      <NightBanner />
-
-      <h1 style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
-        24시간 카페·편의점·세차장 찾기 — 새벽에도 문 여는 곳, 24시나우
-      </h1>
-
-      {/* Top bar */}
-      <div className="floating-top">
-        {/* 통합 네비게이션 바: 브랜드 | 카테고리 스크롤 | 메뉴 */}
-        <div className="floating-search-bar">
-          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시<span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
-          <div className="nav-divider" />
-          <div className="nav-categories">
-            {FILTERS.map(filter => (
-              <button
-                key={filter}
-                className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
-                onClick={(e) => selectFilter(filter, e)}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-          <button
-            className="nav-menu-btn"
-            onClick={() => setIsMenuOpen(true)}
-            aria-label="메뉴 열기"
-            aria-expanded={isMenuOpen}
-          >
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
-              <rect x="0" y="0" width="18" height="1.6" rx="0.8"/>
-              <rect x="0" y="6.2" width="18" height="1.6" rx="0.8"/>
-              <rect x="0" y="12.4" width="18" height="1.6" rx="0.8"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* 2차 필터 */}
-        <div className="sub-filter-container">
-          {/* 지금 영업중 토글 — 항상 최상단 좌측 */}
-          <button
-            className={`sub-filter-chip open-now-chip ${openNowOnly ? 'active' : ''}`}
-            onClick={(e) => { tapEffect(e); setOpenNowOnly(v => !v); }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '5px',
-              borderColor: openNowOnly ? 'var(--accent-neon)' : undefined,
-              color: openNowOnly ? 'var(--accent-neon)' : undefined,
-            }}
-          >
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? 'var(--accent-neon)' : 'currentColor', display: 'inline-block', flexShrink: 0 }} />
-            영업중{openNowOnly && fetchedStores.length > 0 ? ` ${fetchedStores.length}` : ''}
-          </button>
-          {activeFilter === '편의점' && (
-            <button
-              className={`sub-filter-chip ${medicineOnly ? 'active' : ''}`}
-              onClick={(e) => { tapEffect(e); setMedicineOnly(v => !v); }}
-              style={medicineOnly ? { borderColor: '#30D158', color: '#30D158' } : undefined}
-            >
-              💊 약 판매
-            </button>
-          )}
-          {categoryTags.map(tag => (
-            <button
-              key={tag}
-              className={`sub-filter-chip ${activeTag === tag ? 'active' : ''}`}
-              onClick={(e) => toggleTag(tag, e)}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 줌아웃 안내 */}
       {showZoomHint && !selectedStore && (
         <div className="zoom-hint-banner">
           <span style={{ fontSize: '20px' }}>🗺️</span>
@@ -255,21 +204,102 @@ function HomeContent() {
           </div>
         </div>
       )}
-
-      {/* 이 지역에서 검색 버튼 (하단 레이어) */}
       {showSearchHere && !selectedStore && (
         <div className={`search-here-wrapper ${searchHideAnim ? 'hiding' : ''}`}>
-          <button
-            className="search-here-btn"
-            onClick={handleSearchHere}
-          >
-            여기서 찾기 🔍
-          </button>
+          <button className="search-here-btn" onClick={handleSearchHere}>여기서 찾기 🔍</button>
           <p className="search-hint">원하는 위치로 지도를 이동한 뒤 탭해보세요</p>
         </div>
       )}
+      {toastMessage && (
+        <div className="global-toast" role="status" aria-live="polite" aria-atomic="true">
+          {toastMessage}
+        </div>
+      )}
+      {gpsButton}
+    </>
+  );
 
-      {/* Empty State */}
+  if (isDesktop) {
+    return (
+      <>
+        <div className="pc-layout">
+          <PCPanel
+            stores={fetchedStores}
+            selectedStore={selectedStore}
+            activeFilter={activeFilter}
+            activeTag={activeTag}
+            openNowOnly={openNowOnly}
+            userLocation={userLocation}
+            onSelectFilter={selectFilter}
+            onToggleTag={toggleTag}
+            onToggleOpenNow={(e) => { tapEffect(e); setOpenNowOnly(v => !v); }}
+            onSelectStore={handleSelectStore}
+            onMenuOpen={() => setIsMenuOpen(true)}
+          />
+          <div className="map-zone">
+            <KakaoMap {...kakaoMapProps} markerPanOffset={0} />
+            <NightBanner />
+            {mapOverlays}
+          </div>
+        </div>
+        <MenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onShowToast={showToast} user={user} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <KakaoMap {...kakaoMapProps} markerPanOffset={180} />
+
+      <NightBanner />
+
+      <h1 style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+        24시간 카페·편의점·세차장 찾기 — 새벽에도 문 여는 곳, 24시나우
+      </h1>
+
+      <div className="floating-top">
+        <div className="floating-search-bar">
+          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시<span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
+          <div className="nav-divider" />
+          <div className="nav-categories">
+            {FILTERS.map(filter => (
+              <button key={filter} className={`filter-chip ${activeFilter === filter ? 'active' : ''}`} onClick={(e) => selectFilter(filter, e)}>
+                {filter}
+              </button>
+            ))}
+          </div>
+          <button className="nav-menu-btn" onClick={() => setIsMenuOpen(true)} aria-label="메뉴 열기" aria-expanded={isMenuOpen}>
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor">
+              <rect x="0" y="0" width="18" height="1.6" rx="0.8"/>
+              <rect x="0" y="6.2" width="18" height="1.6" rx="0.8"/>
+              <rect x="0" y="12.4" width="18" height="1.6" rx="0.8"/>
+            </svg>
+          </button>
+        </div>
+        <div className="sub-filter-container">
+          <button
+            className={`sub-filter-chip open-now-chip ${openNowOnly ? 'active' : ''}`}
+            onClick={(e) => { tapEffect(e); setOpenNowOnly(v => !v); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', borderColor: openNowOnly ? 'var(--accent-neon)' : undefined, color: openNowOnly ? 'var(--accent-neon)' : undefined }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? 'var(--accent-neon)' : 'currentColor', display: 'inline-block', flexShrink: 0 }} />
+            영업중{openNowOnly && fetchedStores.length > 0 ? ` ${fetchedStores.length}` : ''}
+          </button>
+          {activeFilter === '편의점' && (
+            <button className={`sub-filter-chip ${medicineOnly ? 'active' : ''}`} onClick={(e) => { tapEffect(e); setMedicineOnly(v => !v); }} style={medicineOnly ? { borderColor: '#30D158', color: '#30D158' } : undefined}>
+              💊 약 판매
+            </button>
+          )}
+          {categoryTags.map(tag => (
+            <button key={tag} className={`sub-filter-chip ${activeTag === tag ? 'active' : ''}`} onClick={(e) => toggleTag(tag, e)}>
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mapOverlays}
+
       {searchedBounds && stores.length === 0 && !showSearchHere && (
         <div className="empty-state">
           <p>{openNowOnly ? `지금 이 근처에 영업 중인 ${activeFilter}이(가) 없어요` : `이 근처엔 ${activeFilter} 정보가 없어요`}</p>
@@ -277,44 +307,10 @@ function HomeContent() {
         </div>
       )}
 
-      {/* 최근 방문 기록 — 선택된 매장 없고, 이동 버튼도 없을 때만 노출 */}
-      {!selectedStore && !showSearchHere && (
-        <RecentStores items={recentHistory} />
-      )}
+      {!selectedStore && !showSearchHere && <RecentStores items={recentHistory} />}
 
-      {/* GPS button */}
-      <div
-        className={`gps-button ${requestGps ? 'active' : ''}`}
-        onClick={(e) => { tapEffect(e); setRequestGps(true); }}
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
-          <circle cx="12" cy="12" r="4" strokeWidth="2" />
-          <circle cx="12" cy="12" r="8.5" strokeWidth="1.5" />
-          <line x1="12" y1="2" x2="12" y2="4.5" strokeWidth="2" />
-          <line x1="12" y1="19.5" x2="12" y2="22" strokeWidth="2" />
-          <line x1="2" y1="12" x2="4.5" y2="12" strokeWidth="2" />
-          <line x1="19.5" y1="12" x2="22" y2="12" strokeWidth="2" />
-        </svg>
-      </div>
-
-      <StoreBottomSheet
-        store={selectedStore}
-        userLocation={userLocation}
-        onClose={() => setSelectedStore(null)}
-      />
-
-      <MenuDrawer 
-        isOpen={isMenuOpen} 
-        onClose={() => setIsMenuOpen(false)} 
-        onShowToast={showToast}
-        user={user}
-      />
-
-      {toastMessage && (
-        <div className="global-toast" role="status" aria-live="polite" aria-atomic="true">
-          {toastMessage}
-        </div>
-      )}
+      <StoreBottomSheet store={selectedStore} userLocation={userLocation} onClose={() => setSelectedStore(null)} />
+      <MenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onShowToast={showToast} user={user} />
     </>
   );
 }

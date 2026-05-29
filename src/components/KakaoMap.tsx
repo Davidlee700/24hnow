@@ -15,6 +15,7 @@ interface KakaoMapProps {
   onGpsError?: (msg: string) => void;
   onLocationUpdate?: (lat: number, lng: number) => void;
   dimmed?: boolean;
+  markerPanOffset?: number;
 }
 
 declare global {
@@ -34,7 +35,7 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 
-export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onGpsError, onLocationUpdate, dimmed }: KakaoMapProps) {
+export default function KakaoMap({ stores = [], center, onBoundsChange, onMarkerClick, onMapClick, requestGps, onGpsComplete, onGpsError, onLocationUpdate, dimmed, markerPanOffset = 180 }: KakaoMapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -106,7 +107,6 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         const wrapper = document.createElement('div');
         wrapper.style.cssText = `
           position: relative; width: 18px; height: 18px;
-          filter: invert(1) hue-rotate(180deg);
           pointer-events: none;
         `;
         const accuracyRing = document.createElement('div');
@@ -216,7 +216,6 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         opacity:${markerOpacity};cursor:pointer;
         display:flex;align-items:center;justify-content:center;
         font-size:22px;line-height:1;user-select:none;
-        filter:invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2);
         transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
         z-index: ${zIdx};
         position: relative;
@@ -233,8 +232,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
           background: #FF9F0A; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           font-size: 9px; line-height: 1; z-index: 1;
-          filter: invert(1) hue-rotate(180deg);
-          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         `;
         badge.textContent = '⏰';
         el.appendChild(badge);
@@ -257,10 +255,9 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
         font-weight: 600;
         white-space: nowrap;
         pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         opacity: ${mapRef.current?.getLevel() <= 4 ? '1' : '0'};
         transition: opacity 0.2s ease;
-        filter: invert(1) hue-rotate(180deg);
       `;
       label.textContent = store.name;
       el.appendChild(label);
@@ -278,19 +275,17 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       el.addEventListener('mouseenter', () => {
         el.style.transform = 'scale(1.25) translateY(-6px)';
         overlay.setZIndex(999);
-        el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.8) contrast(1.3) saturate(2.2)';
       });
       el.addEventListener('mouseleave', () => {
         el.style.transform = 'scale(1)';
         overlay.setZIndex(isConfirmed ? 100 : 10);
-        el.style.filter = 'invert(1) hue-rotate(180deg) brightness(1.5) contrast(1.2) saturate(2)';
       });
-      el.onclick = () => { 
-        onMarkerClick?.(store); 
+      el.onclick = () => {
+        onMarkerClick?.(store);
         const proj = mapRef.current.getProjection();
-        if (proj) {
+        if (proj && markerPanOffset > 0) {
           const point = proj.pointFromCoords(position);
-          point.y += 180; // Offset map center downwards by 180px
+          point.y += markerPanOffset;
           const offsetLatLng = proj.coordsFromPoint(point);
           mapRef.current.panTo(offsetLatLng);
         } else {
