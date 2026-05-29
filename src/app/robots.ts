@@ -7,13 +7,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow: ['/admin', '/api/', '/auth/'],
+        allow: ['/', '/api/og'],
+        disallow: ['/admin', '/api/admin/', '/api/report', '/api/vote', '/api/comments', '/api/contact', '/auth/'],
       },
       {
         userAgent: 'Yeti',
-        allow: '/',
-        disallow: ['/admin', '/api/', '/auth/'],
+        allow: ['/', '/api/og'],
+        disallow: ['/admin', '/api/admin/', '/api/report', '/api/vote', '/api/comments', '/api/contact', '/auth/'],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
