@@ -95,7 +95,7 @@ function HomeContent() {
   const [searchHideAnim, setSearchHideAnim] = useState(false);
   const [showZoomHint, setShowZoomHint] = useState(false);
 
-  const handleBoundsChange = useCallback((bounds: MapBounds | null) => {
+  const handleBoundsChange = useCallback((bounds: MapBounds | null, isZoom?: boolean) => {
     if (!bounds) {
       setShowSearchHere(false);
       setShowZoomHint(true);
@@ -104,8 +104,8 @@ function HomeContent() {
     setShowZoomHint(false);
     pendingBoundsRef.current = bounds;
 
-    // GPS 완료 직후 1초 내에 발생하는 bounds 변화는 무조건 자동 검색으로 처리
-    if (Date.now() < autoSearchUntil.current) {
+    // GPS 완료 직후 1초 내에 발생하는 bounds 변화 또는 줌 인/아웃은 자동 검색으로 처리
+    if (isZoom || Date.now() < autoSearchUntil.current) {
       setSearchedBounds(bounds);
       setShowSearchHere(false);
       return;

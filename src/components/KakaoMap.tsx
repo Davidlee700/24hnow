@@ -7,7 +7,7 @@ import { getOpenStatus } from '@/utils/openHours';
 interface KakaoMapProps {
   stores?: Store[];
   center?: { lat: number; lng: number } | null;
-  onBoundsChange?: (bounds: MapBounds | null) => void;
+  onBoundsChange?: (bounds: MapBounds | null, isZoom?: boolean) => void;
   onMarkerClick?: (store: Store) => void;
   onMapClick?: () => void;
   requestGps?: boolean;
@@ -41,6 +41,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
   const markersRef = useRef<any[]>([]);
   const gpsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationOverlayRef = useRef<any>(null);
+  const isZoomingRef = useRef(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(4);
 
@@ -57,6 +58,8 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       setMapLoaded(true);
 
       kakao.maps.event.addListener(mapRef.current, 'idle', () => {
+        const isZoom = isZoomingRef.current;
+        isZoomingRef.current = false;
         const level = mapRef.current.getLevel();
         setZoomLevel(level);
 
@@ -67,14 +70,14 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
 
         if (!onBoundsChange) return;
         if (level > 7) {
-          onBoundsChange(null);
+          onBoundsChange(null, isZoom);
           return;
         }
         const b = mapRef.current.getBounds();
         onBoundsChange({
           sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
           ne: { lat: b.getNorthEast().getLat(), lng: b.getNorthEast().getLng() },
-        });
+        }, isZoom);
       });
 
       kakao.maps.event.addListener(mapRef.current, 'click', () => {
@@ -82,6 +85,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       });
 
       kakao.maps.event.addListener(mapRef.current, 'zoom_changed', () => {
+        isZoomingRef.current = true;
         setZoomLevel(mapRef.current.getLevel());
       });
     };
