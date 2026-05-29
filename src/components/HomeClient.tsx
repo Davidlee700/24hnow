@@ -89,7 +89,7 @@ function HomeContent() {
 
   // "이 지역에서 검색" logic
   const pendingBoundsRef = useRef<MapBounds | null>(null);
-  const autoSearchOnNextBounds = useRef(false);
+  const autoSearchUntil = useRef(0);
   const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
   const [showSearchHere, setShowSearchHere] = useState(false);
   const [searchHideAnim, setSearchHideAnim] = useState(false);
@@ -104,9 +104,8 @@ function HomeContent() {
     setShowZoomHint(false);
     pendingBoundsRef.current = bounds;
 
-    // GPS 완료 후 첫 bounds 업데이트는 자동 검색
-    if (autoSearchOnNextBounds.current) {
-      autoSearchOnNextBounds.current = false;
+    // GPS 완료 직후 1초 내에 발생하는 bounds 변화는 무조건 자동 검색으로 처리
+    if (Date.now() < autoSearchUntil.current) {
       setSearchedBounds(bounds);
       setShowSearchHere(false);
       return;
@@ -171,7 +170,7 @@ function HomeContent() {
     onMarkerClick: handleSelectStore,
     onMapClick: () => setSelectedStore(null),
     requestGps,
-    onGpsComplete: () => { setRequestGps(false); autoSearchOnNextBounds.current = true; },
+    onGpsComplete: () => { setRequestGps(false); autoSearchUntil.current = Date.now() + 1000; },
     onGpsError: showToast,
     onLocationUpdate: (lat: number, lng: number) => setUserLocation({ lat, lng }),
     dimmed: isMenuOpen,
@@ -300,9 +299,32 @@ function HomeContent() {
       {mapOverlays}
 
       {searchedBounds && stores.length === 0 && !showSearchHere && (
-        <div className="empty-state">
-          <p>{openNowOnly ? `지금 이 근처에 영업 중인 ${activeFilter}이(가) 없어요` : `이 근처엔 ${activeFilter} 정보가 없어요`}</p>
-          <span>{openNowOnly ? '지도를 이동하거나 "지금 영업중" 필터를 해제해보세요' : '지도를 이동해 다른 지역을 확인해보세요'}</span>
+        <div className="empty-state" style={{ padding: '24px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)', border: '1px solid var(--border-light)' }}>
+          <div style={{ fontSize: '32px', marginBottom: '8px' }}>💡</div>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '16px', marginBottom: '8px' }}>
+            {openNowOnly ? `이 근처엔 지금 열린 ${activeFilter}이(가) 없네요` : `이 근처엔 ${activeFilter} 정보가 없어요`}
+          </p>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'block', marginBottom: '16px' }}>
+            지도를 넓게 보거나 아래 옵션을 선택해보세요.
+          </span>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {openNowOnly && (
+              <button 
+                onClick={(e) => { tapEffect(e); setOpenNowOnly(false); }}
+                style={{ padding: '8px 16px', borderRadius: '20px', background: 'var(--bg-tertiary)', border: 'none', color: 'var(--text-primary)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+              >
+                영업중 필터 끄기
+              </button>
+            )}
+            {activeFilter !== '편의점' && (
+              <button 
+                onClick={(e) => { selectFilter('편의점', e); }}
+                style={{ padding: '8px 16px', borderRadius: '20px', background: 'rgba(10, 132, 255, 0.1)', color: '#0A84FF', border: 'none', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+              >
+                🏪 주변 편의점 찾기
+              </button>
+            )}
+          </div>
         </div>
       )}
 

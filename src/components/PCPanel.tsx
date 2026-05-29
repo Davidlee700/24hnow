@@ -267,10 +267,14 @@ function InfoRow({ icon, label, valueColor, isLast }: {
 }
 
 /* ── Store List ──────────────────────────────────────────── */
-function StoreList({ stores, userLoc, onSelect }: {
+function StoreList({ stores, userLoc, onSelect, activeFilter, openNowOnly, onToggleOpenNow, onSelectFilter }: {
   stores: Store[];
   userLoc: { lat: number; lng: number } | null;
   onSelect: (s: Store) => void;
+  activeFilter: string;
+  openNowOnly: boolean;
+  onToggleOpenNow: () => void;
+  onSelectFilter: (f: string) => void;
 }) {
   if (stores.length === 0) {
     return (
@@ -279,11 +283,31 @@ function StoreList({ stores, userLoc, onSelect }: {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         style={{ padding: '80px 24px', textAlign: 'center' }}
       >
-        <div style={{ fontSize: 40, marginBottom: 16 }}>🗺️</div>
-        <p style={{ fontSize: 16, fontWeight: 600, color: C.label, marginBottom: 6 }}>매장이 없어요</p>
-        <p style={{ fontSize: 14, color: C.secondary, lineHeight: 1.5 }}>
-          지도를 이동하거나<br/>확대해보세요
+        <div style={{ fontSize: 40, marginBottom: 16 }}>💡</div>
+        <p style={{ fontSize: 16, fontWeight: 600, color: C.label, marginBottom: 6 }}>
+          {openNowOnly ? `이 근처엔 지금 열린 ${activeFilter}이(가) 없네요` : `이 근처엔 ${activeFilter} 정보가 없어요`}
         </p>
+        <p style={{ fontSize: 14, color: C.secondary, lineHeight: 1.5, marginBottom: 24 }}>
+          지도를 넓게 보거나<br/>아래 옵션을 선택해보세요.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+          {openNowOnly && (
+            <button 
+              onClick={onToggleOpenNow}
+              style={{ padding: '10px 20px', borderRadius: '20px', background: C.bg, border: `1px solid ${C.separator}`, color: C.label, fontWeight: 600, fontSize: '14px', cursor: 'pointer', width: '100%', maxWidth: '200px' }}
+            >
+              영업중 필터 끄기
+            </button>
+          )}
+          {activeFilter !== '편의점' && (
+            <button 
+              onClick={() => onSelectFilter('편의점')}
+              style={{ padding: '10px 20px', borderRadius: '20px', background: 'rgba(10, 132, 255, 0.1)', color: '#0A84FF', border: 'none', fontWeight: 600, fontSize: '14px', cursor: 'pointer', width: '100%', maxWidth: '200px' }}
+            >
+              🏪 주변 편의점 찾기
+            </button>
+          )}
+        </div>
       </motion.div>
     );
   }
@@ -468,6 +492,10 @@ export default function PCPanel({
               stores={stores}
               userLoc={userLocation}
               onSelect={onSelectStore}
+              activeFilter={activeFilter}
+              openNowOnly={openNowOnly}
+              onToggleOpenNow={() => onToggleOpenNow(null as any)}
+              onSelectFilter={(f) => onSelectFilter(f, null as any)}
             />
           )}
         </AnimatePresence>
