@@ -49,43 +49,49 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
     const kakao = window.kakao;
     if (!mapElement.current || !kakao) return;
 
-    kakao.maps.load(() => {
-      if (!mapRef.current) {
-        const center = new kakao.maps.LatLng(37.5665, 126.9780);
-        mapRef.current = new kakao.maps.Map(mapElement.current, { center, level: 5 });
-        mapRef.current.setMaxLevel(8);
-        setMapLoaded(true);
+    const initMap = () => {
+      if (mapRef.current || !mapElement.current) return;
+      const center = new kakao.maps.LatLng(37.5665, 126.9780);
+      mapRef.current = new kakao.maps.Map(mapElement.current, { center, level: 5 });
+      mapRef.current.setMaxLevel(8);
+      setMapLoaded(true);
 
-        kakao.maps.event.addListener(mapRef.current, 'idle', () => {
-          const level = mapRef.current.getLevel();
-          setZoomLevel(level);
-          
-          const labels = document.querySelectorAll('.marker-label');
-          labels.forEach((l: any) => {
-            l.style.opacity = level <= 4 ? '1' : '0';
-          });
+      kakao.maps.event.addListener(mapRef.current, 'idle', () => {
+        const level = mapRef.current.getLevel();
+        setZoomLevel(level);
 
-          if (!onBoundsChange) return;
-          if (level > 7) {
-            onBoundsChange(null);
-            return;
-          }
-          const b = mapRef.current.getBounds();
-          onBoundsChange({
-            sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
-            ne: { lat: b.getNorthEast().getLat(), lng: b.getNorthEast().getLng() },
-          });
+        const labels = document.querySelectorAll('.marker-label');
+        labels.forEach((l: any) => {
+          l.style.opacity = level <= 4 ? '1' : '0';
         });
 
-        kakao.maps.event.addListener(mapRef.current, 'click', () => {
-          onMapClick?.();
+        if (!onBoundsChange) return;
+        if (level > 7) {
+          onBoundsChange(null);
+          return;
+        }
+        const b = mapRef.current.getBounds();
+        onBoundsChange({
+          sw: { lat: b.getSouthWest().getLat(), lng: b.getSouthWest().getLng() },
+          ne: { lat: b.getNorthEast().getLat(), lng: b.getNorthEast().getLng() },
         });
+      });
 
-        kakao.maps.event.addListener(mapRef.current, 'zoom_changed', () => {
-          setZoomLevel(mapRef.current.getLevel());
-        });
-      }
-    });
+      kakao.maps.event.addListener(mapRef.current, 'click', () => {
+        onMapClick?.();
+      });
+
+      kakao.maps.event.addListener(mapRef.current, 'zoom_changed', () => {
+        setZoomLevel(mapRef.current.getLevel());
+      });
+    };
+
+    // SDK already initialized (e.g., remount after isDesktop toggle) → call directly
+    if (kakao.maps.Map) {
+      initMap();
+    } else {
+      kakao.maps.load(initMap);
+    }
   }, []);
 
   // 2. GPS
