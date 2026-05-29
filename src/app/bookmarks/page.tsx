@@ -207,9 +207,9 @@ export default function BookmarksPage() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
                     padding: '8px 14px', borderRadius: '20px', flexShrink: 0,
-                    border: isActive ? '1.5px solid var(--accent-neon)' : '1px solid rgba(255,255,255,0.12)',
-                    background: isActive ? 'rgba(173,255,47,0.1)' : 'rgba(255,255,255,0.04)',
-                    color: isActive ? 'var(--accent-neon)' : 'var(--text-secondary)',
+                    border: isActive ? '1.5px solid var(--accent-brand)' : '1px solid rgba(255,255,255,0.12)',
+                    background: isActive ? 'rgba(0,122,255,0.1)' : 'rgba(255,255,255,0.04)',
+                    color: isActive ? 'var(--accent-brand)' : 'var(--text-secondary)',
                     fontSize: '13px', fontWeight: isActive ? '600' : '400', cursor: 'pointer',
                     position: 'relative',
                   }}
@@ -253,7 +253,7 @@ export default function BookmarksPage() {
                   <p style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 6px' }}>이 폴더는 비어있어요</p>
                   <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: 0 }}>지도에서 마음에 드는 장소를<br/>아지트에 저장해보세요</p>
                 </div>
-                <button onClick={() => router.push('/')} style={{ padding: '12px 24px', borderRadius: '12px', background: 'var(--accent-neon)', color: '#000', border: 'none', fontSize: '15px', fontWeight: '700', cursor: 'pointer' }}>
+                <button onClick={() => router.push('/')} style={{ padding: '12px 24px', borderRadius: '12px', background: 'var(--accent-brand)', color: '#ffffff', border: 'none', fontSize: '15px', fontWeight: '700', cursor: 'pointer' }}>
                   지도로 돌아가기
                 </button>
               </div>
@@ -324,7 +324,7 @@ export default function BookmarksPage() {
             <p style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px' }}>새 폴더</p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
               {FOLDER_EMOJIS.map(e => (
-                <button key={e} onClick={() => setNewFolderEmoji(e)} style={{ width: '40px', height: '40px', borderRadius: '10px', border: newFolderEmoji === e ? '2px solid var(--accent-neon)' : '1px solid rgba(255,255,255,0.1)', background: newFolderEmoji === e ? 'rgba(173,255,47,0.1)' : 'rgba(255,255,255,0.04)', fontSize: '20px', cursor: 'pointer' }}>{e}</button>
+                <button key={e} onClick={() => setNewFolderEmoji(e)} style={{ width: '40px', height: '40px', borderRadius: '10px', border: newFolderEmoji === e ? '2px solid var(--accent-brand)' : '1px solid rgba(255,255,255,0.1)', background: newFolderEmoji === e ? 'rgba(0,122,255,0.1)' : 'rgba(255,255,255,0.04)', fontSize: '20px', cursor: 'pointer' }}>{e}</button>
               ))}
             </div>
             <input
@@ -335,7 +335,7 @@ export default function BookmarksPage() {
               style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: 'var(--text-primary)', fontSize: '16px', outline: 'none', boxSizing: 'border-box', marginBottom: '8px' }}
             />
             {createError && <p style={{ color: '#FF453A', fontSize: '13px', margin: '0 0 8px' }}>{createError}</p>}
-            <button onClick={handleCreateFolder} disabled={creating} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--accent-neon)', color: '#000', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer', opacity: creating ? 0.6 : 1 }}>
+            <button onClick={handleCreateFolder} disabled={creating} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--accent-brand)', color: '#ffffff', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer', opacity: creating ? 0.6 : 1 }}>
               {creating ? '생성 중...' : '만들기'}
             </button>
           </div>
@@ -351,7 +351,7 @@ export default function BookmarksPage() {
             <p style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px' }}>폴더 이름 변경</p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
               {FOLDER_EMOJIS.map(e => (
-                <button key={e} onClick={() => setRenameEmoji(e)} style={{ width: '40px', height: '40px', borderRadius: '10px', border: renameEmoji === e ? '2px solid var(--accent-neon)' : '1px solid rgba(255,255,255,0.1)', background: renameEmoji === e ? 'rgba(173,255,47,0.1)' : 'rgba(255,255,255,0.04)', fontSize: '20px', cursor: 'pointer' }}>{e}</button>
+                <button key={e} onClick={() => setRenameEmoji(e)} style={{ width: '40px', height: '40px', borderRadius: '10px', border: renameEmoji === e ? '2px solid var(--accent-brand)' : '1px solid rgba(255,255,255,0.1)', background: renameEmoji === e ? 'rgba(0,122,255,0.1)' : 'rgba(255,255,255,0.04)', fontSize: '20px', cursor: 'pointer' }}>{e}</button>
               ))}
             </div>
             <input
@@ -360,7 +360,7 @@ export default function BookmarksPage() {
               maxLength={20}
               style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '0.5px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: 'var(--text-primary)', fontSize: '16px', outline: 'none', boxSizing: 'border-box', marginBottom: '12px' }}
             />
-            <button onClick={handleRename} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--accent-neon)', color: '#000', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}>
+            <button onClick={handleRename} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--accent-brand)', color: '#ffffff', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}>
               저장
             </button>
           </div>
@@ -384,7 +384,7 @@ export default function BookmarksPage() {
                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
                   링크를 만들면 누구든 이 폴더를 지도에서 볼 수 있어요.<br/>언제든 공유를 중단할 수 있어요.
                 </p>
-                <button onClick={handleEnableSharing} disabled={sharingLoading} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--accent-neon)', color: '#000', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer', opacity: sharingLoading ? 0.6 : 1 }}>
+                <button onClick={handleEnableSharing} disabled={sharingLoading} style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--accent-brand)', color: '#ffffff', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer', opacity: sharingLoading ? 0.6 : 1 }}>
                   {sharingLoading ? '링크 생성 중...' : '링크 만들기'}
                 </button>
               </>
@@ -409,7 +409,7 @@ export default function BookmarksPage() {
                 </p>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button onClick={() => setShowRegenConfirm(false)} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', border: 'none', fontSize: '16px', cursor: 'pointer' }}>취소</button>
-                  <button onClick={handleRegenerate} disabled={sharingLoading} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'var(--accent-neon)', color: '#000', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer', opacity: sharingLoading ? 0.6 : 1 }}>
+                  <button onClick={handleRegenerate} disabled={sharingLoading} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'var(--accent-brand)', color: '#ffffff', border: 'none', fontSize: '16px', fontWeight: '700', cursor: 'pointer', opacity: sharingLoading ? 0.6 : 1 }}>
                     {sharingLoading ? '처리 중...' : '새 링크 만들기'}
                   </button>
                 </div>

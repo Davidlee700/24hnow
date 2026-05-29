@@ -62,7 +62,7 @@ export default function NightBanner() {
             background: 'rgba(10, 10, 15, 0.82)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '0.5px solid rgba(173, 255, 47, 0.25)',
+            border: '0.5px solid rgba(0, 122, 255, 0.25)',
             borderRadius: '20px',
             padding: '9px 18px',
             display: 'flex',
@@ -70,7 +70,7 @@ export default function NightBanner() {
             gap: '8px',
             cursor: 'pointer',
             whiteSpace: 'nowrap',
-            boxShadow: '0 0 18px rgba(173, 255, 47, 0.08)',
+            boxShadow: '0 0 18px rgba(0, 122, 255, 0.08)',
           }}
         >
           <motion.span
@@ -80,7 +80,7 @@ export default function NightBanner() {
               width: 7,
               height: 7,
               borderRadius: '50%',
-              background: 'var(--accent-neon)',
+              background: 'var(--accent-brand)',
               flexShrink: 0,
               display: 'inline-block',
             }}

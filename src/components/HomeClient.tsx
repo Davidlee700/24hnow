@@ -259,7 +259,7 @@ function HomeContent() {
 
       <div className="floating-top">
         <div className="floating-search-bar">
-          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시<span style={{ color: 'var(--accent-neon)' }}>나우</span></a>
+          <a href="/" className="brand-title" style={{ textDecoration: 'none', color: 'inherit' }}>24시<span style={{ color: 'var(--accent-brand)' }}>나우</span></a>
           <div className="nav-divider" />
           <div className="nav-categories">
             {FILTERS.map(filter => (
@@ -280,9 +280,8 @@ function HomeContent() {
           <button
             className={`sub-filter-chip open-now-chip ${openNowOnly ? 'active' : ''}`}
             onClick={(e) => { tapEffect(e); setOpenNowOnly(v => !v); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', borderColor: openNowOnly ? 'var(--accent-neon)' : undefined, color: openNowOnly ? 'var(--accent-neon)' : undefined }}
           >
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? 'var(--accent-neon)' : 'currentColor', display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? '#fff' : 'var(--text-tertiary)', display: 'inline-block', flexShrink: 0 }} />
             영업중{openNowOnly && fetchedStores.length > 0 ? ` ${fetchedStores.length}` : ''}
           </button>
           {activeFilter === '편의점' && (
@@ -321,7 +320,7 @@ export default function HomeClient() {
       <div className="loading-overlay">
         <div className="loading-spinner-wrapper">
           <div className="loading-logo">
-            24시<span style={{ color: 'var(--accent-neon)' }}>나우</span>
+            24시<span style={{ color: 'var(--accent-brand)' }}>나우</span>
           </div>
           <div className="loading-pulse-dot" />
         </div>

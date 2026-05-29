@@ -579,7 +579,7 @@ export default function AdminPage() {
                           <tr key={store.id}>
                             <td className="td-name">
                               <a href={`/stores/${store.id}`} target="_blank" rel="noopener noreferrer"
-                                style={{ color: '#ADFF2F', textDecoration: 'none' }}>
+                                style={{ color: 'var(--accent-brand)', textDecoration: 'none' }}>
                                 {store.name}
                               </a>
                             </td>

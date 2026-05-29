@@ -329,7 +329,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                     </div>
                     <div className="info-content">
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setShowFullHours(!showFullHours)}>
-                        <span className="info-text" style={{ fontWeight: isConfirmed ? 600 : 400, color: isConfirmed ? 'var(--accent-neon)' : 'inherit' }}>
+                        <span className="info-text" style={{ fontWeight: isConfirmed ? 600 : 400, color: isConfirmed ? 'var(--accent-brand)' : 'inherit' }}>
                           {getTodayHours(store.raw_hours, store.confidence_level, store.class_type)}
                         </span>
                         {store.raw_hours && (

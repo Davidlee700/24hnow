@@ -117,7 +117,7 @@ export default function AjitrSharePage() {
         <p style={{ fontSize: '14px', color: '#8E8E93', margin: 0, lineHeight: 1.5 }}>
           링크가 만료됐거나 비공개로 전환된 아지트예요.
         </p>
-        <Link href="/" style={{ marginTop: '8px', padding: '13px 28px', borderRadius: '14px', background: '#ADFF2F', color: '#000', fontSize: '15px', fontWeight: 700, textDecoration: 'none' }}>
+        <Link href="/" style={{ marginTop: '8px', padding: '13px 28px', borderRadius: '14px', background: 'var(--accent-brand)', color: '#ffffff', fontSize: '15px', fontWeight: 700, textDecoration: 'none' }}>
           나만의 아지트 만들기
         </Link>
       </div>
@@ -172,7 +172,7 @@ export default function AjitrSharePage() {
       <div style={{ padding: '16px 20px 36px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <Link
           href="/"
-          style={{ display: 'block', textAlign: 'center', padding: '15px', borderRadius: '16px', background: '#ADFF2F', color: '#000', fontSize: '15px', fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.2px' }}
+          style={{ display: 'block', textAlign: 'center', padding: '15px', borderRadius: '16px', background: 'var(--accent-brand)', color: '#ffffff', fontSize: '15px', fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.2px' }}
         >
           나도 아지트 만들기 →
         </Link>

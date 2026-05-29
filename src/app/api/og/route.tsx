@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const open = searchParams.get('status') === 'open';
 
   const emoji = CATEGORY_EMOJI[category] ?? '📍';
-  const accentColor = CATEGORY_COLOR[category] ?? '#ADFF2F';
+  const accentColor = CATEGORY_COLOR[category] ?? 'var(--accent-brand)';
 
   return new ImageResponse(
     (
@@ -45,19 +45,19 @@ export async function GET(req: NextRequest) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0A0A0F',
+          background: '#000000', // Deep Night Black
           position: 'relative',
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Background glow */}
+        {/* Background ambient glow */}
         <div
           style={{
             position: 'absolute',
-            width: 420,
-            height: 420,
+            width: 800,
+            height: 800,
             borderRadius: '50%',
-            background: `radial-gradient(circle, ${accentColor}18 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${accentColor}25 0%, transparent 60%)`,
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
@@ -65,48 +65,69 @@ export async function GET(req: NextRequest) {
           }}
         />
 
-        {/* Card */}
+        {/* Brand Compass Tagline */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 50,
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(255,255,255,0.1)',
+            padding: '8px 24px',
+            borderRadius: 100,
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          }}
+        >
+          <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.9)', fontWeight: 500, letterSpacing: '-0.02em', display: 'flex' }}>
+            가장 절실한 순간, 확실한 가이드
+          </span>
+        </div>
+
+        {/* Card Content */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 20,
-            padding: '52px 64px',
-            background: 'rgba(255,255,255,0.05)',
-            border: `1px solid ${accentColor}30`,
-            borderRadius: 32,
+            gap: 24,
+            padding: '60px 80px',
+            background: 'rgba(30, 30, 35, 0.7)',
+            border: `1px solid rgba(255, 255, 255, 0.08)`,
+            borderRadius: 40,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
           }}
         >
           {/* Emoji */}
-          <div style={{ fontSize: 88, lineHeight: 1, display: 'flex' }}>{emoji}</div>
+          <div style={{ fontSize: 96, lineHeight: 1, display: 'flex', filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.5))' }}>{emoji}</div>
 
           {/* Store name */}
           <div
             style={{
-              fontSize: 52,
-              fontWeight: 700,
+              fontSize: 60,
+              fontWeight: 800,
               color: '#FFFFFF',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.03em',
               textAlign: 'center',
-              maxWidth: 720,
+              maxWidth: 760,
               display: 'flex',
+              textShadow: '0 4px 12px rgba(0,0,0,0.5)',
             }}
           >
             {name}
           </div>
 
           {/* Region + category */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             {region && (
-              <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.5)', display: 'flex' }}>
+              <span style={{ fontSize: 28, color: 'rgba(255,255,255,0.6)', fontWeight: 500, display: 'flex' }}>
                 {region}
               </span>
             )}
             {region && (
-              <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.25)', display: 'flex' }}>·</span>
+              <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.3)', display: 'flex' }}>·</span>
             )}
-            <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.5)', display: 'flex' }}>
+            <span style={{ fontSize: 28, color: 'rgba(255,255,255,0.6)', fontWeight: 500, display: 'flex' }}>
               {category}
             </span>
           </div>
@@ -115,25 +136,27 @@ export async function GET(req: NextRequest) {
           {open && (
             <div
               style={{
+                marginTop: 12,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                background: 'rgba(173,255,47,0.14)',
-                border: '1px solid rgba(173,255,47,0.4)',
+                gap: 10,
+                background: 'rgba(10, 132, 255, 0.15)',
+                border: '1.5px solid rgba(10, 132, 255, 0.4)',
                 borderRadius: 100,
-                padding: '8px 20px',
+                padding: '12px 28px',
               }}
             >
               <div
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: 10,
+                  height: 10,
                   borderRadius: '50%',
-                  background: '#ADFF2F',
+                  background: '#0A84FF',
                   display: 'flex',
+                  boxShadow: '0 0 12px #0A84FF',
                 }}
               />
-              <span style={{ fontSize: 22, color: '#ADFF2F', fontWeight: 600, display: 'flex' }}>
+              <span style={{ fontSize: 26, color: '#0A84FF', fontWeight: 700, letterSpacing: '-0.02em', display: 'flex' }}>
                 지금 영업중
               </span>
             </div>
@@ -144,19 +167,19 @@ export async function GET(req: NextRequest) {
         <div
           style={{
             position: 'absolute',
-            bottom: 36,
+            bottom: 40,
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 10,
           }}
         >
-          <span style={{ fontSize: 22, color: 'rgba(255,255,255,0.35)', display: 'flex' }}>
+          <span style={{ fontSize: 26, color: 'rgba(255,255,255,0.4)', fontWeight: 600, display: 'flex' }}>
             24시
           </span>
-          <span style={{ fontSize: 22, color: '#ADFF2F', fontWeight: 700, display: 'flex' }}>
+          <span style={{ fontSize: 26, color: '#0A84FF', fontWeight: 800, display: 'flex' }}>
             나우
           </span>
-          <span style={{ fontSize: 22, color: 'rgba(255,255,255,0.2)', display: 'flex' }}>
+          <span style={{ fontSize: 26, color: 'rgba(255,255,255,0.2)', display: 'flex' }}>
             · 24now.kr
           </span>
         </div>

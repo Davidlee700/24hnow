@@ -109,7 +109,7 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
       
       <p className="community-label" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span>💬 밤샘 리뷰</span>
-        <span style={{ fontSize: '12px', color: 'var(--accent-neon)', background: 'rgba(173,255,47,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--accent-brand)', background: 'rgba(0,122,255,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
           {comments.length}
         </span>
       </p>
@@ -130,9 +130,9 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
                   borderRadius: '20px',
                   fontSize: '13px',
                   border: '0.5px solid',
-                  borderColor: isSelected ? 'var(--accent-neon)' : 'rgba(255,255,255,0.15)',
-                  background: isSelected ? 'rgba(173,255,47,0.15)' : 'rgba(255,255,255,0.06)',
-                  color: isSelected ? 'var(--accent-neon)' : 'var(--text-primary)',
+                  borderColor: isSelected ? 'var(--accent-brand)' : 'rgba(255,255,255,0.15)',
+                  background: isSelected ? 'rgba(0,122,255,0.15)' : 'rgba(255,255,255,0.06)',
+                  color: isSelected ? 'var(--accent-brand)' : 'var(--text-primary)',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                 }}
@@ -172,7 +172,7 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
               style={{
                 padding: '10px 24px',
                 borderRadius: '12px',
-                background: (text.trim() || selectedTags.length > 0) ? 'var(--accent-neon)' : 'rgba(255,255,255,0.08)',
+                background: (text.trim() || selectedTags.length > 0) ? 'var(--accent-brand)' : 'rgba(255,255,255,0.08)',
                 color: (text.trim() || selectedTags.length > 0) ? '#000' : 'var(--text-tertiary)',
                 border: 'none',
                 fontSize: '14px',
@@ -206,7 +206,7 @@ export default function StoreReviews({ storeId, availableTags, onLoad, onVote, h
               {comment.selected_tags && comment.selected_tags.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
                   {comment.selected_tags.map(t => (
-                    <span key={t} style={{ fontSize: '11px', color: 'var(--accent-neon)', background: 'rgba(173,255,47,0.08)', padding: '2px 6px', borderRadius: '6px' }}>
+                    <span key={t} style={{ fontSize: '11px', color: 'var(--accent-brand)', background: 'rgba(0,122,255,0.08)', padding: '2px 6px', borderRadius: '6px' }}>
                       {t}
                     </span>
                   ))}

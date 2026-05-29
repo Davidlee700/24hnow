@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Store } from '@/types/store';
 import { getOpenStatus, getTodayHoursLine } from '@/utils/openHours';
+import { calcDistance, formatApiTime, relativeTime, getOpenStatusIcon, getOpenStatusColor } from '@/utils/storeFormatters';
 import { useTagVotes } from '@/hooks/useTagVotes';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import StoreReviews from './StoreReviews';
@@ -13,42 +14,6 @@ interface Props {
   store: Store | null;
   userLocation: { lat: number; lng: number } | null;
   onClose: () => void;
-}
-
-function formatApiTime(timeStr: string): string {
-  if (!timeStr) return '';
-  const time = parseInt(timeStr);
-  if (time === 2400) return '24:00';
-  if (time === 0) return '00:00';
-  if (time > 2400) {
-    const hour = Math.floor((time - 2400) / 100);
-    const min = time % 100;
-    return `익일 ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-  }
-  return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`;
-}
-
-
-function calcDistance(user: { lat: number; lng: number }, store: { latitude: number; longitude: number }): string {
-  const R = 6371;
-  const dLat = (store.latitude - user.lat) * Math.PI / 180;
-  const dLng = (store.longitude - user.lng) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(user.lat * Math.PI / 180) * Math.cos(store.latitude * Math.PI / 180) *
-    Math.sin(dLng / 2) ** 2;
-  const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  if (d < 0.15) return '바로 근처';
-  if (d < 1.5) return `도보 ${Math.round(d / 0.067)}분`;
-  return `차로 ${Math.round(d / 0.4)}분`;
-}
-
-function relativeTime(dateStr?: string): string {
-  if (!dateStr) return '';
-  const h = Math.floor((Date.now() - new Date(dateStr).getTime()) / 3600000);
-  if (h < 1) return '방금 확인됨';
-  if (h < 24) return `${h}시간 전 확인`;
-  const d = Math.floor(h / 24);
-  return d === 1 ? '어제 확인' : `${d}일 전 확인`;
 }
 
 function tapEffect(e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) {
@@ -211,7 +176,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
         }),
       });
       setShowHoursEditor(false);
-      showToast('영업시간 제보 감사해요! 바로 반영됐어요 ✅');
+      showToast('덕분에 누군가의 헛걸음을 막았어요! 🎉');
     } catch {
       showToast('제보 전송에 실패했어요. 다시 시도해 주세요.');
     } finally {
@@ -356,17 +321,6 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
   const openStatus = store ? getOpenStatus(store) : null;
   const todayHoursLine = store ? getTodayHoursLine(store) : null;
 
-  function openStatusIcon(): string {
-    if (!openStatus || openStatus.isOpen === null) return '⚪';
-    if (openStatus.closingSoon) return '⏰';
-    return openStatus.isOpen ? '🟢' : '🔴';
-  }
-
-  function openStatusColor(): string {
-    if (!openStatus || openStatus.isOpen === null) return 'var(--text-secondary)';
-    if (openStatus.closingSoon) return '#FF9F0A';
-    return openStatus.isOpen ? 'var(--accent-neon)' : '#FF453A';
-  }
 
   return (
     <AnimatePresence>
@@ -509,10 +463,10 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                         style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: (store.raw_hours || store.business_hours) ? 'pointer' : 'default' }}
                         onClick={() => (store.raw_hours || store.business_hours) && setShowFullHours(!showFullHours)}
                       >
-                        <div className="info-icon">{openStatusIcon()}</div>
+                        <div className="info-icon">{getOpenStatusIcon(openStatus)}</div>
                         <div className="info-content">
                           {/* 1줄: 상태 라벨 */}
-                          <span className="info-text" style={{ fontWeight: openStatus?.isOpen ? 600 : 400, color: openStatusColor() }}>
+                          <span className="info-text" style={{ fontWeight: openStatus?.isOpen ? 600 : 400, color: getOpenStatusColor(openStatus) }}>
                             {openStatus?.label ?? '영업시간 미확인'}
                           </span>
                           {/* 2줄: 오늘 구체 시간 (금 10:00 - 24:00) */}
@@ -556,7 +510,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                                   const isToday = parts[1] === todayDayName;
                                   return (
                                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontWeight: isToday ? 600 : 400, color: isToday ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                                      <span>{parts[1]}{isToday && <span style={{ fontSize: '10px', marginLeft: '4px', color: openStatusColor() }}>오늘</span>}</span>
+                                      <span>{parts[1]}{isToday && <span style={{ fontSize: '10px', marginLeft: '4px', color: getOpenStatusColor(openStatus) }}>오늘</span>}</span>
                                       <span>{formatApiTime(parts[2])} - {formatApiTime(parts[3])}</span>
                                     </div>
                                   );
@@ -572,11 +526,11 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                   {/* 영업시간 수정 제보 트리거 */}
                   {!showHoursEditor && (
                     <button
-                      onClick={() => setShowHoursEditor(true)}
-                      style={{ background: 'none', border: 'none', padding: '6px 0 0 44px', fontSize: '12px', color: 'var(--text-tertiary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px', display: 'block' }}
-                    >
-                      ✏️ 영업시간 수정 제보
-                    </button>
+                        onClick={() => setShowHoursEditor(true)}
+                        style={{ background: 'rgba(0,122,255,0.08)', border: 'none', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--accent-brand)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '34px', marginTop: '8px' }}
+                      >
+                        ✏️ 영업시간 제보하기
+                      </button>
                   )}
 
                   {/* 요일별 영업시간 에디터 */}
@@ -750,10 +704,10 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
                 {!isConfirmed && (
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', padding: '0 8px', marginBottom: '16px' }}>
-                    <span style={{ fontSize: '14px', color: '#FF9F0A' }}>⚠️</span>
+                    <span style={{ fontSize: '14px', color: '#FF9F0A' }}>💡</span>
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                       {store.operation_type === 'UNKNOWN' || !openStatus || openStatus.isOpen === null
-                        ? '영업시간 정보가 아직 확인되지 않았어요. 방문 전 전화로 확인을 권장합니다.'
+                        ? '최근 정보가 부족해요. 방문 전 전화로 확인하면 헛걸음을 막을 수 있어요.'
                         : '영업시간은 추정 정보입니다. 늦은 시간 방문 전 전화 확인을 권장합니다.'}
                     </span>
                   </div>
@@ -787,7 +741,7 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       <polyline points="18 15 12 9 6 15"></polyline>
                     </svg>
                     <span style={{ fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                      {reviewCount === null || reviewCount === 0 ? '첫 리뷰를 남겨보세요' : '방문 경험을 공유해주세요'}
+                      {reviewCount === null || reviewCount === 0 ? '이곳의 새벽 분위기는 어떤가요? 🌙' : '방문 경험을 공유해주세요'}
                     </span>
                   </div>
                   

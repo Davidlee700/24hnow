@@ -336,7 +336,7 @@ export default async function StorePage(
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            color: '#ADFF2F',
+            color: 'var(--accent-brand)',
             textDecoration: 'none',
             fontSize: '15px',
             fontWeight: 500,
@@ -409,7 +409,7 @@ export default async function StorePage(
             {store.metadata?.phone && (
               <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>전화</p>
-                <a href={`tel:${store.metadata.phone}`} style={{ fontSize: '15px', color: '#ADFF2F', textDecoration: 'none' }}>
+                <a href={`tel:${store.metadata.phone}`} style={{ fontSize: '15px', color: 'var(--accent-brand)', textDecoration: 'none' }}>
                   {store.metadata.phone}
                 </a>
               </div>
@@ -433,8 +433,7 @@ export default async function StorePage(
                         {i === todayKrIndex && (
                           <span style={{
                             fontSize: '10px',
-                            background: '#ADFF2F',
-                            color: '#000',
+                            background: 'var(--accent-brand)', color: '#ffffff',
                             borderRadius: '4px',
                             padding: '1px 5px',
                             fontWeight: 700,
@@ -528,8 +527,8 @@ export default async function StorePage(
                       {s.operation_type === '24H' && (
                         <span style={{
                           fontSize: '11px', fontWeight: 700,
-                          color: '#ADFF2F', background: 'rgba(173,255,47,0.12)',
-                          border: '1px solid rgba(173,255,47,0.3)',
+                          color: 'var(--accent-brand)', background: 'rgba(0,122,255,0.12)',
+                          border: '1px solid rgba(0,122,255,0.3)',
                           borderRadius: '6px', padding: '2px 8px', flexShrink: 0,
                         }}>24H</span>
                       )}
@@ -550,21 +549,21 @@ export default async function StorePage(
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '16px 20px',
-                  background: 'rgba(173,255,47,0.07)',
-                  border: '1px solid rgba(173,255,47,0.2)',
+                  background: 'rgba(0,122,255,0.07)',
+                  border: '1px solid rgba(0,122,255,0.2)',
                   borderRadius: '14px',
                   textDecoration: 'none',
                 }}
               >
                 <div>
-                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#ADFF2F', margin: '0 0 2px' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--accent-brand)', margin: '0 0 2px' }}>
                     {region} {categoryLabel} 전체 보기
                   </p>
                   <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
                     이 지역의 24시간 {store.category} 목록
                   </p>
                 </div>
-                <span style={{ color: '#ADFF2F', fontSize: '18px' }}>→</span>
+                <span style={{ color: 'var(--accent-brand)', fontSize: '18px' }}>→</span>
               </Link>
             </section>
           )}

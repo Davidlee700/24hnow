@@ -156,7 +156,7 @@ export default async function LandingPage({ params }: { params: Params }) {
           <section className="landing-hero">
             <div className="landing-hero-emoji">{meta.emoji}</div>
             <div className="landing-hero-count">
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-neon)', display: 'inline-block' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-brand)', display: 'inline-block' }} />
               {stores.length}곳 확인됨
             </div>
             <h1 className="landing-hero-title">

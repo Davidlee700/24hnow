@@ -53,7 +53,7 @@ export default function AuthCallbackPage() {
     <div className="loading-overlay">
       <div className="loading-spinner-wrapper">
         <div className="loading-logo">
-          24시 <span style={{ color: 'var(--accent-neon)' }}>나우</span>
+          24시 <span style={{ color: 'var(--accent-brand)' }}>나우</span>
         </div>
         <div className="loading-pulse-dot" />
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '16px' }}>로그인 중입니다...</p>
