@@ -6,6 +6,7 @@ import type { Store } from '@/types/store';
 import { LANDING_CATEGORIES, CATEGORY_META, extractCitySlug, type LandingCategory } from '@/lib/landingData';
 
 export const revalidate = 604800; // 7일 캐시
+export const dynamicParams = false; // 정적 목록 외 URL → 즉시 404 (5xx 방지)
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
 
@@ -33,9 +34,9 @@ export async function generateStaticParams() {
   }
 
   return Array.from(counts.entries())
-    .filter(([, n]) => n >= 5)
+    .filter(([, n]) => n >= 3)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 300)
+    .slice(0, 600)
     .map(([key]) => {
       const [city, category] = key.split('|');
       return { city, category };
