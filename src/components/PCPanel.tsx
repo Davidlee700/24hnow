@@ -299,14 +299,7 @@ function StoreList({ stores, userLoc, onSelect, activeFilter, openNowOnly, onTog
               영업중 필터 끄기
             </button>
           )}
-          {activeFilter !== '편의점' && (
-            <button 
-              onClick={() => onSelectFilter('편의점')}
-              style={{ padding: '10px 20px', borderRadius: '20px', background: 'rgba(10, 132, 255, 0.1)', color: '#0A84FF', border: 'none', fontWeight: 600, fontSize: '14px', cursor: 'pointer', width: '100%', maxWidth: '200px' }}
-            >
-              🏪 주변 편의점 찾기
-            </button>
-          )}
+          
         </div>
       </motion.div>
     );
@@ -383,7 +376,7 @@ export default function PCPanel({
             textDecoration: 'none', color: C.label,
             fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em',
           }}>
-            24시<span style={{ color: '#ADFF2F' }}>나우</span>
+            24시<span style={{ color: 'var(--accent-brand)' }}>나우</span>
           </a>
           <button
             onClick={onMenuOpen}
@@ -440,9 +433,9 @@ export default function PCPanel({
             onClick={onToggleOpenNow}
             style={{
               padding: '5px 12px', borderRadius: 999,
-              background: openNowOnly ? 'rgba(52,199,89,0.12)' : C.surface,
-              border: openNowOnly ? `1px solid rgba(52,199,89,0.4)` : `0.5px solid ${C.separator}`,
-              color: openNowOnly ? C.green : C.secondary,
+              background: openNowOnly ? 'rgba(0,122,255,0.12)' : C.surface,
+              border: openNowOnly ? `1px solid rgba(0,122,255,0.4)` : `0.5px solid ${C.separator}`,
+              color: openNowOnly ? C.blue : C.secondary,
               fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 5,
               transition: 'all 0.18s',
@@ -450,7 +443,7 @@ export default function PCPanel({
           >
             <span style={{
               width: 7, height: 7, borderRadius: '50%',
-              background: openNowOnly ? C.green : C.tertiary,
+              background: openNowOnly ? C.blue : C.tertiary,
               display: 'inline-block', flexShrink: 0,
             }} />
             영업중{openNowOnly && stores.length > 0 ? ` ${stores.length}` : ''}

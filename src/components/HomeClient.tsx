@@ -89,41 +89,17 @@ function HomeContent() {
 
   // "이 지역에서 검색" logic
   const pendingBoundsRef = useRef<MapBounds | null>(null);
-  const autoSearchUntil = useRef(0);
-  const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
-  const [showSearchHere, setShowSearchHere] = useState(false);
-  const [searchHideAnim, setSearchHideAnim] = useState(false);
-  const [showZoomHint, setShowZoomHint] = useState(false);
+    const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null);
+      const [showZoomHint, setShowZoomHint] = useState(false);
 
   const handleBoundsChange = useCallback((bounds: MapBounds | null, isZoom?: boolean) => {
     if (!bounds) {
-      setShowSearchHere(false);
       setShowZoomHint(true);
       return;
     }
     setShowZoomHint(false);
-    pendingBoundsRef.current = bounds;
-
-    // GPS 완료 직후 1초 내에 발생하는 bounds 변화 또는 줌 인/아웃은 자동 검색으로 처리
-    if (isZoom || Date.now() < autoSearchUntil.current) {
-      setSearchedBounds(bounds);
-      setShowSearchHere(false);
-      return;
-    }
-
-    setShowSearchHere(true);
-    setSearchHideAnim(false);
+    setSearchedBounds(bounds);
   }, []);
-
-  const handleSearchHere = (e: React.MouseEvent<HTMLElement>) => {
-    tapEffect(e);
-    setSearchHideAnim(true);
-    setTimeout(() => {
-      setShowSearchHere(false);
-      setSearchHideAnim(false);
-      if (pendingBoundsRef.current) setSearchedBounds(pendingBoundsRef.current);
-    }, 180);
-  };
 
   const { stores: fetchedStores } = useStores(searchedBounds, [activeFilter], activeTag ?? undefined, openNowOnly, medicineOnly);
 
@@ -147,7 +123,6 @@ function HomeContent() {
     setSelectedStore(null);
     if (pendingBoundsRef.current) {
       setSearchedBounds(pendingBoundsRef.current);
-      setShowSearchHere(false);
     }
   };
 
@@ -157,7 +132,6 @@ function HomeContent() {
     setSelectedStore(null);
     if (pendingBoundsRef.current) {
       setSearchedBounds(pendingBoundsRef.current);
-      setShowSearchHere(false);
     }
   };
 
@@ -170,7 +144,7 @@ function HomeContent() {
     onMarkerClick: handleSelectStore,
     onMapClick: () => setSelectedStore(null),
     requestGps,
-    onGpsComplete: () => { setRequestGps(false); autoSearchUntil.current = Date.now() + 1000; },
+    onGpsComplete: () => { setRequestGps(false);  },
     onGpsError: showToast,
     onLocationUpdate: (lat: number, lng: number) => setUserLocation({ lat, lng }),
     dimmed: isMenuOpen,
@@ -203,12 +177,7 @@ function HomeContent() {
           </div>
         </div>
       )}
-      {showSearchHere && !selectedStore && (
-        <div className={`search-here-wrapper ${searchHideAnim ? 'hiding' : ''}`}>
-          <button className="search-here-btn" onClick={handleSearchHere}>여기서 찾기 🔍</button>
-          <p className="search-hint">원하는 위치로 지도를 이동한 뒤 탭해보세요</p>
-        </div>
-      )}
+
       {toastMessage && (
         <div className="global-toast" role="status" aria-live="polite" aria-atomic="true">
           {toastMessage}
@@ -284,7 +253,7 @@ function HomeContent() {
             영업중{openNowOnly && fetchedStores.length > 0 ? ` ${fetchedStores.length}` : ''}
           </button>
           {activeFilter === '편의점' && (
-            <button className={`sub-filter-chip ${medicineOnly ? 'active' : ''}`} onClick={(e) => { tapEffect(e); setMedicineOnly(v => !v); }} style={medicineOnly ? { borderColor: '#30D158', color: '#30D158' } : undefined}>
+            <button className={`sub-filter-chip ${medicineOnly ? 'active' : ''}`} onClick={(e) => { tapEffect(e); setMedicineOnly(v => !v); }} style={medicineOnly ? { borderColor: 'var(--accent-brand)', color: 'var(--accent-brand)' } : undefined}>
               💊 약 판매
             </button>
           )}
@@ -298,7 +267,7 @@ function HomeContent() {
 
       {mapOverlays}
 
-      {searchedBounds && stores.length === 0 && !showSearchHere && (
+      {searchedBounds && stores.length === 0 && (
         <div className="empty-state" style={{ padding: '24px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)', border: '1px solid var(--border-light)' }}>
           <div style={{ fontSize: '32px', marginBottom: '8px' }}>💡</div>
           <p style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '16px', marginBottom: '8px' }}>
@@ -316,19 +285,12 @@ function HomeContent() {
                 영업중 필터 끄기
               </button>
             )}
-            {activeFilter !== '편의점' && (
-              <button 
-                onClick={(e) => { selectFilter('편의점', e); }}
-                style={{ padding: '8px 16px', borderRadius: '20px', background: 'rgba(10, 132, 255, 0.1)', color: '#0A84FF', border: 'none', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-              >
-                🏪 주변 편의점 찾기
-              </button>
-            )}
+            
           </div>
         </div>
       )}
 
-      {!selectedStore && !showSearchHere && <RecentStores items={recentHistory} />}
+      {!selectedStore && <RecentStores items={recentHistory} />}
 
       <StoreBottomSheet store={selectedStore} userLocation={userLocation} onClose={() => setSelectedStore(null)} />
       <MenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onShowToast={showToast} user={user} />
