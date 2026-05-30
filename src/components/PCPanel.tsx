@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import FeedPostModal from './FeedPostModal';
+import { useEffect } from 'react';
 import type { Store } from '@/types/store';
 import { getOpenStatus } from '@/utils/openHours';
 import { CATEGORY_TAGS } from '@/hooks/useTagVotes';
@@ -353,6 +355,27 @@ export default function PCPanel({
   openNowOnly, userLocation,
   onSelectFilter, onToggleTag, onToggleOpenNow, onSelectStore, onMenuOpen,
 }: PCPanelProps) {
+  const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
+  const [feedData, setFeedData] = useState<any[]>([]);
+
+  const fetchFeed = async () => {
+    try {
+      const res = await fetch('/api/feed');
+      if (res.ok) {
+        const data = await res.json();
+        setFeedData(data.feed || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch feed', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeed();
+    const interval = setInterval(fetchFeed, 60000); // 1 minute refresh
+    return () => clearInterval(interval);
+  }, []);
+
   const tags = CATEGORY_TAGS[activeFilter] ?? [];
 
   return (
@@ -396,56 +419,7 @@ export default function PCPanel({
           </button>
         </div>
 
-        {/* ── Real-time Community Feed ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <h3 style={{ fontSize: '17px', fontWeight: '700', color: C.label, margin: 0 }}>실시간 심야 피드</h3>
-            <span style={{ fontSize: '13px', color: C.blue, fontWeight: '600', cursor: 'pointer' }}>제보하기</span>
-          </div>
 
-          <div style={{ background: C.surface, padding: '14px', borderRadius: '16px', border: `0.5px solid ${C.separator}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '16px' }}>🚻</span>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: C.label }}>강남역 11번 출구 화장실</span>
-            </div>
-            <p style={{ fontSize: '13px', color: C.secondary, margin: '0 0 8px 0', lineHeight: 1.4 }}>
-              방금 갔는데 문 잠겨있어요. 옆 건물 스벅 화장실 개방되어 있으니 거기로 가세요!
-            </p>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: C.tertiary, fontWeight: '500' }}>
-              <span>방금 전</span>
-              <span>배달마스터</span>
-              <span style={{ marginLeft: 'auto', color: C.red }}>🔥 핫제보</span>
-            </div>
-          </div>
-
-          <div style={{ background: C.surface, padding: '14px', borderRadius: '16px', border: `0.5px solid ${C.separator}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '16px' }}>🫧</span>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: C.label }}>크린토피아 코인워시</span>
-            </div>
-            <p style={{ fontSize: '13px', color: C.secondary, margin: '0 0 8px 0', lineHeight: 1.4 }}>
-              여기 지금 사람 없고 따뜻해서 대기하기 좋습니다 ㅎㅎ 충전기 꽂을 곳도 2개 비어있네요.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: C.tertiary, fontWeight: '500' }}>
-              <span>15분 전</span>
-              <span>신림라이더</span>
-            </div>
-          </div>
-
-          <div style={{ background: C.surface, padding: '14px', borderRadius: '16px', border: `0.5px solid ${C.separator}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '16px' }}>⛽️</span>
-              <span style={{ fontSize: '14px', fontWeight: '600', color: C.label }}>SK엔크린 관악주유소</span>
-            </div>
-            <p style={{ fontSize: '13px', color: C.secondary, margin: '0 0 8px 0', lineHeight: 1.4 }}>
-              전기 바이크 배터리 스테이션 새로 들어왔네요! 참고하세요.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: C.tertiary, fontWeight: '500' }}>
-              <span>2시간 전</span>
-              <span>스쿠터7</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── Content (list ↔ detail with spring animation) ── */}
@@ -472,6 +446,13 @@ export default function PCPanel({
           )}
         </AnimatePresence>
       </div>
+
+      <FeedPostModal 
+        isOpen={isFeedModalOpen} 
+        onClose={() => setIsFeedModalOpen(false)} 
+        nearbyStores={stores}
+        onSuccess={fetchFeed}
+      />
     </aside>
   );
 }

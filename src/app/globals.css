@@ -3258,7 +3258,7 @@ body:has(.landing-page) { overflow-y: auto; }
 
   /* Left panel */
   .pc-panel {
-    width: 360px;
+    width: 400px;
     flex-shrink: 0;
     height: 100dvh;
     background: rgba(18, 18, 18, 0.97);
