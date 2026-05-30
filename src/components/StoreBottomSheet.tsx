@@ -284,8 +284,9 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
 
     const CATEGORY_EMOJI: Record<string, string> = {
       카페: '☕', 편의점: '🏪', 셀프세차장: '🚗', PC방: '🎮',
-      약국: '💊', 코인노래방: '🎤', 셀프빨래방: '🫧', 찜질방: '🛁',
-      복권판매점: '🎰',
+      약국: '💊', 화장실: '🚻',
+      '주유/충전': '⛽️', 셀프빨래방: '🫧', 찜질방: '🛁',
+      
     };
     const emoji = CATEGORY_EMOJI[store.category] ?? '📍';
 
@@ -597,8 +598,55 @@ export default function StoreBottomSheet({ store, userLocation, onClose }: Props
                       </motion.div>
                     )}
                   </AnimatePresence>
+                
                 </div>
                 </div>
+
+                {/* ── Layer 3.1: 화장실 특화 정보 ── */}
+                {store.category === '화장실' && (
+                  <div className="info-card" style={{ padding: '16px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>화장실 정보</span>
+                      <button style={{ background: 'none', border: 'none', color: 'var(--accent-brand)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0 }}>정보 수정 제안</button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>비밀번호</span>
+                        <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          {store.metadata?.restroom_password === false ? '없음 (개방형)' : store.metadata?.restroom_password || '알 수 없음'}
+                        </span>
+                      </div>
+                      <div style={{ height: '0.5px', background: 'var(--border-light)' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>청결도</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '14px' }}>✨</span>
+                          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                            {store.metadata?.restroom_cleanliness ? `${store.metadata.restroom_cleanliness}/5` : '정보 없음'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Layer 3.2: 주유/충전 특화 정보 ── */}
+                {store.category === '주유/충전' && (
+                  <div className="info-card" style={{ padding: '16px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>충전 인프라</span>
+                      <button style={{ background: 'none', border: 'none', color: 'var(--accent-brand)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0 }}>정보 수정 제안</button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>전기차 충전 (EV)</span>
+                        <span style={{ fontSize: '14px', color: store.metadata?.has_ev_charging ? '#34C759' : 'var(--text-secondary)', fontWeight: 600 }}>
+                          {store.metadata?.has_ev_charging ? '가능' : '알 수 없음'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Layer 3.5: Hours Feedback Card — UNKNOWN/EXTENDED 또는 영업상태 불명 매장만 표시 ── */}
                 {!hasVotedHours && (store.operation_type === 'UNKNOWN' || store.operation_type === 'EXTENDED' || (store.operation_type === 'REGULAR' && !store.raw_hours) || openStatus?.isOpen === null) && (

@@ -28,10 +28,11 @@ const CATEGORY_STYLE: Record<string, { bg: string; emoji: string }> = {
   '셀프세차장': { bg: '#30D158', emoji: '🚗' },
   'PC방':       { bg: '#5856D6', emoji: '🎮' },
   '약국':       { bg: '#FF2D55', emoji: '💊' },
-  '코인노래방': { bg: '#FF6B35', emoji: '🎤' },
+  '화장실':     { bg: '#32ADE6', emoji: '🚻' },
+  '주유/충전':  { bg: '#FF9F0A', emoji: '⛽️' },
   '셀프빨래방': { bg: '#32ADE6', emoji: '🫧' },
   '찜질방':     { bg: '#FF9F0A', emoji: '🛁' },
-  '복권판매점':  { bg: '#34C759', emoji: '🎰' },
+  
 };
 const DEFAULT_STYLE = { bg: '#8e8e93', emoji: '📍' };
 

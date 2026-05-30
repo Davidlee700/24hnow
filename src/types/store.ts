@@ -39,6 +39,10 @@ export interface Store {
     kakao_category_full?: string;
     source?: string;
     kakao_id?: string;
+    is_open_restroom?: boolean;
+    restroom_password?: string | boolean;
+    restroom_cleanliness?: number;
+    has_ev_charging?: boolean;
   };
 }
 
