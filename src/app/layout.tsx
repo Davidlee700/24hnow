@@ -118,7 +118,7 @@ export default function RootLayout({
         {/* Load Kakao Maps SDK with libraries (services, clusterer, drawing) if needed later */}
         <Script
           strategy="beforeInteractive"
-          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsKey}&libraries=services&autoload=false`}
+          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJsKey}&libraries=services,clusterer&autoload=false`}
         />
       </head>
       <body>

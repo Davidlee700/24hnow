@@ -204,9 +204,49 @@ function HomeContent() {
             onSelectStore={handleSelectStore}
             onMenuOpen={() => setIsMenuOpen(true)}
           />
-          <div className="map-zone">
+          <div className="map-zone" style={{ position: 'relative' }}>
             <KakaoMap {...kakaoMapProps} markerPanOffset={0} />
             <NightBanner />
+            
+            {/* ── Floating Filters (Desktop Map Zone) ── */}
+            <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ 
+                display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.9)', 
+                backdropFilter: 'blur(10px)', padding: '6px', borderRadius: '999px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '0.5px solid rgba(0,0,0,0.05)'
+              }}>
+                {FILTERS.map(filter => (
+                  <button 
+                    key={filter} 
+                    className={`filter-chip ${activeFilter === filter ? 'active' : ''}`} 
+                    onClick={(e) => selectFilter(filter, e)}
+                    style={{
+                      padding: '8px 16px', borderRadius: '999px', border: 'none',
+                      background: activeFilter === filter ? '#007AFF' : 'transparent',
+                      color: activeFilter === filter ? '#fff' : '#000',
+                      fontWeight: activeFilter === filter ? 600 : 500, cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  className={`sub-filter-chip open-now-chip ${openNowOnly ? 'active' : ''}`}
+                  onClick={(e) => { tapEffect(e); setOpenNowOnly(v => !v); }}
+                  style={{
+                    background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)',
+                    border: '0.5px solid rgba(0,0,0,0.05)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: openNowOnly ? '#34C759' : '#8E8E93', display: 'inline-block', flexShrink: 0, marginRight: 4 }} />
+                  영업중
+                </button>
+              </div>
+            </div>
+
             {mapOverlays}
           </div>
         </div>

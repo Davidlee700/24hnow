@@ -40,6 +40,7 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
   const mapElement = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const clustererRef = useRef<any>(null);
   const gpsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationOverlayRef = useRef<any>(null);
   const isZoomingRef = useRef(false);
@@ -55,7 +56,31 @@ export default function KakaoMap({ stores = [], center, onBoundsChange, onMarker
       if (mapRef.current || !mapElement.current) return;
       const center = new kakao.maps.LatLng(37.5665, 126.9780);
       mapRef.current = new kakao.maps.Map(mapElement.current, { center, level: 5 });
+      
       mapRef.current.setMaxLevel(8);
+      
+      // Initialize MarkerClusterer (Apple HIG Style Dark Blur)
+      clustererRef.current = new kakao.maps.MarkerClusterer({
+        map: mapRef.current, // Map to draw cluster on
+        averageCenter: true, // Center the cluster based on average marker positions
+        minLevel: 5,         // Zoom level to start clustering
+        calculator: [10, 30, 50], // Thresholds for cluster styling
+        styles: [{ // Base style
+          width: '44px', height: '44px',
+          background: 'rgba(28,28,30,0.85)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderRadius: '50%',
+          color: '#fff',
+          textAlign: 'center',
+          fontWeight: '600',
+          fontSize: '15px',
+          lineHeight: '44px',
+          border: '0.5px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }]
+      });
+      
       setMapLoaded(true);
 
       kakao.maps.event.addListener(mapRef.current, 'idle', () => {
