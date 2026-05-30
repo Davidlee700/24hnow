@@ -146,12 +146,11 @@ body, html {
 .nav-categories {
   flex: 1;
   display: flex;
-  gap: 2px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   min-width: 0;
-  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
-  mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  padding-right: 20px; /* Add padding so last item is not cut off */
 }
 .nav-categories::-webkit-scrollbar { display: none; }
 
@@ -176,11 +175,11 @@ body, html {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: transparent;
   border: none;
   border-radius: var(--radius-full);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;

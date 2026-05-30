@@ -398,10 +398,9 @@ export default function PCPanel({
 
         {/* ── Category filter (Apple Maps pill style) ── */}
         <div style={{
-          display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 12,
-          scrollbarWidth: 'none', WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
-          maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
-        }}>
+          display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16,
+          scrollbarWidth: 'auto', // Allow standard scrollbar or use CSS to style it
+        }} className="hide-scroll-on-mobile">
           {FILTERS.map(f => {
             const active = activeFilter === f;
             return (
@@ -410,11 +409,11 @@ export default function PCPanel({
                 onClick={(e) => onSelectFilter(f, e)}
                 whileTap={{ scale: 0.94 }}
                 style={{
-                  flexShrink: 0, padding: '7px 14px',
+                  flexShrink: 0, padding: '10px 18px',
                   borderRadius: 999, border: 'none',
                   background: active ? C.blue : C.surface,
                   color: active ? '#fff' : C.secondary,
-                  fontSize: 14, fontWeight: active ? 600 : 500,
+                  fontSize: 15, fontWeight: active ? 600 : 500,
                   cursor: 'pointer', fontFamily: 'inherit',
                   boxShadow: active ? 'none' : `0 1px 2px rgba(0,0,0,0.08), inset 0 0 0 0.5px ${C.separator}`,
                   transition: 'background 0.18s, color 0.18s',
