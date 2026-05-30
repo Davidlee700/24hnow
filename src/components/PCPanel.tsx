@@ -396,75 +396,55 @@ export default function PCPanel({
           </button>
         </div>
 
-        {/* ── Category filter (Apple Maps pill style) ── */}
-        <div style={{
-          display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16,
-          scrollbarWidth: 'auto', // Allow standard scrollbar or use CSS to style it
-        }} className="hide-scroll-on-mobile">
-          {FILTERS.map(f => {
-            const active = activeFilter === f;
-            return (
-              <motion.button
-                key={f}
-                onClick={(e) => onSelectFilter(f, e)}
-                whileTap={{ scale: 0.94 }}
-                style={{
-                  flexShrink: 0, padding: '10px 18px',
-                  borderRadius: 999, border: 'none',
-                  background: active ? C.blue : C.surface,
-                  color: active ? '#fff' : C.secondary,
-                  fontSize: 15, fontWeight: active ? 600 : 500,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  boxShadow: active ? 'none' : `0 1px 2px rgba(0,0,0,0.08), inset 0 0 0 0.5px ${C.separator}`,
-                  transition: 'background 0.18s, color 0.18s',
-                }}
-              >
-                {EMOJI[f]} {f}
-              </motion.button>
-            );
-          })}
-        </div>
+        {/* ── Real-time Community Feed ── */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <h3 style={{ fontSize: '17px', fontWeight: '700', color: C.label, margin: 0 }}>실시간 심야 피드</h3>
+            <span style={{ fontSize: '13px', color: C.blue, fontWeight: '600', cursor: 'pointer' }}>제보하기</span>
+          </div>
 
-        {/* ── Sub-filters ── */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingBottom: 12 }}>
-          <motion.button
-            whileTap={{ scale: 0.94 }}
-            onClick={onToggleOpenNow}
-            style={{
-              padding: '5px 12px', borderRadius: 999,
-              background: openNowOnly ? 'rgba(0,122,255,0.12)' : C.surface,
-              border: openNowOnly ? `1px solid rgba(0,122,255,0.4)` : `0.5px solid ${C.separator}`,
-              color: openNowOnly ? C.blue : C.secondary,
-              fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 5,
-              transition: 'all 0.18s',
-            }}
-          >
-            <span style={{
-              width: 7, height: 7, borderRadius: '50%',
-              background: openNowOnly ? C.blue : C.tertiary,
-              display: 'inline-block', flexShrink: 0,
-            }} />
-            영업중{openNowOnly && stores.length > 0 ? ` ${stores.length}` : ''}
-          </motion.button>
+          <div style={{ background: C.surface, padding: '14px', borderRadius: '16px', border: `0.5px solid ${C.separator}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '16px' }}>🚻</span>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: C.label }}>강남역 11번 출구 화장실</span>
+            </div>
+            <p style={{ fontSize: '13px', color: C.secondary, margin: '0 0 8px 0', lineHeight: 1.4 }}>
+              방금 갔는데 문 잠겨있어요. 옆 건물 스벅 화장실 개방되어 있으니 거기로 가세요!
+            </p>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: C.tertiary, fontWeight: '500' }}>
+              <span>방금 전</span>
+              <span>배달마스터</span>
+              <span style={{ marginLeft: 'auto', color: C.red }}>🔥 핫제보</span>
+            </div>
+          </div>
 
-          {tags.map(tag => (
-            <motion.button
-              key={tag}
-              whileTap={{ scale: 0.94 }}
-              onClick={(e) => onToggleTag(tag, e)}
-              style={{
-                padding: '5px 12px', borderRadius: 999,
-                background: activeTag === tag ? 'rgba(0,122,255,0.1)' : C.surface,
-                border: activeTag === tag ? `1px solid rgba(0,122,255,0.3)` : `0.5px solid ${C.separator}`,
-                color: activeTag === tag ? C.blue : C.secondary,
-                fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.18s',
-              }}
-            >
-              {tag}
-            </motion.button>
-          ))}
+          <div style={{ background: C.surface, padding: '14px', borderRadius: '16px', border: `0.5px solid ${C.separator}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '16px' }}>🫧</span>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: C.label }}>크린토피아 코인워시</span>
+            </div>
+            <p style={{ fontSize: '13px', color: C.secondary, margin: '0 0 8px 0', lineHeight: 1.4 }}>
+              여기 지금 사람 없고 따뜻해서 대기하기 좋습니다 ㅎㅎ 충전기 꽂을 곳도 2개 비어있네요.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: C.tertiary, fontWeight: '500' }}>
+              <span>15분 전</span>
+              <span>신림라이더</span>
+            </div>
+          </div>
+
+          <div style={{ background: C.surface, padding: '14px', borderRadius: '16px', border: `0.5px solid ${C.separator}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '16px' }}>⛽️</span>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: C.label }}>SK엔크린 관악주유소</span>
+            </div>
+            <p style={{ fontSize: '13px', color: C.secondary, margin: '0 0 8px 0', lineHeight: 1.4 }}>
+              전기 바이크 배터리 스테이션 새로 들어왔네요! 참고하세요.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: C.tertiary, fontWeight: '500' }}>
+              <span>2시간 전</span>
+              <span>스쿠터7</span>
+            </div>
+          </div>
         </div>
       </div>
 
