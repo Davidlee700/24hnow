@@ -5,36 +5,6 @@ import { LANDING_CATEGORIES, extractCitySlug, type LandingCategory } from '@/lib
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://24now.kr';
 
-async function getStoreEntries(): Promise<MetadataRoute.Sitemap> {
-  const entries: MetadataRoute.Sitemap = [];
-  const PAGE_SIZE = 1000;
-  let from = 0;
-
-  while (entries.length < 45000) {
-    const { data, error } = await supabaseAdmin
-      .from('stores')
-      .select('id, last_verified_at')
-      .order('trust_score', { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
-
-    if (error || !data || data.length === 0) break;
-
-    for (const row of data) {
-      entries.push({
-        url: `${BASE_URL}/stores/${row.id}`,
-        lastModified: row.last_verified_at ? new Date(row.last_verified_at) : new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.6,
-      });
-    }
-
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return entries;
-}
-
 async function getLandingEntries(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data } = await supabaseAdmin
@@ -89,8 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const storeRoutes = await getStoreEntries();
   const landingRoutes = await getLandingEntries();
 
-  return [...staticRoutes, ...guideRoutes, ...landingRoutes, ...storeRoutes];
+  return [...staticRoutes, ...guideRoutes, ...landingRoutes];
 }

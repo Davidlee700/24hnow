@@ -8,12 +8,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: ['/', '/api/og'],
-        disallow: ['/admin', '/api/admin/', '/api/report', '/api/vote', '/api/comments', '/api/contact', '/auth/'],
+        disallow: ['/admin', '/api/admin/', '/api/report', '/api/vote', '/api/comments', '/api/contact', '/auth/', '/stores/'],
       },
       {
         userAgent: 'Yeti',
         allow: ['/', '/api/og'],
-        disallow: ['/admin', '/api/admin/', '/api/report', '/api/vote', '/api/comments', '/api/contact', '/auth/'],
+        disallow: ['/admin', '/api/admin/', '/api/report', '/api/vote', '/api/comments', '/api/contact', '/auth/', '/stores/'],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
